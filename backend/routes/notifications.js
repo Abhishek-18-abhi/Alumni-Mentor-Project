@@ -1,13 +1,17 @@
 import { Router } from 'express';
+import { validateId } from '../middleware/validateId.js';
 import Notification from '../models/Notification.js';
+import mongoose from 'mongoose';
 import { requireAuth } from '../middleware/auth.js';
 
 const router = Router();
+router.param('id', validateId);
 
 router.post('/broadcast', requireAuth, async (req, res, next) => {
   try {
     if (req.user.role !== 'admin') return res.status(403).json({ message: 'Only administrators can send broadcast notifications.' });
     const { userIds = [], title, message, type = 'admin' } = req.body;
+    if (!Array.isArray(userIds) || userIds.some((userId) => !mongoose.isValidObjectId(userId))) return res.status(400).json({ message: 'All recipient user IDs must be valid.' });
     if (!title || !message || !Array.isArray(userIds) || !userIds.length) return res.status(400).json({ message: 'Recipients, title and message are required.' });
     const docs = userIds.map((userId) => ({ userId, title, message, type }));
     const notifications = await Notification.insertMany(docs);

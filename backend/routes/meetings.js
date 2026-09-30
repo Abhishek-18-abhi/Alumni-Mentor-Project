@@ -1,11 +1,14 @@
 import { Router } from 'express';
+import { validateId } from '../middleware/validateId.js';
 import Meeting from '../models/Meeting.js';
+import mongoose from 'mongoose';
 import User from '../models/User.js';
 import Notification from '../models/Notification.js';
 import AuditLog from '../models/AuditLog.js';
 import { requireAuth } from '../middleware/auth.js';
 
 const router = Router();
+router.param('id', validateId);
 
 router.get('/', requireAuth, async (req, res, next) => {
   try {
@@ -18,6 +21,7 @@ router.get('/', requireAuth, async (req, res, next) => {
 router.post('/', requireAuth, async (req, res, next) => {
   try {
     const { mentorId, studentId, date, time, mode = 'Online', log = '', status = 'scheduled' } = req.body;
+    if (!mongoose.isValidObjectId(mentorId) || !mongoose.isValidObjectId(studentId)) return res.status(400).json({ message: 'Valid mentorId and studentId are required.' });
     if (!date || !time) return res.status(400).json({ message: 'Date and time are required.' });
     if (req.user.role === 'mentor' && String(mentorId) !== String(req.user._id)) return res.status(403).json({ message: 'You can only schedule your own meetings.' });
     if (req.user.role === 'student' && String(studentId) !== String(req.user._id)) return res.status(403).json({ message: 'You can only schedule meetings for yourself.' });
