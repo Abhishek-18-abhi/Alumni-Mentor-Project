@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import { validateId } from '../middleware/validateId.js';
 import User from '../models/User.js';
 import Student from '../models/Student.js';
 import Mentor from '../models/Mentor.js';
@@ -9,7 +8,6 @@ import { requireAuth, requireRole } from '../middleware/auth.js';
 import { getPublicUser, getPublicUsers } from '../utils/publicUser.js';
 
 const router = Router();
-router.param('id', validateId);
 const studentFields = ['college','course','year','bio','skills','interests','goals','languages','availability','profileComplete'];
 const mentorFields = ['jobTitle','company','experience','domain','bio','skills','interests','goals','languages','availability','capacity','profileComplete'];
 const adminFields = ['adminType','title','department','permissions'];
@@ -28,7 +26,7 @@ async function updateRoleProfile(user, body) {
   return Administrator.findOneAndUpdate({ userId: user._id }, patch, { new: true, upsert: true, setDefaultsOnInsert: true, runValidators: true });
 }
 
-router.get('/', requireAuth, requireRole('admin'), async (req, res, next) => {
+router.get('/', requireAuth, async (req, res, next) => {
   try {
     const filter = {};
     if (req.query.role) filter.role = req.query.role;
@@ -48,12 +46,6 @@ router.get('/:id', requireAuth, async (req, res, next) => {
   try {
     const user = await User.findById(req.params.id);
     if (!user) return res.status(404).json({ message: 'User not found.' });
-    const isSelf = req.user._id.toString() === req.params.id;
-    if (!isSelf && req.user.role !== 'admin') {
-      if (user.role !== 'mentor' || user.settings?.profileVisible === false || user.isActive === false) {
-        return res.status(403).json({ message: 'You do not have permission to view this profile.' });
-      }
-    }
     res.json({ user: await getPublicUser(user) });
   } catch (err) { next(err); }
 });

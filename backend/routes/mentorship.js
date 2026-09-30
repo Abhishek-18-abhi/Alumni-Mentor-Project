@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import { validateId } from '../middleware/validateId.js';
 import mongoose from 'mongoose';
 import MentorshipRequest from '../models/MentorshipRequest.js';
 import User from '../models/User.js';
@@ -9,7 +8,6 @@ import AuditLog from '../models/AuditLog.js';
 import { requireAuth } from '../middleware/auth.js';
 
 const router = Router();
-router.param('id', validateId);
 
 router.get('/', requireAuth, async (req, res, next) => {
   try {

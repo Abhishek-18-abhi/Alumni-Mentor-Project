@@ -18,7 +18,9 @@ export async function login(email, password) {
     setSession({ id: user.id, name: user.name, email: user.email, role: user.role });
     try { await hydrateLocalCache({ includeAudit: user.role === 'admin' }); } catch (e) { console.warn('Background data hydration failed:', e?.message || e); }
     return { ok: true, user: publicUser(user) };
-  } catch (error) { return { ok: false, error: error.message }; }
+  } catch (error) {
+    return { ok: false, error: error.message };
+  }
 }
 
 export async function registerUser(data) {
@@ -30,12 +32,13 @@ export async function registerUser(data) {
     setSession({ id: user.id, name: user.name, email: user.email, role: user.role });
     try { await hydrateLocalCache({ includeAudit: false }); } catch (e) { console.warn('Background data hydration failed:', e?.message || e); }
     return { ok: true, user: publicUser(user) };
-  } catch (error) { return { ok: false, error: error.message }; }
+  } catch (error) {
+    return { ok: false, error: error.message };
+  }
 }
 
 export async function setupAdmin(data) {
   if (!isValidPassword(data.password)) return { ok: false, error: PASSWORD_ERROR };
-  if (typeof data.setupToken !== 'string' || !data.setupToken.trim()) return { ok: false, error: 'Setup token is required.' };
   try {
     const result = await apiPost('/auth/setup-admin', data);
     setToken(result.token);
@@ -43,7 +46,9 @@ export async function setupAdmin(data) {
     setSession({ id: user.id, name: user.name, email: user.email, role: user.role });
     try { await hydrateLocalCache({ includeAudit: true }); } catch (e) { console.warn('Background data hydration failed:', e?.message || e); }
     return { ok: true, user: publicUser(user) };
-  } catch (error) { return { ok: false, error: error.message }; }
+  } catch (error) {
+    return { ok: false, error: error.message };
+  }
 }
 
 export async function updateUser(userId, patch) {
@@ -55,7 +60,9 @@ export async function updateUser(userId, patch) {
     const session = JSON.parse(localStorage.getItem('mc_session') || 'null');
     if (session?.id === user.id) setSession({ id: user.id, name: user.name, email: user.email, role: user.role });
     return { ok: true, user: publicUser(user) };
-  } catch (error) { return { ok: false, error: error.message }; }
+  } catch (error) {
+    return { ok: false, error: error.message };
+  }
 }
 
 export async function createAdmin(data) {
@@ -65,7 +72,9 @@ export async function createAdmin(data) {
     const users = getUsers();
     localStorage.setItem('mc_users', JSON.stringify([user, ...users.filter((u) => u.id !== user.id)]));
     return { ok: true, user: publicUser(user) };
-  } catch (error) { return { ok: false, error: error.message }; }
+  } catch (error) {
+    return { ok: false, error: error.message };
+  }
 }
 
 export async function changePassword(_userId, currentPassword, nextPassword) {
@@ -73,7 +82,9 @@ export async function changePassword(_userId, currentPassword, nextPassword) {
   try {
     await apiPatch('/auth/change-password', { currentPassword, nextPassword });
     return { ok: true };
-  } catch (error) { return { ok: false, error: error.message }; }
+  } catch (error) {
+    return { ok: false, error: error.message };
+  }
 }
 
 export function logout() {

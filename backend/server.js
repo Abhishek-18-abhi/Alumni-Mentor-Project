@@ -22,7 +22,6 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json({ limit: '1mb' }));
-app.use((req, _res, next) => { req.body ??= {}; next(); });
 
 app.get('/api/health', (req, res) => {
   res.json({
@@ -47,11 +46,7 @@ app.use((req, res) => res.status(404).json({ message: 'API route not found.' }))
 app.use((err, req, res, next) => {
   console.error(err);
   if (err?.code === 11000) return res.status(409).json({ message: 'A record with this unique value already exists.' });
-  if (err instanceof mongoose.Error.CastError) return res.status(400).json({ message: 'Invalid id.' });
-  if (err instanceof mongoose.Error.ValidationError) {
-    console.error('Validation error:', err.message);
-    return res.status(400).json({ message: 'Validation failed.' });
-  }
+  if (err instanceof mongoose.Error.ValidationError) return res.status(400).json({ message: err.message });
   res.status(500).json({ message: 'Internal server error.' });
 });
 
