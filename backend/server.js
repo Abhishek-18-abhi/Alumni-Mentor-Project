@@ -50,9 +50,19 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: 'Internal server error.' });
 });
 
-connectDB()
-  .then(() => app.listen(PORT, () => console.log(`Backend running on http://localhost:${PORT}`)))
-  .catch((err) => {
-    console.error('Failed to start backend:', err.message);
-    process.exit(1);
-  });
+if (!process.env.VERCEL) {
+  connectDB()
+    .then(() => {
+      app.listen(PORT, () => {
+        console.log(`Backend running on http://localhost:${PORT}`);
+      });
+    })
+    .catch((err) => {
+      console.error('Failed to start backend:', err.message);
+      process.exit(1);
+    });
+} else {
+  await connectDB();
+}
+
+export default app;
