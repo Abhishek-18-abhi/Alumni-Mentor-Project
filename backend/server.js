@@ -44,10 +44,37 @@ app.use('/api/platform-settings', platformSettingsRoutes);
 app.use((req, res) => res.status(404).json({ message: 'API route not found.' }));
 
 app.use((err, req, res, next) => {
-  console.error(err);
-  if (err?.code === 11000) return res.status(409).json({ message: 'A record with this unique value already exists.' });
-  if (err instanceof mongoose.Error.ValidationError) return res.status(400).json({ message: err.message });
-  res.status(500).json({ message: 'Internal server error.' });
+  console.error('API error:', {
+    method: req.method,
+    path: req.originalUrl,
+    name: err?.name,
+    code: err?.code,
+    message: err?.message
+  });
+
+  if (res.headersSent) return next(err);
+
+  if (err?.code === 11000) {
+    return res.status(409).json({ message: 'A record with this unique value already exists.' });
+  }
+
+  if (err instanceof mongoose.Error.ValidationError) {
+    const message = Object.values(err.errors || {}).map((item) => item.message).join(' ') || 'Validation failed.';
+    return res.status(400).json({ message });
+  }
+
+  if (err instanceof mongoose.Error.CastError || err?.name === 'BSONError') {
+    return res.status(400).json({ message: 'Invalid identifier or data format.' });
+  }
+
+  if (err?.name === 'JsonWebTokenError' || err?.name === 'TokenExpiredError') {
+    return res.status(401).json({ message: 'Invalid or expired token.' });
+  }
+
+  const status = Number.isInteger(err?.status) && err.status >= 400 && err.status < 600 ? err.status : 500;
+  return res.status(status).json({
+    message: status === 500 ? 'Internal server error.' : (err.message || 'Request failed.')
+  });
 });
 
 if (!process.env.VERCEL) {
