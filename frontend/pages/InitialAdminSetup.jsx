@@ -12,6 +12,7 @@ export default function InitialAdminSetup() {
   const [e, setE] = useState('');
   const [loading, setLoading] = useState(true);
   const [needsSetup, setNeedsSetup] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -33,9 +34,11 @@ export default function InitialAdminSetup() {
 
   const sub = async (x) => {
     x.preventDefault();
+    if (submitting) return;
+    setSubmitting(true);
     setE('');
     const r = await setupAdmin(f);
-    if (!r.ok) return setE(r.error);
+    if (!r.ok) { setSubmitting(false); return setE(r.error); }
     nav('/admin');
   };
 
@@ -56,7 +59,7 @@ export default function InitialAdminSetup() {
           <label>Password<input required type="password" minLength={MIN_PASSWORD_LENGTH} placeholder={`At least ${MIN_PASSWORD_LENGTH} characters`} value={f.password} onChange={(e) => setF({ ...f, password: e.target.value })} /></label>
           <label>One-time setup token<input required type="password" autoComplete="off" value={f.setupToken} onChange={(e) => setF({ ...f, setupToken: e.target.value })} /></label>
           {e && <div className="error-box">{e}</div>}
-          <button className="uiverse-btn full" type="submit">Create administrator <ArrowRight size={17} /></button>
+          <button className="uiverse-btn full" type="submit" disabled={submitting}>{submitting ? "Creating administrator..." : "Create administrator"} <ArrowRight size={17} /></button>
         </form>
       </div>
     </div>

@@ -17,6 +17,7 @@ export default function Auth({ register = false, adminLogin = false }) {
     languages: 'English', capacity: '1',
   });
   const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
   const [setupAvailable, setSetupAvailable] = useState(false);
 
   useEffect(() => {
@@ -31,14 +32,16 @@ export default function Auth({ register = false, adminLogin = false }) {
   const change = (e) => setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   const submit = async (e) => {
     e.preventDefault();
+    if (submitting) return;
+    setSubmitting(true);
     setError('');
     if (register) {
       const r = await registerUser({ ...form, role: mode, languages: String(form.languages || '').split(',').map((x) => x.trim()).filter(Boolean), capacity: Number(form.capacity) || 1 });
-      if (!r.ok) return setError(r.error);
+      if (!r.ok) { setSubmitting(false); return setError(r.error); }
       nav(mode === 'mentor' ? '/mentor/onboarding' : '/onboarding');
     } else {
       const r = await login(form.email, form.password);
-      if (!r.ok) return setError(r.error);
+      if (!r.ok) { setSubmitting(false); return setError(r.error); }
       nav(r.user.role === 'admin' ? '/admin' : r.user.role === 'mentor' ? '/mentor' : '/student');
     }
   };
@@ -71,7 +74,7 @@ export default function Auth({ register = false, adminLogin = false }) {
           {register && mode === 'student' && <div className="two-col"><label>College / Institution<input name="college" value={form.college} onChange={change} required placeholder="Your college" /></label><label>Course<input name="course" value={form.course} onChange={change} /></label></div>}
           {register && mode === 'mentor' && <><div className="two-col"><label>Job title<input name="jobTitle" value={form.jobTitle} onChange={change} required placeholder="Senior Data Analyst" /></label><label>Company<input name="company" value={form.company} onChange={change} required placeholder="Company name" /></label></div><div className="two-col"><label>Experience<input name="experience" value={form.experience} onChange={change} required placeholder="5 years" /></label><label>Domain<input name="domain" value={form.domain} onChange={change} required placeholder="Data Analytics" /></label></div><div className="two-col"><label>Languages<input name="languages" value={form.languages} onChange={change} /></label><label>Capacity<select name="capacity" value={form.capacity} onChange={change}>{[1,2,3,4,5,6,7,8].map((x) => <option key={x}>{x}</option>)}</select></label></div></>}
           {error && <div className="error-box">{error}</div>}
-          <button className="uiverse-btn full" type="submit">{register ? 'Create account' : 'Sign in'} <ArrowRight size={17} /></button>
+          <button className="uiverse-btn full" type="submit" disabled={submitting}>{submitting ? (register ? 'Creating account...' : 'Signing in...') : (register ? 'Create account' : 'Sign in')} <ArrowRight size={17} /></button>
         </form>
         {!register && <div className="admin-hint"><ShieldCheck size={16} /><span>Administrator accounts are created through first-time setup or by another administrator.</span></div>}
         {!register && setupAvailable && <button className="setup-link" onClick={() => nav('/admin/setup')}>First-time administrator setup</button>}

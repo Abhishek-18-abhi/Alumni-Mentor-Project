@@ -39,6 +39,7 @@ export default function Onboarding({ role = 'student' }) {
     capacity: u?.capacity || 1,
   });
   const [newSkill, setNewSkill] = useState('');
+  const [saving, setSaving] = useState(false);
   if (!u) return null;
   const availableSkills = seedSkills().filter((x) => !form.skills.includes(x));
   const toggle = (key, x) =>
@@ -62,9 +63,11 @@ export default function Onboarding({ role = 'student' }) {
   };
   const finish = async (e) => {
     e.preventDefault();
+    if (saving) return;
     if (!form.skills.length) return toast.error('Please select at least one skill.');
+    setSaving(true);
     const result = await updateUser(u.id, { ...form, profileComplete: true });
-    if (!result.ok) return toast.error(result.error || 'Could not complete onboarding.');
+    if (!result.ok) { setSaving(false); return toast.error(result.error || 'Could not complete onboarding.'); }
     toast.success('Profile saved to MongoDB.');
     nav(role === 'mentor' ? '/mentor' : '/student');
   };
