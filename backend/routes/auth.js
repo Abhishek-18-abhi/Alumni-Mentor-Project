@@ -36,22 +36,61 @@ async function createRoleProfile(user, data = {}, session) {
 }
 
 router.post('/register', async (req, res, next) => {
+  const session = await mongoose.startSession();
   try {
-    const { name, email, password, role = 'student', ...profile } = req.body;
+    const { name, email, password, role = 'student', ...profile } = req.body ?? {};
     if (!name || !email || !password) return res.status(400).json({ message: 'Name, email and password are required.' });
-    if (password.length < MIN_PASSWORD_LENGTH) return res.status(400).json({ message: `Password must be at least ${MIN_PASSWORD_LENGTH} characters.` });
+    if (typeof password !== 'string' || password.length < MIN_PASSWORD_LENGTH) {
+      return res.status(400).json({ message: `Password must be at least ${MIN_PASSWORD_LENGTH} characters.` });
+    }
     if (!['student', 'mentor'].includes(role)) return res.status(400).json({ message: 'Public registration is only for students and mentors.' });
-    const normalizedEmail = email.toLowerCase().trim();
-    if (await User.findOne({ email: normalizedEmail })) return res.status(409).json({ message: 'An account with this email already exists.' });
 
-    const user = await User.create({ name: name.trim(), email: normalizedEmail, passwordHash: await bcrypt.hash(password, 10), role });
-    await createRoleProfile(user, { ...profile, profileComplete: false });
-    await AuditLog.create({ userId: user._id, action: 'Account created', resource: 'Account' });
-    await Notification.create({ userId: user._id, title: 'Welcome to MentorConnect', message: 'Complete your profile to start using mentorship features.' });
+    const normalizedEmail = String(email).toLowerCase().trim();
+    if (!normalizedEmail || !/^\S+@\S+\.\S+$/.test(normalizedEmail)) {
+      return res.status(400).json({ message: 'A valid email address is required.' });
+    }
+    if (!String(name).trim()) return res.status(400).json({ message: 'Name cannot be empty.' });
+
+    let user;
+    await session.withTransaction(async () => {
+      if (await User.exists({ email: normalizedEmail }).session(session)) {
+        const error = new Error('An account with this email already exists.');
+        error.status = 409;
+        throw error;
+      }
+
+      try {
+        user = await User.create([{
+          name: String(name).trim(),
+          email: normalizedEmail,
+          passwordHash: await bcrypt.hash(password, 10),
+          role
+        }], { session }).then(([doc]) => doc);
+      } catch (err) {
+        if (err?.code === 11000) {
+          const error = new Error('An account with this email already exists.');
+          error.status = 409;
+          throw error;
+        }
+        throw err;
+      }
+
+      await createRoleProfile(user, { ...profile, profileComplete: false }, session);
+      await AuditLog.create([{ userId: user._id, action: 'Account created', resource: 'Account' }], { session });
+      await Notification.create([{
+        userId: user._id,
+        title: 'Welcome to MentorConnect',
+        message: 'Complete your profile to start using mentorship features.'
+      }], { session });
+    });
+
     res.status(201).json({ token: tokenFor(user), user: await getPublicUser(user) });
-  } catch (err) { next(err); }
+  } catch (err) {
+    next(err);
+  } finally {
+    await session.endSession();
+  }
 });
-
 router.get('/setup-status', async (_req, res, next) => {
   try {
     const adminExists = Boolean(await User.exists({ role: 'admin', isActive: { $ne: false } }));
