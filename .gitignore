@@ -1,0 +1,9 @@
+(
+echo node_modules/
+echo dist/
+echo .netlify/
+echo .env
+echo .env.local
+echo .env.*.local
+) > .gitignore
+node_modules
