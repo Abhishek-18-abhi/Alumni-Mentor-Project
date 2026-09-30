@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { validateId } from '../middleware/validateId.js';
 import User from '../models/User.js';
 import Student from '../models/Student.js';
 import Mentor from '../models/Mentor.js';
@@ -8,6 +9,7 @@ import { requireAuth, requireRole } from '../middleware/auth.js';
 import { getPublicUser, getPublicUsers } from '../utils/publicUser.js';
 
 const router = Router();
+router.param('id', validateId);
 const studentFields = ['college','course','year','bio','skills','interests','goals','languages','availability','profileComplete'];
 const mentorFields = ['jobTitle','company','experience','domain','bio','skills','interests','goals','languages','availability','capacity','profileComplete'];
 const adminFields = ['adminType','title','department','permissions'];

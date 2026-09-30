@@ -1,8 +1,11 @@
 import { Router } from 'express';
+import { validateId } from '../middleware/validateId.js';
 import Goal from '../models/Goal.js';
+import mongoose from 'mongoose';
 import { requireAuth } from '../middleware/auth.js';
 
 const router = Router();
+router.param('id', validateId);
 
 router.get('/', requireAuth, async (req, res, next) => {
   try {
@@ -15,6 +18,7 @@ router.get('/', requireAuth, async (req, res, next) => {
 router.post('/', requireAuth, async (req, res, next) => {
   try {
     const { studentId, title, target = '', progress = 0 } = req.body;
+    if (!mongoose.isValidObjectId(studentId)) return res.status(400).json({ message: 'Invalid studentId.' });
     if (!studentId || !title) return res.status(400).json({ message: 'studentId and title are required.' });
     if (req.user.role === 'student' && String(studentId) !== String(req.user._id)) return res.status(403).json({ message: 'You can only create goals for yourself.' });
     const goal = await Goal.create({ studentId, createdBy: req.user._id, title, target, progress, status: Number(progress) >= 100 ? 'completed' : 'active' });
