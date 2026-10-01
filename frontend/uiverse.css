@@ -1,38 +1,48 @@
-/* Uiverse.io-inspired button treatment, adapted for MentorConnect's design system. */
+/* shadcn/ui inspired primary button design tokens */
 .uiverse-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  border: 0;
-  border-radius: 12px;
-  padding: 11px 16px;
-  font-weight: 800;
-  color: #fff;
-  background: #111827;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  padding: 9px 16px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: #ffffff;
+  background: #0f172a;
   cursor: pointer;
-  box-shadow: 0 7px 0 #dbe4ef;
-  transition:
-    transform 0.16s ease,
-    box-shadow 0.16s ease,
-    background 0.16s ease;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  text-decoration: none;
 }
+
 .uiverse-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 9px 0 #dbe4ef;
-  background: #1d4ed8;
+  background: #1e293b;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.16);
 }
+
 .uiverse-btn:active {
-  transform: translateY(4px);
-  box-shadow: 0 3px 0 #dbe4ef;
+  transform: translateY(0);
+  background: #090d16;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
+
+.uiverse-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #2563eb;
+}
+
 .uiverse-btn.full {
   width: 100%;
 }
+
 .uiverse-btn:disabled {
-  opacity: 0.6;
+  opacity: 0.55;
   cursor: not-allowed;
   transform: none;
-  box-shadow: 0 4px 0 #dbe4ef;
+  box-shadow: none;
   pointer-events: none;
 }
