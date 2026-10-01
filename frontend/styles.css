@@ -497,37 +497,55 @@ textarea:focus {
   z-index: 4;
 }
 .global-search {
-  width: min(470px, 50%);
+  width: min(440px, 45%);
   position: relative;
   display: flex;
   align-items: center;
-  gap: 8px;
-  color: #98a2b3;
+}
+.global-search .search-icon {
+  position: absolute;
+  left: 14px;
+  color: #94a3b8;
+  pointer-events: none;
+  z-index: 1;
 }
 .global-search input {
-  border: 0;
-  background: #f4f6f8;
   width: 100%;
-  padding: 10px 45px 10px 0;
+  height: 40px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0 36px 0 38px;
+  font-size: 0.88rem;
+  color: #1e293b;
   box-shadow: none;
+  transition: all 0.2s ease;
 }
 .global-search input:focus {
-  box-shadow: none;
+  background: #ffffff;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+  outline: none;
 }
-.global-search kbd {
-  position: absolute;
-  right: 5px;
-  background: white;
-  border: 1px solid #dfe5ed;
-  border-radius: 6px;
-  padding: 3px 6px;
-  font-size: 10px;
+.global-search input::placeholder {
+  color: #94a3b8;
 }
 .clear-search {
   position: absolute;
-  right: 55px;
+  right: 10px;
   border: 0;
   background: transparent;
+  color: #94a3b8;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 50%;
+  transition: color 0.15s ease;
+}
+.clear-search:hover {
+  color: #475569;
 }
 .top-actions {
   display: flex;
@@ -1088,9 +1106,6 @@ textarea:focus {
   }
   .global-search {
     width: 52%;
-  }
-  .global-search kbd {
-    display: none;
   }
   .account-copy {
     display: none;
@@ -1835,11 +1850,7 @@ body,
 
   .global-search input {
     min-width: 0;
-    padding: 10px 12px;
-  }
-
-  .global-search kbd {
-    display: none;
+    padding: 0 30px 0 36px;
   }
 
   .account-copy {

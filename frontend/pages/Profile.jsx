@@ -38,7 +38,7 @@ export default function Profile() {
     try {
       const result = await updateUser(u.id, { ...form, profileComplete: true });
       if (!result.ok) return toast.error(result.error || 'Could not save profile.');
-      toast.success('Profile saved to MongoDB.');
+      toast.success('Profile updated successfully.');
     } finally {
       setIsSaving(false);
     }
@@ -49,7 +49,7 @@ export default function Profile() {
       <PageTitle
         eyebrow="Account"
         title="Profile"
-        text="Edit the information used by search and matching. Data is stored in MongoDB."
+        text="Edit the information used by search and matching."
       />
       <form className="profile-edit" onSubmit={save}>
         <section className="card">

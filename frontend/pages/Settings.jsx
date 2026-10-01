@@ -53,7 +53,7 @@ export default function Settings() {
     setSaving(true);
     try {
       const result = await updateUser(user.id, { settings: prefs });
-      if (result.ok) toast.success('Settings saved to MongoDB.');
+      if (result.ok) toast.success('Settings saved successfully.');
       else toast.error(result.error || 'Could not save settings.');
     } finally {
       setSaving(false);

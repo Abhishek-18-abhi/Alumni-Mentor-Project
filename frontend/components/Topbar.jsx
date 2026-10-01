@@ -32,15 +32,14 @@ export default function Topbar({ onMenuToggle = () => {} }) {
         <Menu size={21} />
       </button>
       <form className="global-search" onSubmit={submit}>
-        <Search size={18} />
+        <Search className="search-icon" size={17} />
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Search mentors, skills or domains..."
         />
-        <kbd>⌘ K</kbd>
         {q && (
-          <button type="button" className="clear-search" onClick={() => setQ('')}>
+          <button type="button" className="clear-search" onClick={() => setQ('')} aria-label="Clear search">
             <X size={14} />
           </button>
         )}

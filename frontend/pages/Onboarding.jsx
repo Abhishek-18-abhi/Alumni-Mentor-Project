@@ -69,7 +69,7 @@ export default function Onboarding({ role = 'student' }) {
     try {
       const result = await updateUser(u.id, { ...form, profileComplete: true });
       if (!result.ok) return toast.error(result.error || 'Could not complete onboarding.');
-      toast.success('Profile saved to MongoDB.');
+      toast.success('Profile saved successfully.');
       nav(role === 'mentor' ? '/mentor' : '/student');
     } finally {
       setIsSubmitting(false);
@@ -80,7 +80,7 @@ export default function Onboarding({ role = 'student' }) {
       <PageTitle
         eyebrow="Profile onboarding"
         title={role === 'mentor' ? 'Build your mentor profile' : 'Tell us what you want to learn'}
-        text="Your selections are stored in MongoDB and used by the matching engine. You can update them later from Profile."
+        text="Your preferences are used by the matching engine. You can update them anytime from your Profile."
       />
       <section className="card onboarding-card">
         <div className="steps">

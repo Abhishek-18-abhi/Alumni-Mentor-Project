@@ -127,7 +127,7 @@ export function AdminDashboard() {
       <PageTitle
         eyebrow="Administrator"
         title="Platform overview"
-        text="All counts are calculated from the MongoDB-backed records cached for this session."
+        text="Real-time overview of platform activity, members, and mentorship sessions."
       />
       <div className="stats">
         <Stat

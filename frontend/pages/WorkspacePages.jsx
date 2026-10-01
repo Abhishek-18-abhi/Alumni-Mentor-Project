@@ -273,7 +273,7 @@ export function Request() {
     try {
       const result = await createMentorshipRequest(s, m, msg, buildMatchSnapshot(scoreMatch(s, m)));
       if (!result.ok) return toast.error(result.error);
-      toast.success('Request sent and saved to MongoDB.');
+      toast.success('Mentorship request sent successfully.');
       nav('/matches');
     } finally {
       setIsSubmitting(false);
@@ -536,7 +536,7 @@ export function Meetings({ role = 'student' }) {
       <PageTitle
         eyebrow="Workspace"
         title="Meetings"
-        text="Scheduled meetings and meeting logs are stored in MongoDB."
+        text="Scheduled meetings and meeting logs stay connected to your mentorship sessions."
         action={
           role === 'student' ? (
             <Link className="uiverse-btn" to="/calendar">
@@ -635,7 +635,7 @@ export function Calendar() {
     try {
       const result = await createMeeting({ studentId: s.id, mentorId: form.mentorId, date: form.date, time: form.time, mode: form.mode, status: 'scheduled' });
       if (!result.ok) return toast.error(result.error);
-      toast.success('Meeting scheduled and saved to MongoDB.');
+      toast.success('Meeting scheduled successfully.');
       nav('/meetings');
     } finally {
       setIsScheduling(false);
@@ -844,7 +844,7 @@ export function Goals({ role }) {
       setItems(all.filter((x) => role === 'student' ? x.studentId === s.id : mentees.some((m) => m.id === x.studentId)));
       setTitle('');
       setTarget('');
-      toast.success('Goal saved to MongoDB.');
+      toast.success('Goal saved successfully.');
     } finally {
       setIsAdding(false);
     }
@@ -865,7 +865,7 @@ export function Goals({ role }) {
       <PageTitle
         eyebrow="Workspace"
         title={role === 'student' ? 'My goals' : 'Mentee goals'}
-        text="Goals are stored in MongoDB and linked to the real mentorship relationship."
+        text="Goals and milestones are linked to your active mentorship relationship."
       />
       {role === 'mentor' && mentees.length > 0 && (
         <section className="card form-card">
@@ -975,7 +975,7 @@ export function Feedback({ role }) {
       const all = getFeedback();
       setItems(all.filter((f) => f.fromUserId === s.id));
       setText('');
-      toast.success('Feedback submitted and saved to MongoDB.');
+      toast.success('Feedback submitted successfully.');
     } finally {
       setSubmittingRequestId(null);
     }
@@ -1221,14 +1221,14 @@ export function AdminSettings() {
     try {
       const result = await updatePlatformSettings(settings);
       if (!result.ok) return toast.error(result.error);
-      toast.success('Platform settings saved to MongoDB.');
+      toast.success('Platform settings saved successfully.');
     } finally {
       setIsSaving(false);
     }
   };
   return (
     <AppShell role="admin">
-      <PageTitle eyebrow="Administrator" title="Administrator settings" text="Platform-wide controls stored in MongoDB." />
+      <PageTitle eyebrow="Administrator" title="Administrator settings" text="Platform-wide operational controls and configurations." />
       <div className="admin-settings-grid">
         <section className="card settings-card"><div className="settings-heading"><div className="settings-icon"><BarChart3 size={19} /></div><div><h2>Platform</h2><p>General application behaviour.</p></div></div>
           <label>Platform name<input value={settings.platformName} onChange={(e) => setSettings({ ...settings, platformName: e.target.value })} /></label>
@@ -1333,8 +1333,7 @@ export function AdminSimple({ title, icon: Icon = BarChart3, text }) {
         </div>
         <h2>No demo records</h2>
         <p>
-          This section is intentionally based on real MongoDB activity. It will populate as
-          users use the application.
+          This section displays real platform activity. It will populate as users engage with the application.
         </p>
       </section>
     </AppShell>
