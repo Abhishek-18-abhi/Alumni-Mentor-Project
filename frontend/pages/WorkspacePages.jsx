@@ -28,7 +28,13 @@ import {
   Users,
   Sparkles,
   ClipboardList,
+  Video,
+  Download,
+  Database,
+  Trash2,
 } from 'lucide-react';
+import { loadSampleCollegeData, clearSampleCollegeData } from '../lib/seedDemoData';
+import { downloadCsv } from '../lib/exportUtils';
 import {
   getUsers,
   saveUsers,
@@ -563,7 +569,21 @@ export function Meetings({ role = 'student' }) {
                   {m.date} · {m.time}
                 </span>
                 <span>{other?.name || 'Unknown'}</span>
-                <span>{m.mode}</span>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                  <span>{m.mode}</span>
+                  {m.status !== 'cancelled' && (
+                    <a
+                      href={m.link || 'https://meet.google.com/new'}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn mini join-btn"
+                      title="Join Video Meeting"
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                    >
+                      <Video size={13} /> Join
+                    </a>
+                  )}
+                </span>
                 <span>
                   <span className="status-chip">{m.status}</span>
                   {m.status !== 'cancelled' && (
@@ -619,6 +639,7 @@ export function Calendar() {
     date: '',
     time: '',
     mode: 'Video call',
+    link: '',
   });
   const [isScheduling, setIsScheduling] = useState(false);
 
@@ -633,7 +654,15 @@ export function Calendar() {
     if (!form.mentorId) return toast.error('You need an accepted mentor relationship first.');
     setIsScheduling(true);
     try {
-      const result = await createMeeting({ studentId: s.id, mentorId: form.mentorId, date: form.date, time: form.time, mode: form.mode, status: 'scheduled' });
+      const result = await createMeeting({
+        studentId: s.id,
+        mentorId: form.mentorId,
+        date: form.date,
+        time: form.time,
+        mode: form.mode,
+        link: form.link || (form.mode === 'Video call' ? 'https://meet.google.com/new' : ''),
+        status: 'scheduled',
+      });
       if (!result.ok) return toast.error(result.error);
       toast.success('Meeting scheduled successfully.');
       nav('/meetings');
@@ -694,6 +723,15 @@ export function Calendar() {
                 <option>Phone call</option>
                 <option>In person</option>
               </select>
+            </label>
+            <label>
+              Meeting link (Google Meet / Zoom)
+              <input
+                type="url"
+                value={form.link || ''}
+                onChange={(e) => setForm({ ...form, link: e.target.value })}
+                placeholder="https://meet.google.com/xyz-abc-def (optional)"
+              />
             </label>
             <button className="uiverse-btn" type="submit" disabled={isScheduling}>
               {isScheduling ? 'Scheduling...' : 'Create meeting'}
@@ -866,6 +904,25 @@ export function Goals({ role }) {
         eyebrow="Workspace"
         title={role === 'student' ? 'My goals' : 'Mentee goals'}
         text="Goals and milestones are linked to your active mentorship relationship."
+        action={
+          items.length > 0 ? (
+            <button
+              type="button"
+              className="btn secondary"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+              onClick={() => {
+                downloadCsv(
+                  'mentorship_goals_report.csv',
+                  ['Goal Title', 'Target / Success Criteria', 'Progress %', 'Status', 'Created At'],
+                  items.map((g) => [g.title, g.target, `${g.progress}%`, g.status, g.createdAt || ''])
+                );
+                toast.success('Goals summary exported as CSV.');
+              }}
+            >
+              <Download size={15} /> Export Goals (.csv)
+            </button>
+          ) : null
+        }
       />
       {role === 'mentor' && mentees.length > 0 && (
         <section className="card form-card">
@@ -1141,7 +1198,43 @@ export function AdminAnalytics() {
 
   return (
     <AppShell role="admin">
-      <PageTitle eyebrow="Administrator" title="Analytics & reports" text="Operational analytics calculated from the current MentorConnect records." />
+      <PageTitle
+        eyebrow="Administrator"
+        title="Analytics & reports"
+        text="Operational analytics calculated from the current MentorConnect records."
+        action={
+          <button
+            type="button"
+            className="btn secondary"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+            onClick={() => {
+              const summaryRows = [
+                ['Metric', 'Value'],
+                ['Total Registered Users', users.length],
+                ['Students', students.length],
+                ['Alumni Mentors', mentors.length],
+                ['Administrators', users.filter((u) => u.role === 'admin').length],
+                ['Profiles Completed', `${completed} / ${users.length}`],
+                ['Total Mentorship Requests', requests.length],
+                ['Accepted Requests', statusCount(requests, 'accepted')],
+                ['Pending Requests', statusCount(requests, 'pending')],
+                ['Total Meetings', meetings.length],
+                ['Completed Meetings', statusCount(meetings, 'completed')],
+                ['Scheduled Meetings', statusCount(meetings, 'scheduled')],
+                ['Total Goals Created', goals.length],
+                ['Total Feedback Reviews', feedback.length],
+                ['Average Feedback Rating', `${avgRating} / 5.0`],
+                ['', ''],
+                ['Top Skills', 'Occurrences'],
+                ...topSkills.map(([skill, count]) => [skill, count]),
+              ];
+              downloadCsv('mentorconnect_platform_analytics.csv', ['Category', 'Details'], summaryRows);
+            }}
+          >
+            <Download size={15} /> Export Report (.csv)
+          </button>
+        }
+      />
       <div className="stats">
         <div className="stat"><div className="stat-icon"><Users size={19} /></div><div><span>Total users</span><b>{users.length}</b></div></div>
         <div className="stat"><div className="stat-icon"><ClipboardList size={19} /></div><div><span>Requests</span><b>{requests.length}</b></div></div>
@@ -1243,6 +1336,42 @@ export function AdminSettings() {
         </section>
       </div>
       <section className="card"><h2>Configuration preview</h2><div className="settings-stat-grid"><div className="settings-stat"><b>{settings.matchingEnabled ? 'ON' : 'OFF'}</b><span>Matching</span></div><div className="settings-stat"><b>{settings.registrationsEnabled ? 'ON' : 'OFF'}</b><span>Registration</span></div><div className="settings-stat"><b>{settings.maintenanceMode ? 'ON' : 'OFF'}</b><span>Maintenance</span></div><div className="settings-stat"><b>{settings.defaultMentorCapacity}</b><span>Default capacity</span></div></div><button className="uiverse-btn" disabled={isSaving} onClick={save}>{isSaving ? 'Saving settings...' : 'Save platform settings'}</button></section>
+      <section className="card" style={{ marginTop: 20 }}>
+        <div className="settings-heading">
+          <div className="settings-icon"><Database size={19} /></div>
+          <div>
+            <h2>Viva & Demo Utilities</h2>
+            <p>One-click tools for presentation, academic evaluation, and testing.</p>
+          </div>
+        </div>
+        <p style={{ margin: '14px 0', color: '#64748b', fontSize: '0.92rem', lineHeight: 1.5 }}>
+          Quickly populate sample verified alumni mentors (from Google, Microsoft, Amazon), active student match pairings, upcoming meetings, goals, and feedback reviews. This allows evaluators to see the explainable matching algorithm and platform workflows in action.
+        </p>
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            className="uiverse-btn"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+            onClick={() => {
+              loadSampleCollegeData();
+              toast.success('Sample alumni mentors, student matches, and meetings loaded!');
+            }}
+          >
+            <Sparkles size={15} /> Load Sample College Data
+          </button>
+          <button
+            type="button"
+            className="btn secondary"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+            onClick={() => {
+              clearSampleCollegeData();
+              toast.success('Sample demo data cleared.');
+            }}
+          >
+            <Trash2 size={15} /> Clear Demo Data
+          </button>
+        </div>
+      </section>
     </AppShell>
   );
 }

@@ -95,8 +95,8 @@ export default function Landing() {
           />
           <Feature
             icon={Users}
-            title="Real account data"
-            text="Empty states remain empty until real users register."
+            title="Verified Alumni Network"
+            text="Connect with verified college graduates working across leading tech companies and industries."
           />
         </div>
       </section>

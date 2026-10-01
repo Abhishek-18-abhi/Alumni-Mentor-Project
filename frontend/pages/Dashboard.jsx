@@ -29,7 +29,7 @@ export function StudentDashboard() {
       <PageTitle
         eyebrow="Student workspace"
         title={`Welcome${s?.name ? `, ${s.name.split(' ')[0]}` : ''}`}
-        text="Your dashboard uses only your real account and local activity."
+        text="Track your mentorship progress, upcoming meetings, and milestones."
       />
       <div className="stats">
         <Stat icon={UserCheck} label="Active mentors" value={active.length} />
@@ -62,6 +62,17 @@ export function StudentDashboard() {
             {active.length ? 'Schedule meeting' : 'Find mentor'}
           </Link>
         </div>
+        <div className="card">
+          <h2>Mentorship requests</h2>
+          <p>
+            {getRequests().filter((r) => r.studentId === s?.id).length
+              ? `${getRequests().filter((r) => r.studentId === s?.id).length} request(s) submitted. Track your pairing status.`
+              : 'Submit requests to recommended mentors.'}
+          </p>
+          <Link className="btn secondary" to="/matches">
+            My requests & matches
+          </Link>
+        </div>
       </section>
     </AppShell>
   );
@@ -76,7 +87,7 @@ export function MentorDashboard() {
       <PageTitle
         eyebrow="Alumni mentor"
         title={`Welcome${s?.name ? `, ${s.name.split(' ')[0]}` : ''}`}
-        text="Your dashboard is calculated from your actual profile and activity."
+        text="Overview of your active mentees, mentorship requests, and upcoming sessions."
       />
       <div className="stats">
         <Stat icon={Users} label="Active mentees" value={mentees.length} />
