@@ -69,7 +69,7 @@ export default function Landing() {
           <span className="eyebrow">How it works</span>
           <h2>A real mentorship workflow</h2>
         </div>
-        <div className="feature-grid">
+        <div id="features" className="feature-grid">
           <Feature
             icon={Users}
             title="Create profiles"
@@ -90,10 +90,6 @@ export default function Landing() {
             title="Track outcomes"
             text="Goals, feedback and coordinator oversight complete the workflow."
           />
-        </div>
-      </section>
-      <section id="features" className="section muted">
-        <div className="feature-grid">
           <Feature
             icon={ShieldCheck}
             title="Role-based access"
@@ -106,6 +102,10 @@ export default function Landing() {
           />
         </div>
       </section>
+      <footer className="landing-footer">
+        <Logo showText size={26} />
+        <p>© {new Date().getFullYear()} MentorConnect. Empowering alumni-student mentorship.</p>
+      </footer>
     </div>
   );
 }

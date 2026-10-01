@@ -184,18 +184,18 @@ a {
   color: #344054;
 }
 .section {
-  padding: 90px 6%;
+  padding: 70px 6% 40px;
   max-width: 1280px;
   margin: auto;
 }
 .section.muted {
   max-width: none;
-  background: #f4f7fb;
+  background: transparent;
 }
 .section-heading {
   text-align: center;
   max-width: 700px;
-  margin: 0 auto 44px;
+  margin: 0 auto 40px;
 }
 .section-heading h2 {
   font-size: 38px;
@@ -206,14 +206,20 @@ a {
   max-width: 1180px;
   margin: auto;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 18px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
 }
 .feature {
   background: #fff;
   border: 1px solid #e4e9f1;
   border-radius: 18px;
   padding: 24px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.feature:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px -4px rgba(15, 23, 42, 0.06);
+  border-color: #cbd5e1;
 }
 .feature-icon {
   width: 42px;
@@ -231,6 +237,19 @@ a {
   color: #667085;
   line-height: 1.6;
   font-size: 14px;
+}
+.landing-footer {
+  max-width: 1180px;
+  margin: 60px auto 36px;
+  padding: 24px 6% 0;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  color: #64748b;
+  font-size: 13px;
 }
 .auth-page {
   min-height: 100vh;
