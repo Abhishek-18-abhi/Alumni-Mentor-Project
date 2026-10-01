@@ -1,55 +1,56 @@
 /* ==========================================================================
    MentorConnect Design System
    Inspired by ui.shadcn.com (Minimalist, Hairline Borders, Clean Typography)
-   and Coolors.co (Harmonious Modern Color Palette, Refined Accents)
+   Theme: Ocean Blue Serenity (Coolors.co - #03045E, #023E8A, #0077B6, #00B4D8, #CAF0F8)
    ========================================================================== */
 
 :root {
-  /* Coolors & shadcn/ui Color Tokens */
-  --background: #f8fafc;
+  /* Ocean Blue Serenity Color Tokens (Coolors.co) */
+  --background: #f4f9fc;
   --surface: #ffffff;
   --surface-raised: #ffffff;
-  --foreground: #0f172a;
-  --foreground-muted: #64748b;
-  --foreground-subtle: #94a3b8;
+  --foreground: #03045e;
+  --foreground-muted: #2d5070;
+  --foreground-subtle: #6c8fa8;
 
-  /* Primary Brand (Coolors Electric Royal Blue) */
-  --primary: #2563eb;
-  --primary-hover: #1d4ed8;
+  /* Primary Brand (Ocean Blue Serenity - Bright Teal Blue #0077b6) */
+  --primary: #0077b6;
+  --primary-hover: #023e8a;
   --primary-foreground: #ffffff;
-  --primary-subtle: #eff6ff;
-  --primary-border: #bfdbfe;
+  --primary-subtle: #e8f7fa;
+  --primary-border: #90e0ef;
+  --ring: rgba(0, 150, 199, 0.22);
 
-  /* Dark Neutral (shadcn primary button / accents) */
-  --dark-primary: #0f172a;
-  --dark-primary-hover: #1e293b;
+  /* Deep Oceanic Tone (Deep Twilight #03045e - primary buttons / accents) */
+  --dark-primary: #03045e;
+  --dark-primary-hover: #023e8a;
   --dark-primary-foreground: #ffffff;
 
-  /* Secondary & Neutral Tints */
-  --secondary: #f1f5f9;
-  --secondary-hover: #e2e8f0;
-  --secondary-foreground: #0f172a;
+  /* Secondary & Neutral Tints (Frosted Ocean Tints) */
+  --secondary: #eef7fc;
+  --secondary-hover: #dff0f9;
+  --secondary-foreground: #03045e;
 
-  /* Borders & Hairlines */
-  --border: #e2e8f0;
-  --border-subtle: #f1f5f9;
-  --border-hover: #cbd5e1;
+  /* Borders & Hairlines (Subtle Serene Aqua-Slate) */
+  --border: #d4e7f3;
+  --border-subtle: #e8f3f9;
+  --border-hover: #90e0ef;
 
-  /* Status Accents */
-  --success: #10b981;
+  /* Status Accents (harmonized with Ocean Blue) */
+  --success: #059669;
   --success-surface: #ecfdf5;
   --success-border: #a7f3d0;
   --success-text: #047857;
 
-  --warning: #f59e0b;
+  --warning: #d97706;
   --warning-surface: #fffbeb;
   --warning-border: #fde68a;
   --warning-text: #b45309;
 
-  --danger: #ef4444;
-  --danger-surface: #fef2f2;
-  --danger-border: #fecaca;
-  --danger-text: #b91c1c;
+  --danger: #e11d48;
+  --danger-surface: #fff1f2;
+  --danger-border: #fecdd3;
+  --danger-text: #be123c;
 
   /* Radii */
   --radius-xs: 5px;
@@ -59,12 +60,12 @@
   --radius-xl: 16px;
   --radius-pill: 9999px;
 
-  /* Elevation Shadows (shadcn ultra-crisp shadows) */
-  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.09), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+  /* Elevation Shadows (crisp oceanic shadows) */
+  --shadow-xs: 0 1px 2px 0 rgba(3, 4, 94, 0.04);
+  --shadow-sm: 0 1px 3px 0 rgba(3, 4, 94, 0.04), 0 1px 2px -1px rgba(3, 4, 94, 0.03);
+  --shadow-md: 0 4px 6px -1px rgba(3, 4, 94, 0.06), 0 2px 4px -2px rgba(3, 4, 94, 0.04);
+  --shadow-lg: 0 10px 15px -3px rgba(3, 4, 94, 0.08), 0 4px 6px -4px rgba(3, 4, 94, 0.04);
+  --shadow-xl: 0 20px 25px -5px rgba(3, 4, 94, 0.10), 0 8px 10px -6px rgba(3, 4, 94, 0.05);
 }
 
 /* ==========================================================================
@@ -127,10 +128,10 @@ a {
   border-radius: var(--radius-sm);
   display: grid;
   place-items: center;
-  background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+  background: linear-gradient(135deg, #03045e 0%, #0077b6 100%);
   color: white;
   font-weight: 800;
-  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+  box-shadow: 0 2px 10px rgba(0, 119, 182, 0.28);
 }
 
 /* ==========================================================================
@@ -205,7 +206,7 @@ a {
 .landing {
   min-height: 100vh;
   background:
-    radial-gradient(100% 50% at 50% 0%, #eff6ff 0%, #ffffff 85%),
+    radial-gradient(100% 55% at 50% 0%, #caf0f8 0%, #f4f9fc 70%, #ffffff 100%),
     #ffffff;
 }
 
@@ -216,7 +217,7 @@ a {
   align-items: center;
   justify-content: space-between;
   border-bottom: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.88);
   backdrop-filter: blur(12px);
   position: sticky;
   top: 0;
@@ -267,7 +268,7 @@ a {
 }
 
 .hero h1 span {
-  background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+  background: linear-gradient(135deg, #023e8a 0%, #0077b6 50%, #00b4d8 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -315,7 +316,7 @@ a {
   width: 340px;
   height: 340px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(37, 99, 235, 0.12) 0%, rgba(219, 234, 254, 0.05) 70%);
+  background: radial-gradient(circle, rgba(0, 180, 216, 0.18) 0%, rgba(202, 240, 248, 0.10) 65%, transparent 100%);
   filter: blur(28px);
 }
 
@@ -470,7 +471,7 @@ a {
   justify-content: center;
   padding: 40px 20px;
   background:
-    radial-gradient(circle at 50% 0%, #edf4ff, #f8fafc 70%),
+    radial-gradient(circle at 50% 0%, #caf0f8, #f4f9fc 75%),
     var(--background);
 }
 
@@ -552,7 +553,7 @@ label {
   gap: 6px;
   font-size: 0.82rem;
   font-weight: 600;
-  color: #334155;
+  color: var(--foreground);
 }
 
 .form-stack input,
@@ -654,7 +655,7 @@ textarea:focus {
   display: flex;
   gap: 10px;
   align-items: flex-start;
-  background: #f8fafc;
+  background: var(--background);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   padding: 12px;
@@ -956,7 +957,7 @@ textarea:focus {
   text-align: left;
   font-weight: 550;
   font-size: 0.82rem;
-  color: #334155;
+  color: var(--foreground);
   transition: all 0.12s ease;
 }
 
@@ -1200,7 +1201,7 @@ textarea:focus {
   padding: 4px 8px;
   font-size: 0.74rem;
   font-weight: 600;
-  color: #334155;
+  color: var(--foreground-muted);
 }
 
 .mentor-actions {
@@ -1466,7 +1467,7 @@ textarea:focus {
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.45);
+  background: rgba(3, 4, 94, 0.45);
   backdrop-filter: blur(5px);
   display: grid;
   place-items: center;
@@ -1566,7 +1567,7 @@ textarea:focus {
   background: var(--surface);
   border-radius: var(--radius-pill);
   padding: 6px 12px;
-  color: #334155;
+  color: var(--foreground);
   font-size: 0.78rem;
   font-weight: 600;
   display: inline-flex;
@@ -1676,7 +1677,7 @@ textarea:focus {
   border-radius: var(--radius-sm);
   padding: 7px;
   font-size: 0.75rem;
-  color: #475467;
+  color: var(--foreground-muted);
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -1786,7 +1787,7 @@ textarea:focus {
 }
 
 .explain-box p {
-  color: #334155;
+  color: var(--foreground);
   font-size: 0.82rem;
   line-height: 1.55;
   margin: 6px 0 0;
@@ -1833,7 +1834,7 @@ textarea:focus {
 
 .request-main p {
   font-size: 0.84rem;
-  color: #334155;
+  color: var(--foreground);
   margin: 5px 0 0;
 }
 
@@ -1940,7 +1941,7 @@ textarea:focus {
   gap: 8px;
   padding: 9px 0;
   border-bottom: 1px solid var(--border-subtle);
-  color: #334155;
+  color: var(--foreground);
   font-size: 0.82rem;
 }
 
@@ -2033,7 +2034,7 @@ textarea:focus {
   margin: 6px 0 0;
   padding-left: 18px;
   font-size: 0.8rem;
-  color: #475467;
+  color: var(--foreground-muted);
 }
 
 .match-rationale {
@@ -2390,7 +2391,7 @@ body,
     height: 100%;
     border: 0;
     padding: 0;
-    background: rgba(15, 23, 42, 0.42);
+    background: rgba(3, 4, 94, 0.42);
     z-index: 90;
   }
 

@@ -1344,7 +1344,7 @@ export function AdminSettings() {
             <p>One-click tools for presentation, academic evaluation, and testing.</p>
           </div>
         </div>
-        <p style={{ margin: '14px 0', color: '#64748b', fontSize: '0.92rem', lineHeight: 1.5 }}>
+        <p style={{ margin: '14px 0', color: 'var(--foreground-muted)', fontSize: '0.92rem', lineHeight: 1.5 }}>
           Quickly populate sample verified alumni mentors (from Google, Microsoft, Amazon), active student match pairings, upcoming meetings, goals, and feedback reviews. This allows evaluators to see the explainable matching algorithm and platform workflows in action.
         </p>
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
