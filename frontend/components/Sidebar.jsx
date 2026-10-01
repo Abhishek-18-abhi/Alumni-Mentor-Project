@@ -15,7 +15,6 @@ import {
   UserCog,
   Bell,
   LogOut,
-  ArrowRight,
 } from 'lucide-react';
 import Logo from './Logo';
 import { getSession, getRequests, getUsers, getMeetings } from '../lib/storage';
@@ -330,28 +329,6 @@ export default function Sidebar({ role = 'student', isOpen = false, onClose = ()
             />
           ))}
         </div>
-      </div>
-
-      {/* Shopeers Promo Callout Card */}
-      <div className="sidebar-promo-card">
-        <div className="promo-badge-icon">
-          <Sparkles size={17} />
-        </div>
-        <h4 className="promo-title">AI Match Pro</h4>
-        <p className="promo-copy">
-          Unlock instant AI matching, priority session booking, and detailed career analytics.
-        </p>
-        <button
-          type="button"
-          className="promo-btn"
-          onClick={() => {
-            onClose();
-            nav(role === 'mentor' ? '/mentor/calendar' : '/matches');
-          }}
-        >
-          <span>Upgrade to Pro!</span>
-          <ArrowRight size={13} />
-        </button>
       </div>
 
       {/* Bottom User Card / Actions */}
