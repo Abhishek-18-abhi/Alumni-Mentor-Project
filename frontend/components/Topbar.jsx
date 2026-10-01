@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Bell, Search, X, PanelLeft, Calendar, ChevronDown, Plus, Download } from 'lucide-react';
+import { Bell, Search, X, PanelLeft } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import AccountMenu from './AccountMenu';
-import { getNotifications, getSession, NOTIFICATIONS_CHANGED_EVENT, getUsers } from '../lib/storage';
-import { downloadCsv } from '../lib/exportUtils';
+import { getNotifications, getSession, NOTIFICATIONS_CHANGED_EVENT } from '../lib/storage';
 
 export default function Topbar({ onMenuToggle = () => {} }) {
   const nav = useNavigate();
@@ -11,7 +10,6 @@ export default function Topbar({ onMenuToggle = () => {} }) {
   const s = getSession();
   const [q, setQ] = useState('');
   const [unread, setUnread] = useState(0);
-  const [dateRange, setDateRange] = useState('Jan 1, 2025 - Feb 1, 2025');
 
   useEffect(() => {
     const refresh = () =>
@@ -28,29 +26,6 @@ export default function Topbar({ onMenuToggle = () => {} }) {
   const submit = (e) => {
     e.preventDefault();
     if (q.trim()) nav(`/mentors?search=${encodeURIComponent(q.trim())}`);
-  };
-
-  const handleExport = () => {
-    try {
-      const users = getUsers();
-      const rows = users.map((u) => [
-        u.name || 'Anonymous',
-        u.role || 'Member',
-        u.company || u.course || 'BCA',
-        u.profileComplete ? 'Active' : 'Pending',
-      ]);
-      downloadCsv(
-        `mentorconnect_report_${new Date().toISOString().slice(0, 10)}.csv`,
-        ['Name', 'Role', 'Domain/Company', 'Status'],
-        rows
-      );
-    } catch {
-      // fallback gracefully
-    }
-  };
-
-  const handleAddWidget = () => {
-    window.dispatchEvent(new CustomEvent('open-add-widget'));
   };
 
   return (
@@ -76,45 +51,6 @@ export default function Topbar({ onMenuToggle = () => {} }) {
       </form>
 
       <div className="top-actions">
-        {/* Date Filter Pill */}
-        <div
-          className="topbar-filter-pill"
-          title="Date Range"
-          role="button"
-          tabIndex={0}
-          onClick={() => {
-            const ranges = ['Jan 1, 2025 - Feb 1, 2025', 'Last 30 Days', 'This Quarter', 'Year to Date'];
-            const nextIdx = (ranges.indexOf(dateRange) + 1) % ranges.length;
-            setDateRange(ranges[nextIdx]);
-          }}
-        >
-          <Calendar size={14} />
-          <span>{dateRange}</span>
-          <ChevronDown size={13} />
-        </div>
-
-        {/* Add Widget Button */}
-        <button
-          type="button"
-          className="topbar-btn primary"
-          onClick={handleAddWidget}
-          title="Customize dashboard widgets"
-        >
-          <Plus size={15} />
-          <span>Add widget</span>
-        </button>
-
-        {/* Export Button */}
-        <button
-          type="button"
-          className="topbar-btn outline"
-          onClick={handleExport}
-          title="Export report CSV"
-        >
-          <Download size={14} />
-          <span>Export</span>
-        </button>
-
         <button
           className="icon-btn bell-btn"
           onClick={() => nav('/notifications')}
