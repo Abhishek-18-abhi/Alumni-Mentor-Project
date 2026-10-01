@@ -300,7 +300,7 @@ export default function Sidebar({ role = 'student', isOpen = false, onClose = ()
         </NavLink>
         <div className="sidebar-role-badge">
           <span className="role-pulse" />
-          {role === 'admin' ? 'Administrator' : role === 'mentor' ? 'Alumni Mentor' : 'Student Hub'}
+          <span>{role === 'admin' ? 'Administrator' : role === 'mentor' ? 'Alumni Mentor' : 'Student Hub'}</span>
         </div>
       </div>
 
