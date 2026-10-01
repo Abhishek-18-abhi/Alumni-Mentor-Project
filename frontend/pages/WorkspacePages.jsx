@@ -78,9 +78,36 @@ function Empty({ title, text }) {
     </div>
   );
 }
+function getSkillPillClass(skill = '') {
+  const s = skill.toLowerCase();
+  if (
+    ['react', 'vue', 'angular', 'javascript', 'typescript', 'frontend', 'ui/ux', 'html', 'css', 'next.js', 'web'].some(
+      (k) => s.includes(k)
+    )
+  ) {
+    return 'skill-pill frontend';
+  }
+  if (
+    ['node', 'python', 'java', 'backend', 'golang', 'c++', 'aws', 'cloud', 'docker', 'kubernetes', 'sql', 'mongodb', 'api'].some(
+      (k) => s.includes(k)
+    )
+  ) {
+    return 'skill-pill backend';
+  }
+  if (
+    ['data', 'ai', 'ml', 'machine learning', 'analytics', 'tensorflow', 'deep learning', 'pandas'].some(
+      (k) => s.includes(k)
+    )
+  ) {
+    return 'skill-pill data';
+  }
+  return 'skill-pill core';
+}
+
 export function FindMentor() {
   const [params, setParams] = useSearchParams();
   const [q, setQ] = useState(params.get('search') || '');
+  const [filter, setFilter] = useState('all');
   const s = current();
   const mentors = getUsers().filter((u) => u.role === 'mentor' && u.profileComplete);
   const results = mentors
@@ -92,6 +119,17 @@ export function FindMentor() {
         .includes(q.toLowerCase())
     )
     .sort((a, b) => b.match.score - a.match.score);
+
+  const displayed = results.filter((m) => {
+    if (filter === 'top') return m.match.score >= 85;
+    if (filter === 'capacity') return m.match.capacity;
+    if (filter === 'tech')
+      return ['google', 'microsoft', 'amazon', 'meta', 'apple', 'uber'].some((c) =>
+        (m.company || '').toLowerCase().includes(c)
+      );
+    return true;
+  });
+
   return (
     <AppShell role="student">
       <PageTitle
@@ -111,18 +149,51 @@ export function FindMentor() {
             placeholder="Search mentors, skills or domains..."
           />
         </div>
+
+        {/* shadcn style Segmented Filter Tabs */}
+        <div className="tabs-bar" style={{ marginTop: 14, marginBottom: 0 }}>
+          <button
+            type="button"
+            className={`tab-btn ${filter === 'all' ? 'active' : ''}`}
+            onClick={() => setFilter('all')}
+          >
+            All Mentors <span className="tab-count">{results.length}</span>
+          </button>
+          <button
+            type="button"
+            className={`tab-btn ${filter === 'top' ? 'active' : ''}`}
+            onClick={() => setFilter('top')}
+          >
+            Top Match (85%+) <span className="tab-count">{results.filter((m) => m.match.score >= 85).length}</span>
+          </button>
+          <button
+            type="button"
+            className={`tab-btn ${filter === 'capacity' ? 'active' : ''}`}
+            onClick={() => setFilter('capacity')}
+          >
+            Available Capacity <span className="tab-count">{results.filter((m) => m.match.capacity).length}</span>
+          </button>
+          <button
+            type="button"
+            className={`tab-btn ${filter === 'tech' ? 'active' : ''}`}
+            onClick={() => setFilter('tech')}
+          >
+            Big Tech Alumni
+          </button>
+        </div>
       </section>
+
       <div className="mentor-grid">
-        {results.map((m) => (
+        {displayed.map((m) => (
           <MentorCard key={m.id} mentor={m} />
         ))}
-        {results.length === 0 && (
+        {displayed.length === 0 && (
           <Empty
-            title={q ? 'No mentors match your search' : 'No alumni mentors registered yet.'}
+            title={q ? 'No mentors match your search' : 'No mentors match this filter'}
             text={
               q
                 ? 'Try another name, skill or domain.'
-                : 'Register an alumni mentor account from the top-right account menu.'
+                : 'Switch back to "All Mentors" to browse available profiles.'
             }
           />
         )}
@@ -130,23 +201,49 @@ export function FindMentor() {
     </AppShell>
   );
 }
+
 function MentorCard({ mentor }) {
+  const score = mentor.match.score;
+  const scoreStyle =
+    score >= 85
+      ? { background: 'var(--success-surface)', color: 'var(--success-text)', borderColor: 'var(--success-border)' }
+      : score >= 70
+        ? { background: 'var(--primary-subtle)', color: 'var(--primary)', borderColor: 'var(--primary-border)' }
+        : { background: 'var(--warning-surface)', color: 'var(--warning-text)', borderColor: 'var(--warning-border)' };
+
+  const isBigTech = ['google', 'microsoft', 'amazon', 'meta', 'uber', 'apple'].some((c) =>
+    (mentor.company || '').toLowerCase().includes(c)
+  );
+
   return (
     <article className="mentor-card">
       <div className="mentor-avatar">{mentor.name?.[0]}</div>
       <div className="mentor-main">
         <div>
-          <h3>{mentor.name}</h3>
+          <h3 style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+            {mentor.name}
+            {isBigTech && (
+              <span className="bento-badge" style={{ fontSize: '0.66rem', padding: '1px 6px' }}>
+                Verified
+              </span>
+            )}
+          </h3>
           <p>
             {mentor.jobTitle} · {mentor.company}
           </p>
         </div>
-        <span className="match-score">{mentor.match.score}% match</span>
+        <span className="match-score" style={scoreStyle}>
+          {mentor.match.score}% match
+        </span>
       </div>
       <p>{mentor.domain || mentor.interests?.join(', ') || 'Mentorship'}</p>
+      
+      {/* Color Hunt Category Pastel Pills */}
       <div className="tag-row">
         {(mentor.skills || []).slice(0, 5).map((x) => (
-          <span key={x}>{x}</span>
+          <span key={x} className={getSkillPillClass(x)}>
+            {x}
+          </span>
         ))}
       </div>
       <div className="match-reason">
@@ -327,7 +424,19 @@ export function Request() {
 }
 export function Matches() {
   const s = current();
-  const req = getRequests().filter((r) => r.studentId === s?.id);
+  const [tab, setTab] = useState('all');
+  const allReq = getRequests().filter((r) => r.studentId === s?.id);
+  const pendingCount = allReq.filter((r) => r.status === 'pending').length;
+  const acceptedCount = allReq.filter((r) => r.status === 'accepted').length;
+  const declinedCount = allReq.filter((r) => r.status === 'rejected').length;
+
+  const req = allReq.filter((r) => {
+    if (tab === 'pending') return r.status === 'pending';
+    if (tab === 'accepted') return r.status === 'accepted';
+    if (tab === 'rejected') return r.status === 'rejected';
+    return true;
+  });
+
   const mentors = getUsers()
     .filter((u) => u.role === 'mentor' && u.profileComplete)
     .map((m) => ({ ...m, match: scoreMatch(s, m) }))
@@ -354,7 +463,48 @@ export function Matches() {
         </div>
       </section>
       <section className="card">
-        <h2>My requests</h2>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: 12,
+            marginBottom: 16,
+          }}
+        >
+          <h2 style={{ margin: 0 }}>My requests</h2>
+          <div className="tabs-bar" style={{ margin: 0 }}>
+            <button
+              type="button"
+              className={`tab-btn ${tab === 'all' ? 'active' : ''}`}
+              onClick={() => setTab('all')}
+            >
+              All <span className="tab-count">{allReq.length}</span>
+            </button>
+            <button
+              type="button"
+              className={`tab-btn ${tab === 'pending' ? 'active' : ''}`}
+              onClick={() => setTab('pending')}
+            >
+              Pending <span className="tab-count">{pendingCount}</span>
+            </button>
+            <button
+              type="button"
+              className={`tab-btn ${tab === 'accepted' ? 'active' : ''}`}
+              onClick={() => setTab('accepted')}
+            >
+              Accepted <span className="tab-count">{acceptedCount}</span>
+            </button>
+            <button
+              type="button"
+              className={`tab-btn ${tab === 'rejected' ? 'active' : ''}`}
+              onClick={() => setTab('rejected')}
+            >
+              Declined <span className="tab-count">{declinedCount}</span>
+            </button>
+          </div>
+        </div>
         <div className="data-table">
           <div className="table-row table-head">
             <span>Mentor</span>
@@ -369,7 +519,18 @@ export function Matches() {
                 <span>{m?.name || 'Unknown'}</span>
                 <span>{r.message}</span>
                 <span>
-                  <span className="status-chip">{r.status}</span>
+                  <span
+                    className="status-chip"
+                    style={
+                      r.status === 'accepted'
+                        ? { background: 'var(--success-surface)', color: 'var(--success-text)', borderColor: 'var(--success-border)' }
+                        : r.status === 'pending'
+                          ? { background: 'var(--warning-surface)', color: 'var(--warning-text)', borderColor: 'var(--warning-border)' }
+                          : { background: 'var(--danger-surface)', color: 'var(--danger-text)', borderColor: 'var(--danger-border)' }
+                    }
+                  >
+                    {r.status}
+                  </span>
                 </span>
                 <span>{new Date(r.createdAt).toLocaleDateString()}</span>
               </div>
@@ -377,7 +538,10 @@ export function Matches() {
           })}
         </div>
         {req.length === 0 && (
-          <Empty title="No requests yet" text="Send a mentorship request from a mentor profile." />
+          <Empty
+            title="No requests found"
+            text={tab === 'all' ? 'Send a mentorship request from a mentor profile.' : `No requests currently in "${tab}" status.`}
+          />
         )}
       </section>
     </AppShell>
@@ -386,8 +550,21 @@ export function Matches() {
 export function MentorRequests() {
   const s = current();
   const toast = useToast();
+  const [tab, setTab] = useState('all');
   const [items, setItems] = useState(getRequests().filter((r) => r.mentorId === s?.id));
   const [respondingId, setRespondingId] = useState(null);
+
+  const pendingCount = items.filter((r) => r.status === 'pending').length;
+  const acceptedCount = items.filter((r) => r.status === 'accepted').length;
+  const declinedCount = items.filter((r) => r.status === 'rejected').length;
+
+  const displayItems = items.filter((r) => {
+    if (tab === 'pending') return r.status === 'pending';
+    if (tab === 'accepted') return r.status === 'accepted';
+    if (tab === 'rejected') return r.status === 'rejected';
+    return true;
+  });
+
   const respond = async (r, status) => {
     if (respondingId) return;
     setRespondingId(r.id);
@@ -407,67 +584,120 @@ export function MentorRequests() {
         title="Mentorship requests"
         text="Accept or decline real student requests while respecting your capacity."
       />
-      <section className="card request-list">
-        {items.map((r) => {
-          const st = getUsers().find((u) => u.id === r.studentId);
-          return (
-            <div className="request-row" key={r.id}>
-              <div className="mentor-avatar">{st?.name?.[0]}</div>
-              <div className="request-main">
-                <b>{st?.name}</b>
-                <span>
-                  {st?.college} · {(st?.skills || []).slice(0, 4).join(', ')}
-                </span>
-                <p>{r.message}</p>
-                {r.matchSnapshot && (
-                  <details className="match-rationale">
-                    <summary>
-                      Match rationale · {r.matchSnapshot.score}% ({r.matchSnapshot.algorithmVersion}
-                      )
-                    </summary>
-                    <ul className="factor-list">
-                      {r.matchSnapshot.factors.map((f) => (
-                        <li key={f.name}>
-                          <b>{FACTOR_LABELS[f.name]}</b> · {f.contribution} pts — {f.explanation}
-                        </li>
-                      ))}
-                    </ul>
-                  </details>
-                )}
-              </div>
-              <div className="request-actions">
-                {r.status === 'pending' ? (
-                  <>
-                    <button
-                      className="btn secondary"
-                      onClick={() => respond(r, 'rejected')}
-                      disabled={!!respondingId}
+      <section className="card">
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: 12,
+            marginBottom: 16,
+          }}
+        >
+          <h2 style={{ margin: 0 }}>Incoming Student Requests</h2>
+          <div className="tabs-bar" style={{ margin: 0 }}>
+            <button
+              type="button"
+              className={`tab-btn ${tab === 'all' ? 'active' : ''}`}
+              onClick={() => setTab('all')}
+            >
+              All <span className="tab-count">{items.length}</span>
+            </button>
+            <button
+              type="button"
+              className={`tab-btn ${tab === 'pending' ? 'active' : ''}`}
+              onClick={() => setTab('pending')}
+            >
+              Pending <span className="tab-count">{pendingCount}</span>
+            </button>
+            <button
+              type="button"
+              className={`tab-btn ${tab === 'accepted' ? 'active' : ''}`}
+              onClick={() => setTab('accepted')}
+            >
+              Accepted <span className="tab-count">{acceptedCount}</span>
+            </button>
+            <button
+              type="button"
+              className={`tab-btn ${tab === 'rejected' ? 'active' : ''}`}
+              onClick={() => setTab('rejected')}
+            >
+              Declined <span className="tab-count">{declinedCount}</span>
+            </button>
+          </div>
+        </div>
+
+        <div className="request-list">
+          {displayItems.map((r) => {
+            const st = getUsers().find((u) => u.id === r.studentId);
+            return (
+              <div className="request-row" key={r.id}>
+                <div className="mentor-avatar">{st?.name?.[0]}</div>
+                <div className="request-main">
+                  <b>{st?.name}</b>
+                  <span>
+                    {st?.college} · {(st?.skills || []).slice(0, 4).join(', ')}
+                  </span>
+                  <p>{r.message}</p>
+                  {r.matchSnapshot && (
+                    <details className="match-rationale">
+                      <summary>
+                        Match rationale · {r.matchSnapshot.score}% ({r.matchSnapshot.algorithmVersion})
+                      </summary>
+                      <ul className="factor-list">
+                        {r.matchSnapshot.factors.map((f) => (
+                          <li key={f.name}>
+                            <b>{FACTOR_LABELS[f.name]}</b> · {f.contribution} pts — {f.explanation}
+                          </li>
+                        ))}
+                      </ul>
+                    </details>
+                  )}
+                </div>
+                <div className="request-actions">
+                  {r.status === 'pending' ? (
+                    <>
+                      <button
+                        className="btn secondary"
+                        onClick={() => respond(r, 'rejected')}
+                        disabled={!!respondingId}
+                      >
+                        <X size={15} />
+                        Decline
+                      </button>
+                      <button
+                        className="uiverse-btn"
+                        onClick={() => respond(r, 'accepted')}
+                        disabled={!!respondingId}
+                      >
+                        <Check size={15} />
+                        {respondingId === r.id ? 'Processing...' : 'Accept'}
+                      </button>
+                    </>
+                  ) : (
+                    <span
+                      className="status-chip"
+                      style={
+                        r.status === 'accepted'
+                          ? { background: 'var(--success-surface)', color: 'var(--success-text)', borderColor: 'var(--success-border)' }
+                          : { background: 'var(--danger-surface)', color: 'var(--danger-text)', borderColor: 'var(--danger-border)' }
+                      }
                     >
-                      <X size={15} />
-                      Decline
-                    </button>
-                    <button
-                      className="uiverse-btn"
-                      onClick={() => respond(r, 'accepted')}
-                      disabled={!!respondingId}
-                    >
-                      <Check size={15} />
-                      {respondingId === r.id ? 'Processing...' : 'Accept'}
-                    </button>
-                  </>
-                ) : (
-                  <span className="status-chip">{r.status}</span>
-                )}
+                      {r.status}
+                    </span>
+                  )}
+                </div>
               </div>
-            </div>
-          );
-        })}
-        {!items.length && (
-          <Empty
-            title="No requests"
-            text="Student requests will appear here when someone requests mentorship."
-          />
-        )}
+            );
+          })}
+          {!displayItems.length && (
+            <Empty
+              title="No requests found"
+              text={tab === 'all' ? 'Student requests will appear here when someone requests mentorship.' : `No requests currently in "${tab}" status.`}
+            />
+          )}
+        </div>
       </section>
     </AppShell>
   );
