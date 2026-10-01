@@ -1,0 +1,14 @@
+node_modules
+npm-debug.log
+dist
+.git
+.gitignore
+.env
+README.md
+CHANGES.md
+*.md
+.vscode
+.idea
+__tests__
+.prettierrc
+vitest.config.js

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Bell, Search, X, Menu } from 'lucide-react';
+import { Bell, Search, X, PanelLeft } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import AccountMenu from './AccountMenu';
 import { getNotifications, getSession, NOTIFICATIONS_CHANGED_EVENT } from '../lib/storage';
@@ -29,7 +29,7 @@ export default function Topbar({ onMenuToggle = () => {} }) {
   return (
     <header className="topbar">
       <button className="mobile-menu-btn" onClick={onMenuToggle} aria-label="Open navigation">
-        <Menu size={21} />
+        <PanelLeft size={20} />
       </button>
       <form className="global-search" onSubmit={submit}>
         <Search className="search-icon" size={17} />

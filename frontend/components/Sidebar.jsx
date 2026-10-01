@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -7,7 +7,6 @@ import {
   MessageSquare,
   Target,
   Star,
-  UserRound,
   Sparkles,
   ClipboardList,
   BarChart3,
@@ -15,14 +14,13 @@ import {
   Settings,
   UserCog,
   Bell,
-  ArrowRight,
   LogOut,
 } from 'lucide-react';
 import Logo from './Logo';
-import { getSession } from '../lib/storage';
+import { getSession, getRequests, getUsers } from '../lib/storage';
 import { logout as authLogout } from '../lib/auth';
 
-const maps = {
+const navMaps = {
   student: [
     ['Dashboard', '/student', LayoutDashboard],
     ['Find Mentor', '/mentors', Users],
@@ -31,7 +29,7 @@ const maps = {
     ['Meetings', '/meetings', MessageSquare],
     ['Goals', '/goals', Target],
     ['Feedback', '/feedback', Star],
-    ['Profile', '/profile', UserRound],
+    ['Settings', '/settings', Settings],
   ],
   mentor: [
     ['Dashboard', '/mentor', LayoutDashboard],
@@ -41,7 +39,7 @@ const maps = {
     ['Meetings', '/mentor/meetings', MessageSquare],
     ['Goals', '/mentor/goals', Target],
     ['Feedback', '/mentor/feedback', Star],
-    ['Profile', '/mentor/profile', UserRound],
+    ['Settings', '/mentor/profile', Settings],
   ],
   admin: [
     ['Overview', '/admin', LayoutDashboard],
@@ -55,7 +53,138 @@ const maps = {
   ],
 };
 
-export default function Sidebar({ role, isOpen = false, onClose = () => {} }) {
+const SAMPLE_MENTORS = [
+  {
+    id: 'demo_mentor_priya',
+    name: 'Priya Sharma',
+    role: 'Google',
+    avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=120&auto=format&fit=crop&q=80',
+    to: '/mentors',
+  },
+  {
+    id: 'demo_mentor_rahul',
+    name: 'Rahul Verma',
+    role: 'Microsoft',
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80',
+    to: '/mentors',
+  },
+  {
+    id: 'demo_mentor_ananya',
+    name: 'Ananya Patel',
+    role: 'Amazon',
+    avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=120&auto=format&fit=crop&q=80',
+    to: '/mentors',
+  },
+  {
+    id: 'demo_mentor_vikram',
+    name: 'Vikram Rao',
+    role: 'AWS',
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80',
+    to: '/mentors',
+  },
+  {
+    id: 'demo_mentor_sneha',
+    name: 'Sneha Reddy',
+    role: 'Flipkart',
+    avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=120&auto=format&fit=crop&q=80',
+    to: '/mentors',
+  },
+];
+
+const SAMPLE_MENTEES = [
+  {
+    id: 'demo_student_arjun',
+    name: 'Arjun Mehta',
+    role: "BCA '25",
+    avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=120&auto=format&fit=crop&q=80',
+    to: '/mentor/mentees',
+  },
+  {
+    id: 'demo_student_riya',
+    name: 'Riya Gupta',
+    role: "BCA '26",
+    avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=120&auto=format&fit=crop&q=80',
+    to: '/mentor/mentees',
+  },
+  {
+    id: 'demo_student_devansh',
+    name: 'Devansh Joshi',
+    role: "BCA '25",
+    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&auto=format&fit=crop&q=80',
+    to: '/mentor/mentees',
+  },
+  {
+    id: 'demo_student_tanvi',
+    name: 'Tanvi Kulkarni',
+    role: "BCA '26",
+    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&auto=format&fit=crop&q=80',
+    to: '/mentor/mentees',
+  },
+];
+
+const SAMPLE_COORDINATORS = [
+  {
+    id: 'admin_1',
+    name: 'Dr. K. Sharma',
+    role: 'HOD BCA',
+    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=120&auto=format&fit=crop&q=80',
+    to: '/admin/administrators',
+  },
+  {
+    id: 'admin_2',
+    name: 'Prof. Verma',
+    role: 'Placement',
+    avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=120&auto=format&fit=crop&q=80',
+    to: '/admin/administrators',
+  },
+  {
+    id: 'admin_3',
+    name: 'Placement Cell',
+    role: 'Alumni',
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80',
+    to: '/admin/users',
+  },
+];
+
+function TeamMemberItem({ member, onClick }) {
+  const [imgError, setImgError] = useState(false);
+  const initials = member.name
+    ? member.name
+        .split(' ')
+        .map((n) => n[0])
+        .join('')
+        .slice(0, 2)
+        .toUpperCase()
+    : 'U';
+
+  return (
+    <div
+      className="sidebar-team-item"
+      onClick={onClick}
+      role="button"
+      tabIndex={0}
+      title={`${member.name} - ${member.role}`}
+    >
+      <div className="sidebar-team-avatar-wrap">
+        {!imgError && member.avatar ? (
+          <img
+            src={member.avatar}
+            alt={member.name}
+            className="sidebar-team-avatar"
+            onError={() => setImgError(true)}
+          />
+        ) : (
+          <div className="sidebar-team-avatar-fallback">{initials}</div>
+        )}
+        <span className="sidebar-team-status-dot" aria-label="Active" />
+      </div>
+      <span className="sidebar-team-name">{member.name}</span>
+      <span className="sidebar-team-role">{member.role}</span>
+    </div>
+  );
+}
+
+export default function Sidebar({ role = 'student', isOpen = false, onClose = () => {} }) {
   const nav = useNavigate();
   const user = getSession();
 
@@ -64,11 +193,86 @@ export default function Sidebar({ role, isOpen = false, onClose = () => {} }) {
     nav('/login');
   };
 
+  const navItems = navMaps[role] || navMaps.student;
+
+  // Resolve team members dynamically according to project role and storage
+  let sectionTitle = 'Your Mentors';
+  let members = SAMPLE_MENTORS;
+
+  try {
+    const allUsers = getUsers();
+    const allRequests = getRequests();
+
+    if (role === 'student') {
+      sectionTitle = 'Your Mentors';
+      const acceptedReqs = allRequests.filter(
+        (r) => r.studentId === user?.id && r.status === 'accepted'
+      );
+      const studentMentors = acceptedReqs
+        .map((r) => allUsers.find((u) => u.id === r.mentorId))
+        .filter(Boolean);
+
+      if (studentMentors.length > 0) {
+        members = studentMentors.map((m) => ({
+          id: m.id,
+          name: m.name,
+          role: m.company || m.domain?.split('&')[0]?.trim() || 'Mentor',
+          avatar: m.avatar || '',
+          to: `/mentor/${m.id}`,
+        }));
+      } else {
+        members = SAMPLE_MENTORS;
+      }
+    } else if (role === 'mentor') {
+      sectionTitle = 'Your Mentees';
+      const acceptedReqs = allRequests.filter(
+        (r) => r.mentorId === user?.id && r.status === 'accepted'
+      );
+      const mentees = acceptedReqs
+        .map((r) => allUsers.find((u) => u.id === r.studentId))
+        .filter(Boolean);
+
+      if (mentees.length > 0) {
+        members = mentees.map((m) => ({
+          id: m.id,
+          name: m.name,
+          role: m.course ? m.course.replace(/BCA\s*/i, '') : "BCA '25",
+          avatar: m.avatar || '',
+          to: '/mentor/mentees',
+        }));
+      } else {
+        members = SAMPLE_MENTEES;
+      }
+    } else if (role === 'admin') {
+      sectionTitle = 'Coordinators';
+      members = SAMPLE_COORDINATORS;
+    }
+  } catch {
+    // Graceful fallback to samples
+  }
+
+  const handleMemberClick = (member) => {
+    onClose();
+    if (member.to) {
+      nav(member.to);
+    } else if (role === 'mentor') {
+      nav('/mentor/mentees');
+    } else {
+      nav('/mentors');
+    }
+  };
+
   return (
     <aside className={`sidebar${isOpen ? ' mobile-open' : ''}`}>
-      {/* Top Header Branding & Role */}
+      {/* Brand Header */}
       <div className="sidebar-header">
-        <Logo size={32} />
+        <NavLink
+          to={role === 'admin' ? '/admin' : role === 'mentor' ? '/mentor' : '/student'}
+          className="sidebar-brand-link"
+          onClick={onClose}
+        >
+          <Logo size={32} />
+        </NavLink>
         <div className="sidebar-role-badge">
           <span className="role-pulse" />
           {role === 'admin' ? 'Administrator' : role === 'mentor' ? 'Alumni Mentor' : 'Student Hub'}
@@ -77,7 +281,7 @@ export default function Sidebar({ role, isOpen = false, onClose = () => {} }) {
 
       {/* Main Navigation */}
       <nav className="sidebar-nav">
-        {maps[role].map(([label, to, Icon]) => (
+        {navItems.map(([label, to, Icon]) => (
           <NavLink key={to} to={to} end onClick={onClose}>
             <Icon size={18} />
             <span>{label}</span>
@@ -85,91 +289,21 @@ export default function Sidebar({ role, isOpen = false, onClose = () => {} }) {
         ))}
       </nav>
 
-      {/* Interactive Middle Widget (Fills empty space with high-value actions) */}
-      <div className="sidebar-middle-section">
-        {role === 'student' && (
-          <div className="sidebar-widget">
-            <div className="widget-header">
-              <div className="widget-icon">
-                <Sparkles size={14} />
-              </div>
-              <span className="widget-title">Match Engine</span>
-              <span className="widget-tag">94% Max</span>
-            </div>
-            <p className="widget-copy">
-              Multi-factor matching active across skills, goals & availability.
-            </p>
-            <div className="widget-meter">
-              <div className="widget-meter-label">
-                <span>Algorithm Readiness</span>
-                <b>Active</b>
-              </div>
-              <div className="widget-bar">
-                <div className="widget-bar-fill" style={{ width: '92%' }} />
-              </div>
-            </div>
-            <NavLink to="/mentors" className="widget-action-btn" onClick={onClose}>
-              Find Mentors <ArrowRight size={13} />
-            </NavLink>
-          </div>
-        )}
-
-        {role === 'mentor' && (
-          <div className="sidebar-widget">
-            <div className="widget-header">
-              <div className="widget-icon">
-                <Target size={14} />
-              </div>
-              <span className="widget-title">Mentorship Capacity</span>
-              <span className="widget-tag">Open</span>
-            </div>
-            <p className="widget-copy">
-              Your mentee availability slots are live for student booking.
-            </p>
-            <div className="widget-meter">
-              <div className="widget-meter-label">
-                <span>Capacity Utilized</span>
-                <b>2 Active</b>
-              </div>
-              <div className="widget-bar">
-                <div className="widget-bar-fill" style={{ width: '50%' }} />
-              </div>
-            </div>
-            <NavLink to="/mentor/calendar" className="widget-action-btn" onClick={onClose}>
-              Manage Slots <ArrowRight size={13} />
-            </NavLink>
-          </div>
-        )}
-
-        {role === 'admin' && (
-          <div className="sidebar-widget">
-            <div className="widget-header">
-              <div className="widget-icon">
-                <ShieldCheck size={14} />
-              </div>
-              <span className="widget-title">System Health</span>
-              <span
-                className="widget-tag"
-                style={{
-                  background: 'var(--success-surface)',
-                  color: 'var(--success-text)',
-                  borderColor: 'var(--success-border)',
-                }}
-              >
-                Active
-              </span>
-            </div>
-            <p className="widget-copy">
-              Platform verified. Coordinator audit logging enabled.
-            </p>
-            <NavLink to="/admin/analytics" className="widget-action-btn" onClick={onClose}>
-              View Analytics <ArrowRight size={13} />
-            </NavLink>
-          </div>
-        )}
+      {/* Role-Specific Contacts / Mentors / Mentees Section */}
+      <div className="sidebar-team-section">
+        <div className="sidebar-section-header">{sectionTitle}</div>
+        <div className="sidebar-team-list">
+          {members.map((member) => (
+            <TeamMemberItem
+              key={member.id}
+              member={member}
+              onClick={() => handleMemberClick(member)}
+            />
+          ))}
+        </div>
       </div>
 
-      {/* Interactive Bottom User Profile Card (shadcn Sidebar Footer) */}
+      {/* Bottom User Card / Actions */}
       <div className="sidebar-footer">
         <div className="sidebar-user-card">
           <div className="sidebar-user-avatar">
@@ -177,7 +311,7 @@ export default function Sidebar({ role, isOpen = false, onClose = () => {} }) {
           </div>
           <div className="sidebar-user-info">
             <b>{user?.name || 'Account'}</b>
-            <span>{user?.email || (role === 'admin' ? 'Coordinator' : 'Verified User')}</span>
+            <span>{user?.email || (role === 'admin' ? 'Administrator' : 'Active User')}</span>
           </div>
           <div className="sidebar-user-actions">
             <NavLink
