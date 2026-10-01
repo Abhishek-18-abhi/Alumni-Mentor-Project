@@ -177,12 +177,25 @@ a {
 }
 
 .btn.primary {
+  background: var(--primary);
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+}
+
+.btn.primary:hover {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+}
+
+.btn.dark {
   background: var(--dark-primary);
   color: #ffffff;
   border-color: transparent;
 }
 
-.btn.primary:hover {
+.btn.dark:hover {
   background: var(--dark-primary-hover);
   transform: translateY(-1px);
   box-shadow: var(--shadow-md);
@@ -1639,16 +1652,17 @@ textarea:focus {
 .mentor-avatar,
 .large-avatar,
 .mini-avatar {
-  width: 46px;
-  height: 46px;
-  border-radius: var(--radius-md);
-  background: var(--primary-subtle);
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
   color: var(--primary);
   border: 1px solid var(--primary-border);
   display: grid;
   place-items: center;
   font-weight: 750;
-  font-size: 1rem;
+  font-size: 1.05rem;
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.08);
 }
 
 .mentor-main {

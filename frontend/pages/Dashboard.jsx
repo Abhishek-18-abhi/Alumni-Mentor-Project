@@ -60,7 +60,7 @@ function ShopeersKpiGrid({ metrics }) {
 /* -------------------------------------------------------------------------- */
 function ShopeersAreaChart({ title, subtitle, total, trend, breakdown = [] }) {
   const [period, setPeriod] = useState('Monthly');
-  const [hoveredPoint, setHoveredPoint] = useState({ x: 440, y: 35, label: 'Jan 20: 38 hrs • 94% match' });
+  const [hoveredPoint, setHoveredPoint] = useState({ x: 440, y: 55, label: 'Jan 20: 38 hrs • 94% match' });
 
   return (
     <div className="shopeers-chart-card">
@@ -95,13 +95,13 @@ function ShopeersAreaChart({ title, subtitle, total, trend, breakdown = [] }) {
       <div className="chart-visual-wrapper">
         <svg
           className="chart-svg"
-          viewBox="0 0 700 190"
+          viewBox="0 0 700 200"
           preserveAspectRatio="none"
           onMouseMove={(e) => {
             const rect = e.currentTarget.getBoundingClientRect();
             const relX = Math.max(0, Math.min(680, ((e.clientX - rect.left) / rect.width) * 700));
-            // Approximate curve Y value
-            const relY = Math.max(25, Math.min(150, 110 - Math.sin((relX / 700) * Math.PI * 2.2) * 55));
+            // Curve with comfortable top margin
+            const relY = Math.max(45, Math.min(160, 120 - Math.sin((relX / 700) * Math.PI * 2.2) * 50));
             setHoveredPoint({
               x: Math.round(relX),
               y: Math.round(relY),
@@ -118,19 +118,19 @@ function ShopeersAreaChart({ title, subtitle, total, trend, breakdown = [] }) {
           </defs>
 
           {/* Subtle Horizontal Grid lines */}
-          <line x1="0" y1="40" x2="700" y2="40" stroke="#f1f5f9" strokeWidth="1" strokeDasharray="4 4" />
-          <line x1="0" y1="90" x2="700" y2="90" stroke="#f1f5f9" strokeWidth="1" strokeDasharray="4 4" />
-          <line x1="0" y1="140" x2="700" y2="140" stroke="#f1f5f9" strokeWidth="1" strokeDasharray="4 4" />
+          <line x1="0" y1="50" x2="700" y2="50" stroke="#f1f5f9" strokeWidth="1" strokeDasharray="4 4" />
+          <line x1="0" y1="100" x2="700" y2="100" stroke="#f1f5f9" strokeWidth="1" strokeDasharray="4 4" />
+          <line x1="0" y1="150" x2="700" y2="150" stroke="#f1f5f9" strokeWidth="1" strokeDasharray="4 4" />
 
           {/* Area Fill */}
           <path
-            d="M 0,140 C 90,135 150,65 240,75 C 330,85 410,25 500,40 C 580,55 640,25 700,30 L 700,190 L 0,190 Z"
+            d="M 0,150 C 90,145 150,85 240,95 C 330,105 410,50 500,60 C 580,72 640,46 700,50 L 700,200 L 0,200 Z"
             fill="url(#shopeersAreaGradient)"
           />
 
           {/* Main Spline Line */}
           <path
-            d="M 0,140 C 90,135 150,65 240,75 C 330,85 410,25 500,40 C 580,55 640,25 700,30"
+            d="M 0,150 C 90,145 150,85 240,95 C 330,105 410,50 500,60 C 580,72 640,46 700,50"
             fill="none"
             stroke="#2563eb"
             strokeWidth="3.2"
@@ -144,7 +144,7 @@ function ShopeersAreaChart({ title, subtitle, total, trend, breakdown = [] }) {
                 x1={hoveredPoint.x}
                 y1="10"
                 x2={hoveredPoint.x}
-                y2="190"
+                y2="200"
                 stroke="#94a3b8"
                 strokeWidth="1.2"
                 strokeDasharray="3 3"
@@ -160,16 +160,16 @@ function ShopeersAreaChart({ title, subtitle, total, trend, breakdown = [] }) {
               />
               <rect
                 x={Math.max(10, Math.min(540, hoveredPoint.x - 70))}
-                y={Math.max(5, hoveredPoint.y - 32)}
+                y={Math.max(8, hoveredPoint.y - 32)}
                 width="140"
                 height="24"
                 rx="6"
                 fill="#0f172a"
-                opacity="0.92"
+                opacity="0.94"
               />
               <text
                 x={Math.max(80, Math.min(610, hoveredPoint.x))}
-                y={Math.max(21, hoveredPoint.y - 16)}
+                y={Math.max(24, hoveredPoint.y - 16)}
                 fill="#ffffff"
                 fontSize="11"
                 fontWeight="600"
@@ -211,15 +211,20 @@ function ShopeersAreaChart({ title, subtitle, total, trend, breakdown = [] }) {
 /* Weekly Peak Activity Bar Chart Card ("Most Day Active")                    */
 /* -------------------------------------------------------------------------- */
 function WeeklyActivityCard({ peakDay = 'Tue', peakHours = '8.5 hrs' }) {
-  const days = [
-    { label: 'Sun', height: '35%' },
-    { label: 'Mon', height: '60%' },
-    { label: 'Tue', height: '90%', isPeak: true },
-    { label: 'Wed', height: '55%' },
-    { label: 'Thu', height: '70%' },
-    { label: 'Fri', height: '45%' },
-    { label: 'Sat', height: '25%' },
-  ];
+  const baseHeights = {
+    Sun: '35%',
+    Mon: '55%',
+    Tue: '65%',
+    Wed: '50%',
+    Thu: '60%',
+    Fri: '45%',
+    Sat: '30%',
+  };
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((label) => ({
+    label,
+    height: label === peakDay ? '90%' : baseHeights[label] || '45%',
+    isPeak: label === peakDay,
+  }));
 
   return (
     <div className="weekly-activity-card">
@@ -263,14 +268,14 @@ function MilestoneGaugeCard({
         </span>
       </div>
       <div className="gauge-svg-wrap">
-        <svg width="125" height="125" viewBox="0 0 100 100">
+        <svg width="130" height="130" viewBox="0 0 100 100">
           <circle
             cx="50"
             cy="50"
             r="40"
             fill="none"
             stroke="#f1f5f9"
-            strokeWidth="10"
+            strokeWidth="8"
             strokeDasharray={`${circumference * 0.75} ${circumference * 0.25}`}
             strokeDashoffset="0"
             strokeLinecap="round"
@@ -282,7 +287,7 @@ function MilestoneGaugeCard({
             r="40"
             fill="none"
             stroke="#10b981"
-            strokeWidth="10"
+            strokeWidth="8"
             strokeDasharray={`${circumference * 0.75} ${circumference * 0.25}`}
             strokeDashoffset={strokeDashoffset}
             strokeLinecap="round"
@@ -291,8 +296,10 @@ function MilestoneGaugeCard({
           />
         </svg>
         <div className="gauge-center-content">
-          <b>{percent}%</b>
-          <span>{label}</span>
+          <b style={{ fontSize: '1.45rem', lineHeight: 1 }}>{percent}%</b>
+          <span style={{ fontSize: '0.62rem', lineHeight: 1.15, maxWidth: 76, textAlign: 'center', marginTop: 3 }}>
+            {label}
+          </span>
         </div>
       </div>
     </div>

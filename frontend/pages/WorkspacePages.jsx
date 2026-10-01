@@ -532,7 +532,7 @@ export function Matches() {
                     {r.status}
                   </span>
                 </span>
-                <span>{new Date(r.createdAt).toLocaleDateString()}</span>
+                <span>{r.createdAt && !isNaN(new Date(r.createdAt).getTime()) ? new Date(r.createdAt).toLocaleDateString() : 'Recent'}</span>
               </div>
             );
           })}
@@ -1359,7 +1359,7 @@ export function AdminUsers() {
                 <span className="status-chip">{u.role}</span>
               </span>
               <span>{u.profileComplete ? 'Complete' : 'Incomplete'}</span>
-              <span>{new Date(u.createdAt).toLocaleDateString()}</span>
+              <span>{u.createdAt && !isNaN(new Date(u.createdAt).getTime()) ? new Date(u.createdAt).toLocaleDateString() : 'Active Member'}</span>
             </div>
           ))}
         </div>
