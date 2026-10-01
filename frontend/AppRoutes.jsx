@@ -3,8 +3,6 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import Landing from './pages/Landing';
 import Auth from './pages/Auth';
 import InitialAdminSetup from './pages/InitialAdminSetup';
-import AccountSwitcher from './pages/AccountSwitcher';
-import AccountAdd from './pages/AccountAdd';
 import AdminAdministrators from './pages/AdminAdministrators';
 import Profile from './pages/Profile';
 import Onboarding from './pages/Onboarding';
@@ -66,8 +64,8 @@ const publicRoutes = (
 
 const sharedRoutes = (
   <>
-    <Route path="/account-switcher" element={<ProtectedRoute><AccountSwitcher /></ProtectedRoute>} />
-    <Route path="/account/add" element={<ProtectedRoute><AccountAdd /></ProtectedRoute>} />
+    <Route path="/account-switcher" element={<Navigate to="/profile" replace />} />
+    <Route path="/account/add" element={<Navigate to="/profile" replace />} />
     <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
     <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
     <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />

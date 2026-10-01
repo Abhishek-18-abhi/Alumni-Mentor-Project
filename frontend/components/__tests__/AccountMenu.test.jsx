@@ -22,25 +22,25 @@ describe('AccountMenu', () => {
   it('opens the dropdown on trigger click', async () => {
     renderMenu();
     await userEvent.click(screen.getByText('Test User'));
-    expect(screen.getByText('Switch account')).toBeInTheDocument();
+    expect(screen.getByText('Profile')).toBeInTheDocument();
   });
 
   it('closes when clicking outside the menu', async () => {
     renderMenu();
     await userEvent.click(screen.getByText('Test User'));
-    expect(screen.getByText('Switch account')).toBeInTheDocument();
+    expect(screen.getByText('Profile')).toBeInTheDocument();
 
     await userEvent.click(document.body);
-    expect(screen.queryByText('Switch account')).not.toBeInTheDocument();
+    expect(screen.queryByText('Profile')).not.toBeInTheDocument();
   });
 
   it('closes on Escape', async () => {
     renderMenu();
     await userEvent.click(screen.getByText('Test User'));
-    expect(screen.getByText('Switch account')).toBeInTheDocument();
+    expect(screen.getByText('Profile')).toBeInTheDocument();
 
     await userEvent.keyboard('{Escape}');
-    expect(screen.queryByText('Switch account')).not.toBeInTheDocument();
+    expect(screen.queryByText('Profile')).not.toBeInTheDocument();
   });
 
   it('signs out without recursive call stack overflow', async () => {

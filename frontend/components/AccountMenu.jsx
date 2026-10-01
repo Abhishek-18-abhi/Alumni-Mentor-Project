@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ChevronDown, LogOut, UserRound, Repeat2, Shield, Plus, Settings } from 'lucide-react';
+import { ChevronDown, LogOut, UserRound, Shield, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { getSession, getUsers } from '../lib/storage';
+import { getSession } from '../lib/storage';
 import { logout as authLogout } from '../lib/auth';
 export default function AccountMenu() {
   const [open, setOpen] = useState(false);
@@ -25,7 +25,6 @@ export default function AccountMenu() {
   }, [open]);
   const nav = useNavigate();
   const s = getSession();
-  const users = getUsers();
   const roleLabel =
     s?.role === 'admin' ? 'Administrator' : s?.role === 'mentor' ? 'Alumni Mentor' : 'Student';
   const handleLogout = () => {
@@ -63,15 +62,6 @@ export default function AccountMenu() {
             <UserRound size={17} />
             Profile
           </button>
-          <button
-            onClick={() => {
-              setOpen(false);
-              nav('/account-switcher');
-            }}
-          >
-            <Repeat2 size={17} />
-            Switch account
-          </button>
           {s?.role === 'admin' && (
             <button
               onClick={() => {
@@ -83,15 +73,6 @@ export default function AccountMenu() {
               Manage administrators
             </button>
           )}
-          <button
-            onClick={() => {
-              setOpen(false);
-              nav('/account/add');
-            }}
-          >
-            <Plus size={17} />
-            Add another account
-          </button>
           <button
             onClick={() => {
               setOpen(false);
