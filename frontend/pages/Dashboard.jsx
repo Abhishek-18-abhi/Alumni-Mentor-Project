@@ -12,7 +12,6 @@ import {
   CheckCircle2,
   Award,
   Star,
-  Send,
   ArrowRight,
   Search,
   Plus,
@@ -307,72 +306,6 @@ function MilestoneGaugeCard({
 }
 
 /* -------------------------------------------------------------------------- */
-/* AI Assistant Widget with Glowing 3D Orb & Interactive Chat Pill           */
-/* -------------------------------------------------------------------------- */
-function AiAssistantCard({ role = 'student' }) {
-  const [prompt, setPrompt] = useState('');
-  const [reply, setReply] = useState(
-    role === 'student'
-      ? '💡 Tip: Top match for your skills is Priya Sharma (Google) for Cloud & Scalable Systems.'
-      : role === 'mentor'
-        ? '💡 Tip: 2 mentees requested review on BCA final year capstone architecture.'
-        : '💡 Tip: Algorithm matching accuracy increased by 14% this quarter.'
-  );
-  const [loading, setLoading] = useState(false);
-
-  const handleAsk = (e) => {
-    e?.preventDefault();
-    if (!prompt.trim()) return;
-    setLoading(true);
-    const q = prompt;
-    setPrompt('');
-    setTimeout(() => {
-      setLoading(false);
-      if (q.toLowerCase().includes('resume') || q.toLowerCase().includes('cv')) {
-        setReply('✨ AI: Highlight your React, SQL, and Capstone projects at the top of your resume.');
-      } else if (q.toLowerCase().includes('mentor') || q.toLowerCase().includes('match')) {
-        setReply('✨ AI: Recommended: Ananya Patel (Amazon) & Vikram Rao (AWS) are available for 1:1 sessions.');
-      } else if (q.toLowerCase().includes('interview') || q.toLowerCase().includes('job')) {
-        setReply('✨ AI: Schedule a mock technical round with our alumni network under the Meetings tab.');
-      } else {
-        setReply(`✨ AI: Great question! Explore the matches directory to connect with mentors specialized in "${q}".`);
-      }
-    }, 450);
-  };
-
-  return (
-    <div className="ai-assistant-card">
-      <div className="ai-assistant-header">
-        <div className="ai-assistant-status">
-          <span className="role-pulse" />
-          <span>Online • AI Copilot</span>
-        </div>
-        <Sparkles size={16} color="#2563eb" />
-      </div>
-
-      <div className="ai-orb-container">
-        <div className="ai-3d-orb" />
-        <div className="ai-orb-copy">
-          <h5>MentorConnect AI</h5>
-          <p>{loading ? 'Analyzing career match engine...' : reply}</p>
-        </div>
-      </div>
-
-      <form className="ai-chat-input-pill" onSubmit={handleAsk}>
-        <input
-          value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
-          placeholder="Ask AI Copilot for advice..."
-        />
-        <button type="submit" className="ai-send-btn" aria-label="Ask AI">
-          <Send size={13} />
-        </button>
-      </form>
-    </div>
-  );
-}
-
-/* -------------------------------------------------------------------------- */
 /* Shopeers Data Table Card ("Top Recommended Mentors" / "Best Selling...")   */
 /* -------------------------------------------------------------------------- */
 function TopMentorsTableCard({ mentors = [], title = 'Top Recommended Mentors' }) {
@@ -493,7 +426,6 @@ function AddWidgetModal({ isOpen, onClose, activeWidgets, onToggleWidget }) {
     { id: 'areaChart', title: 'Mentorship Growth Chart', desc: 'Spline wave chart tracking active hours & bookings.' },
     { id: 'weeklyActivity', title: 'Most Day Active', desc: 'Weekly peak hours bar chart visualization.' },
     { id: 'milestoneGauge', title: 'Progress Radial Gauge', desc: 'Circular progress tracking retention & milestones.' },
-    { id: 'aiAssistant', title: 'AI Mentor Copilot', desc: 'Interactive 3D glowing assistant for career tips.' },
     { id: 'tableCard', title: 'Top Recommended Mentors', desc: 'Full-width rich data table of available alumni.' },
   ];
 
@@ -547,7 +479,6 @@ export function StudentDashboard() {
     areaChart: true,
     weeklyActivity: true,
     milestoneGauge: true,
-    aiAssistant: true,
     tableCard: true,
   });
 
@@ -635,9 +566,6 @@ export function StudentDashboard() {
           {widgets.milestoneGauge && (
             <MilestoneGaugeCard percent={82} label="Active Match Retention" change="+ 8% vs last month" />
           )}
-          {widgets.aiAssistant && (
-            <AiAssistantCard role="student" />
-          )}
         </div>
       </div>
 
@@ -675,7 +603,6 @@ export function MentorDashboard() {
     areaChart: true,
     weeklyActivity: true,
     milestoneGauge: true,
-    aiAssistant: true,
     tableCard: true,
   });
 
@@ -769,9 +696,6 @@ export function MentorDashboard() {
           {widgets.milestoneGauge && (
             <MilestoneGaugeCard percent={88} label="Mentee Goal Completion" change="+ 12% vs last month" />
           )}
-          {widgets.aiAssistant && (
-            <AiAssistantCard role="mentor" />
-          )}
         </div>
       </div>
 
@@ -806,7 +730,6 @@ export function AdminDashboard() {
     areaChart: true,
     weeklyActivity: true,
     milestoneGauge: true,
-    aiAssistant: true,
     tableCard: true,
   });
 
@@ -892,9 +815,6 @@ export function AdminDashboard() {
           )}
           {widgets.milestoneGauge && (
             <MilestoneGaugeCard percent={94} label="Match Success Index" change="+ 6% vs last quarter" />
-          )}
-          {widgets.aiAssistant && (
-            <AiAssistantCard role="admin" />
           )}
         </div>
       </div>
