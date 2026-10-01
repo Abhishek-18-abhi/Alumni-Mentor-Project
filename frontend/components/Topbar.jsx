@@ -41,12 +41,10 @@ export default function Topbar({ onMenuToggle = () => {} }) {
           onChange={(e) => setQ(e.target.value)}
           placeholder="Search mentors, skills or domains..."
         />
-        {q ? (
+        {q && (
           <button type="button" className="clear-search" onClick={() => setQ('')} aria-label="Clear search">
             <X size={14} />
           </button>
-        ) : (
-          <span className="search-shortcut-badge">⌘K</span>
         )}
       </form>
 
