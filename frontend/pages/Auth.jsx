@@ -55,30 +55,23 @@ export default function Auth({ register = false, adminLogin = false }) {
   };
   return (
     <div className="auth-page">
-      <div className="auth-side">
-        <Logo />
-        <div>
-          <span className="eyebrow">MentorConnect</span>
-          <h2>{register ? 'Build your mentorship profile.' : 'Welcome back.'}</h2>
-          <p>
-            {register
-              ? 'Create a real account. Your profile data will be stored securely in MongoDB and used by the matching workflow.'
-              : 'Sign in with your MentorConnect account stored in MongoDB.'}
-          </p>
+      <div className={`auth-card ${register ? 'register-mode' : ''}`}>
+        <div className="auth-logo-center">
+          <Logo size={36} />
         </div>
-      </div>
-      <div className="auth-card">
         <div className="auth-head">
           <span className="eyebrow">
-            {register ? 'Create account' : adminLogin ? 'Administrator access' : 'Secure sign in'}
+            {register ? 'Get Started' : adminLogin ? 'Administrator Access' : 'Welcome back'}
           </span>
           <h1>
-            {register ? 'Join MentorConnect' : adminLogin ? 'Administrator sign in' : 'Sign in'}
+            {register ? 'Create your account' : adminLogin ? 'Administrator sign in' : 'Sign in to MentorConnect'}
           </h1>
           <p>
             {register
-              ? 'Choose Student or Alumni Mentor and complete onboarding.'
-              : 'Use your registered email and password.'}
+              ? 'Choose Student or Alumni Mentor to complete onboarding.'
+              : adminLogin
+                ? 'Use your administrator credentials to access platform controls.'
+                : 'Use your registered email and password to access your account.'}
           </p>
         </div>
         {register && (
@@ -235,16 +228,16 @@ export default function Auth({ register = false, adminLogin = false }) {
             <ArrowRight size={17} />
           </button>
         </form>
-        {!register && (
+        {adminLogin && (
           <div className="admin-hint">
             <ShieldCheck size={16} />
             <span>
-              Administrator accounts are created through first-time setup or by another
+              Administrator accounts are created through first-time setup or by an existing
               administrator.
             </span>
           </div>
         )}
-        {!register && (
+        {adminLogin && (
           <button className="setup-link" onClick={() => nav('/admin/setup')}>
             First-time administrator setup
           </button>
@@ -253,6 +246,11 @@ export default function Auth({ register = false, adminLogin = false }) {
           {register ? 'Already registered?' : 'New to MentorConnect?'}{' '}
           <button onClick={() => nav(register ? '/login' : '/register')}>
             {register ? 'Sign in' : 'Create account'}
+          </button>
+        </div>
+        <div className="auth-back-home">
+          <button type="button" onClick={() => nav('/')}>
+            ← Back to home
           </button>
         </div>
       </div>
