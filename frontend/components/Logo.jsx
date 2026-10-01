@@ -39,7 +39,11 @@ export default function Logo({ showText = true, size = 34 }) {
           />
         </svg>
       </div>
-      {showText && <span>MentorConnect</span>}
+      {showText && (
+        <span className="brand-text">
+          Mentor<span className="brand-accent">Connect</span>
+        </span>
+      )}
     </div>
   );
 }
