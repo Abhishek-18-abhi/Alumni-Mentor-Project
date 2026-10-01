@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import {
   ArrowRight,
   LogIn,
@@ -16,8 +16,13 @@ export default function AccountSwitcher() {
   const nav = useNavigate();
   const s = getSession();
   const users = getUsers();
+
+  if (!s) {
+    return <Navigate to="/login" replace />;
+  }
+
   return (
-    <AppShell role={s.role}>
+    <AppShell role={s?.role}>
       <PageTitle
         eyebrow="Account"
         title="Switch account"
@@ -26,8 +31,8 @@ export default function AccountSwitcher() {
       <div className="account-grid">
         {users.map((u) => (
           <button
-            key={u.id}
-            className={`account-card ${u.id === s.id ? 'current' : ''}`}
+            key={u.id || u._id || u.email}
+            className={`account-card ${u.id === s?.id ? 'current' : ''}`}
             onClick={() => {
               logout();
               nav('/login', { state: { email: u.email } });
@@ -51,7 +56,7 @@ export default function AccountSwitcher() {
                   : u.role === 'mentor'
                     ? 'Alumni Mentor'
                     : 'Student'}{' '}
-                {u.id === s.id ? '· Current' : ''}
+                {u.id === s?.id ? '· Current' : ''}
               </small>
             </div>
             <ArrowRight size={17} />

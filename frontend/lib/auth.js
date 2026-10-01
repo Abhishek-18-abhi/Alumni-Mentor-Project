@@ -90,4 +90,7 @@ export async function changePassword(_userId, currentPassword, nextPassword) {
 export function logout() {
   clearToken();
   setSession(null);
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event('mc:auth-expired'));
+  }
 }

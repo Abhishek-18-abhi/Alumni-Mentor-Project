@@ -4,18 +4,33 @@ import { ShieldCheck, ArrowRight } from 'lucide-react';
 import { MIN_PASSWORD_LENGTH } from '../lib/constants';
 import Logo from '../components/Logo';
 import { setupAdmin } from '../lib/auth';
+import { getUsers } from '../lib/storage';
 export default function InitialAdminSetup() {
   const nav = useNavigate();
   const [f, setF] = useState({ name: '', email: '', password: '' });
   const [e, setE] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const adminExists = getUsers().some((u) => u.role === 'admin');
+
   const sub = async (x) => {
     x.preventDefault();
+    if (isSubmitting) return;
     setE('');
-    const r = await setupAdmin(f);
-    if (!r.ok) return setE(r.error);
-    nav('/admin');
+    setIsSubmitting(true);
+    try {
+      const r = await setupAdmin(f);
+      if (!r.ok) {
+        setF((prev) => ({ ...prev, password: '' }));
+        return setE(r.error);
+      }
+      nav('/admin');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
-  if (false)
+
+  if (adminExists)
     return (
       <div className="center-page">
         <div className="simple-card">
@@ -61,8 +76,9 @@ export default function InitialAdminSetup() {
             />
           </label>
           {e && <div className="error-box">{e}</div>}
-          <button className="uiverse-btn full">
-            Create administrator <ArrowRight size={17} />
+          <button className="uiverse-btn full" type="submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Creating administrator...' : 'Create administrator'}{' '}
+            <ArrowRight size={17} />
           </button>
         </form>
       </div>

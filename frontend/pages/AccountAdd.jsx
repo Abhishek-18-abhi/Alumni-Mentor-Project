@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { GraduationCap, BriefcaseBusiness } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import PageTitle from '../components/PageTitle';
@@ -7,8 +7,13 @@ import { getSession } from '../lib/storage';
 export default function AccountAdd() {
   const s = getSession();
   const nav = useNavigate();
+
+  if (!s) {
+    return <Navigate to="/login" replace />;
+  }
+
   return (
-    <AppShell role={s.role}>
+    <AppShell role={s?.role}>
       <PageTitle
         eyebrow="Account"
         title="Add another account"

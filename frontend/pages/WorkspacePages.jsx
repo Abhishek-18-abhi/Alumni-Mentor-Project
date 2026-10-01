@@ -1,8 +1,9 @@
-import React, { useMemo, useState } from 'react';
-import { useSearchParams, useParams, useNavigate, Link } from 'react-router-dom';
+import React, { useMemo, useState, useEffect } from 'react';
+import { useSearchParams, useParams, useNavigate, Link, Navigate } from 'react-router-dom';
 import { DAYS, TIME_SLOTS } from '../lib/constants';
 import { respondToRequest, createMentorshipRequest } from '../lib/requests';
-import { apiPatch, hydrateLocalCache } from '../lib/api';
+import { updateUser } from '../lib/auth';
+import { apiPatch, hydrateLocalCache, refetchAudit } from '../lib/api';
 import { createMeeting, updateMeeting, createGoal, updateGoal, createFeedback, markNotificationRead, markAllNotificationsRead, updatePlatformSettings, sendAdminNotification } from '../lib/dataApi';
 import { scoreMatch, buildMatchSnapshot } from '../lib/matching';
 import { useToast } from '../components/Toast';
@@ -254,17 +255,29 @@ export function Request() {
   const mentorId = params.get('mentor');
   const m = getUsers().find((u) => u.id === mentorId);
   const [msg, setMsg] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const nav = useNavigate();
   const toast = useToast();
   const submit = async (e) => {
     e.preventDefault();
-    if (!m || !s) return;
-    const existing = getRequests().find((r) => r.studentId === s.id && r.mentorId === m.id && r.status === 'pending');
-    if (existing) return toast.error('You already have a pending request for this mentor.');
-    const result = await createMentorshipRequest(s, m, msg, buildMatchSnapshot(scoreMatch(s, m)));
-    if (!result.ok) return toast.error(result.error);
-    toast.success('Request sent and saved to MongoDB.');
-    nav('/matches');
+    if (!m || !s || isSubmitting) return;
+    const existing = getRequests().find((r) => r.studentId === s.id && r.mentorId === m.id && ['pending', 'accepted'].includes(r.status));
+    if (existing) {
+      return toast.error(
+        existing.status === 'accepted'
+          ? 'You are already actively paired with this mentor.'
+          : 'You already have a pending request for this mentor.'
+      );
+    }
+    setIsSubmitting(true);
+    try {
+      const result = await createMentorshipRequest(s, m, msg, buildMatchSnapshot(scoreMatch(s, m)));
+      if (!result.ok) return toast.error(result.error);
+      toast.success('Request sent and saved to MongoDB.');
+      nav('/matches');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   return (
     <AppShell role="student">
@@ -295,8 +308,8 @@ export function Request() {
                 placeholder="Explain your goals and what you hope to learn."
               />
             </label>
-            <button className="uiverse-btn">
-              Send request <Send size={16} />
+            <button className="uiverse-btn" type="submit" disabled={isSubmitting}>
+              {isSubmitting ? 'Sending request...' : 'Send request'} <Send size={16} />
             </button>
           </form>
         </section>
@@ -368,11 +381,18 @@ export function MentorRequests() {
   const s = current();
   const toast = useToast();
   const [items, setItems] = useState(getRequests().filter((r) => r.mentorId === s?.id));
+  const [respondingId, setRespondingId] = useState(null);
   const respond = async (r, status) => {
-    const result = await respondToRequest(s.id, r.id, status);
-    if (!result.ok) return toast.error(result.error);
-    setItems(getRequests().filter((x) => x.mentorId === s.id));
-    toast.success(status === 'accepted' ? 'Request accepted.' : 'Request declined.');
+    if (respondingId) return;
+    setRespondingId(r.id);
+    try {
+      const result = await respondToRequest(s.id, r.id, status);
+      if (!result.ok) return toast.error(result.error);
+      setItems(getRequests().filter((x) => x.mentorId === s.id));
+      toast.success(status === 'accepted' ? 'Request accepted.' : 'Request declined.');
+    } finally {
+      setRespondingId(null);
+    }
   };
   return (
     <AppShell role="mentor">
@@ -412,13 +432,21 @@ export function MentorRequests() {
               <div className="request-actions">
                 {r.status === 'pending' ? (
                   <>
-                    <button className="btn secondary" onClick={() => respond(r, 'rejected')}>
+                    <button
+                      className="btn secondary"
+                      onClick={() => respond(r, 'rejected')}
+                      disabled={!!respondingId}
+                    >
                       <X size={15} />
                       Decline
                     </button>
-                    <button className="uiverse-btn" onClick={() => respond(r, 'accepted')}>
+                    <button
+                      className="uiverse-btn"
+                      onClick={() => respond(r, 'accepted')}
+                      disabled={!!respondingId}
+                    >
                       <Check size={15} />
-                      Accept
+                      {respondingId === r.id ? 'Processing...' : 'Accept'}
                     </button>
                   </>
                 ) : (
@@ -487,14 +515,21 @@ export function Meetings({ role = 'student' }) {
     getMeetings().filter((m) => (role === 'mentor' ? m.mentorId === s?.id : m.studentId === s?.id))
   );
   const [log, setLog] = useState(null);
+  const [isSavingLog, setIsSavingLog] = useState(false);
   const saveLog = async (e) => {
     e.preventDefault();
-    const result = await updateMeeting(log.id, { log: log.text, status: 'completed' });
-    if (!result.ok) return toast.error(result.error);
-    const all = getMeetings();
-    setItems(all.filter((m) => (role === 'mentor' ? m.mentorId === s?.id : m.studentId === s?.id)));
-    setLog(null);
-    toast.success('Meeting log saved.');
+    if (isSavingLog || !log) return;
+    setIsSavingLog(true);
+    try {
+      const result = await updateMeeting(log.id, { log: log.text, status: 'completed' });
+      if (!result.ok) return toast.error(result.error);
+      const all = getMeetings();
+      setItems(all.filter((m) => (role === 'mentor' ? m.mentorId === s?.id : m.studentId === s?.id)));
+      setLog(null);
+      toast.success('Meeting log saved.');
+    } finally {
+      setIsSavingLog(false);
+    }
   };
   return (
     <AppShell role={role}>
@@ -564,7 +599,9 @@ export function Meetings({ role = 'student' }) {
                 placeholder="Topics discussed, action items, next steps..."
               />
             </label>
-            <button className="uiverse-btn">Save meeting log</button>
+            <button className="uiverse-btn" type="submit" disabled={isSavingLog}>
+              {isSavingLog ? 'Saving log...' : 'Save meeting log'}
+            </button>
           </form>
         </ModalShell>
       )}
@@ -583,13 +620,26 @@ export function Calendar() {
     time: '',
     mode: 'Video call',
   });
+  const [isScheduling, setIsScheduling] = useState(false);
+
+  useEffect(() => {
+    if (!form.mentorId && mentors.length > 0) {
+      setForm((prev) => ({ ...prev, mentorId: mentors[0].id }));
+    }
+  }, [mentors, form.mentorId]);
   const save = async (e) => {
     e.preventDefault();
+    if (isScheduling) return;
     if (!form.mentorId) return toast.error('You need an accepted mentor relationship first.');
-    const result = await createMeeting({ studentId: s.id, mentorId: form.mentorId, date: form.date, time: form.time, mode: form.mode, status: 'scheduled' });
-    if (!result.ok) return toast.error(result.error);
-    toast.success('Meeting scheduled and saved to MongoDB.');
-    nav('/meetings');
+    setIsScheduling(true);
+    try {
+      const result = await createMeeting({ studentId: s.id, mentorId: form.mentorId, date: form.date, time: form.time, mode: form.mode, status: 'scheduled' });
+      if (!result.ok) return toast.error(result.error);
+      toast.success('Meeting scheduled and saved to MongoDB.');
+      nav('/meetings');
+    } finally {
+      setIsScheduling(false);
+    }
   };
   return (
     <AppShell role="student">
@@ -645,7 +695,9 @@ export function Calendar() {
                 <option>In person</option>
               </select>
             </label>
-            <button className="uiverse-btn">Create meeting</button>
+            <button className="uiverse-btn" type="submit" disabled={isScheduling}>
+              {isScheduling ? 'Scheduling...' : 'Create meeting'}
+            </button>
           </form>
         </section>
       ) : (
@@ -662,7 +714,7 @@ export function MentorAvailability() {
   const [slots, setSlots] = useState(s?.availability || []);
   const toggle = async (x) => {
     const next = slots.includes(x) ? slots.filter((v) => v !== x) : [...slots, x];
-    const result = await import('../lib/auth').then(({ updateUser }) => updateUser(s.id, { availability: next }));
+    const result = await updateUser(s.id, { availability: next });
     if (!result.ok) return;
     setSlots(next);
   };
@@ -698,19 +750,24 @@ export function MentorAvailability() {
 }
 export function Notifications() {
   const s = getSession();
-  const [items, setItems] = useState(getNotifications().filter((n) => n.userId === s?.id));
+  const [items, setItems] = useState(() => getNotifications().filter((n) => n.userId === s?.id));
+
+  if (!s) {
+    return <Navigate to="/login" replace />;
+  }
+
   const mark = async (id) => {
     const result = await markNotificationRead(id);
     if (!result.ok) return;
-    setItems(getNotifications().filter((n) => n.userId === s.id));
+    setItems(getNotifications().filter((n) => n.userId === s?.id));
   };
   const markAll = async () => {
     const result = await markAllNotificationsRead();
     if (!result.ok) return;
-    setItems(getNotifications().filter((n) => n.userId === s.id));
+    setItems(getNotifications().filter((n) => n.userId === s?.id));
   };
   return (
-    <AppShell role={s.role}>
+    <AppShell role={s?.role}>
       <PageTitle
         eyebrow="Updates"
         title="Notifications"
@@ -765,19 +822,32 @@ export function Goals({ role }) {
   const [title, setTitle] = useState('');
   const [target, setTarget] = useState('');
   const [progressGoal, setProgressGoal] = useState(null);
+  const [isAdding, setIsAdding] = useState(false);
   const toast = useToast();
+
+  useEffect(() => {
+    if (!selected && mentees.length > 0) {
+      setSelected(mentees[0].id);
+    }
+  }, [mentees, selected]);
   const add = async (e) => {
     e.preventDefault();
+    if (isAdding) return;
     const studentId = role === 'student' ? s.id : selected;
     if (!studentId) return toast.error('Select a mentee first.');
     if (!title.trim()) return toast.error('Enter a goal title.');
-    const result = await createGoal({ studentId, title, target, progress: 0 });
-    if (!result.ok) return toast.error(result.error);
-    const all = getGoals();
-    setItems(all.filter((x) => role === 'student' ? x.studentId === s.id : mentees.some((m) => m.id === x.studentId)));
-    setTitle('');
-    setTarget('');
-    toast.success('Goal saved to MongoDB.');
+    setIsAdding(true);
+    try {
+      const result = await createGoal({ studentId, title, target, progress: 0 });
+      if (!result.ok) return toast.error(result.error);
+      const all = getGoals();
+      setItems(all.filter((x) => role === 'student' ? x.studentId === s.id : mentees.some((m) => m.id === x.studentId)));
+      setTitle('');
+      setTarget('');
+      toast.success('Goal saved to MongoDB.');
+    } finally {
+      setIsAdding(false);
+    }
   };
   const saveProgress = async (value) => {
     const g = progressGoal;
@@ -818,7 +888,7 @@ export function Goals({ role }) {
         />
       ) : (
         <section className="card form-card">
-          <form className="form-stack">
+          <form className="form-stack" onSubmit={add}>
             <label>
               Goal title
               <input
@@ -837,8 +907,8 @@ export function Goals({ role }) {
                 placeholder="Describe the outcome"
               />
             </label>
-            <button type="button" className="uiverse-btn" onClick={add}>
-              Add goal
+            <button type="submit" className="uiverse-btn" disabled={isAdding}>
+              {isAdding ? 'Adding goal...' : 'Add goal'}
             </button>
           </form>
         </section>
@@ -894,15 +964,21 @@ export function Feedback({ role }) {
   );
   const [rating, setRating] = useState(5);
   const [text, setText] = useState('');
+  const [submittingRequestId, setSubmittingRequestId] = useState(null);
   const toast = useToast();
   const submit = async (toId, requestId) => {
-    if (!text.trim()) return;
-    const result = await createFeedback({ toUserId: toId, requestId, rating: Number(rating), text });
-    if (!result.ok) return toast.error(result.error);
-    const all = getFeedback();
-    setItems(all.filter((f) => f.fromUserId === s.id));
-    setText('');
-    toast.success('Feedback submitted and saved to MongoDB.');
+    if (!text.trim() || submittingRequestId) return;
+    setSubmittingRequestId(requestId);
+    try {
+      const result = await createFeedback({ toUserId: toId, requestId, rating: Number(rating), text });
+      if (!result.ok) return toast.error(result.error);
+      const all = getFeedback();
+      setItems(all.filter((f) => f.fromUserId === s.id));
+      setText('');
+      toast.success('Feedback submitted and saved to MongoDB.');
+    } finally {
+      setSubmittingRequestId(null);
+    }
   };
   return (
     <AppShell role={role}>
@@ -938,8 +1014,12 @@ export function Feedback({ role }) {
               onChange={(e) => setText(e.target.value)}
               placeholder="Share useful feedback..."
             />
-            <button className="uiverse-btn" onClick={() => submit(otherId, r.id)}>
-              Send feedback
+            <button
+              className="uiverse-btn"
+              disabled={!!submittingRequestId}
+              onClick={() => submit(otherId, r.id)}
+            >
+              {submittingRequestId === r.id ? 'Sending feedback...' : 'Send feedback'}
             </button>
           </section>
         );
@@ -1103,8 +1183,15 @@ export function AdminAnalytics() {
 
 export function AdminAudit() {
   const users = getUsers();
-  const logs = getAudit();
+  const [logs, setLogs] = useState(() => getAudit());
   const [filter, setFilter] = useState('');
+
+  useEffect(() => {
+    refetchAudit().then((items) => {
+      if (items) setLogs(items);
+    });
+  }, []);
+
   const filtered = logs.filter((log) => {
     const user = users.find((u) => u.id === log.userId);
     const haystack = `${log.action} ${log.resource} ${log.status} ${user?.name || ''} ${user?.email || ''}`.toLowerCase();
@@ -1126,11 +1213,18 @@ export function AdminAudit() {
 
 export function AdminSettings() {
   const [settings, setSettings] = useState(() => getPlatformSettings());
+  const [isSaving, setIsSaving] = useState(false);
   const toast = useToast();
   const save = async () => {
-    const result = await updatePlatformSettings(settings);
-    if (!result.ok) return toast.error(result.error);
-    toast.success('Platform settings saved to MongoDB.');
+    if (isSaving) return;
+    setIsSaving(true);
+    try {
+      const result = await updatePlatformSettings(settings);
+      if (!result.ok) return toast.error(result.error);
+      toast.success('Platform settings saved to MongoDB.');
+    } finally {
+      setIsSaving(false);
+    }
   };
   return (
     <AppShell role="admin">
@@ -1148,7 +1242,7 @@ export function AdminSettings() {
           </div>
         </section>
       </div>
-      <section className="card"><h2>Configuration preview</h2><div className="settings-stat-grid"><div className="settings-stat"><b>{settings.matchingEnabled ? 'ON' : 'OFF'}</b><span>Matching</span></div><div className="settings-stat"><b>{settings.registrationsEnabled ? 'ON' : 'OFF'}</b><span>Registration</span></div><div className="settings-stat"><b>{settings.maintenanceMode ? 'ON' : 'OFF'}</b><span>Maintenance</span></div><div className="settings-stat"><b>{settings.defaultMentorCapacity}</b><span>Default capacity</span></div></div><button className="uiverse-btn" onClick={save}>Save platform settings</button></section>
+      <section className="card"><h2>Configuration preview</h2><div className="settings-stat-grid"><div className="settings-stat"><b>{settings.matchingEnabled ? 'ON' : 'OFF'}</b><span>Matching</span></div><div className="settings-stat"><b>{settings.registrationsEnabled ? 'ON' : 'OFF'}</b><span>Registration</span></div><div className="settings-stat"><b>{settings.maintenanceMode ? 'ON' : 'OFF'}</b><span>Maintenance</span></div><div className="settings-stat"><b>{settings.defaultMentorCapacity}</b><span>Default capacity</span></div></div><button className="uiverse-btn" disabled={isSaving} onClick={save}>{isSaving ? 'Saving settings...' : 'Save platform settings'}</button></section>
     </AppShell>
   );
 }
@@ -1158,16 +1252,23 @@ export function AdminNotifications() {
   const [target, setTarget] = useState('all');
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
+  const [isSending, setIsSending] = useState(false);
   const toast = useToast();
   const send = async (e) => {
     e.preventDefault();
+    if (isSending) return;
     const recipients = target === 'all' ? users : users.filter((u) => u.id === target);
     if (!recipients.length) return toast.error('No recipients found.');
-    const result = await sendAdminNotification(recipients.map((u) => u.id), title, message, 'admin');
-    if (!result.ok) return toast.error(result.error);
-    setTitle('');
-    setMessage('');
-    toast.success(`Notification sent to ${recipients.length} account(s).`);
+    setIsSending(true);
+    try {
+      const result = await sendAdminNotification(recipients.map((u) => u.id), title, message, 'admin');
+      if (!result.ok) return toast.error(result.error);
+      setTitle('');
+      setMessage('');
+      toast.success(`Notification sent to ${recipients.length} account(s).`);
+    } finally {
+      setIsSending(false);
+    }
   };
   return (
     <AppShell role="admin">
@@ -1208,8 +1309,8 @@ export function AdminNotifications() {
               placeholder="Write your notification..."
             />
           </label>
-          <button className="uiverse-btn">
-            <Send size={16} /> Send notification
+          <button className="uiverse-btn" type="submit" disabled={isSending}>
+            <Send size={16} /> {isSending ? 'Sending notification...' : 'Send notification'}
           </button>
         </form>
       </section>

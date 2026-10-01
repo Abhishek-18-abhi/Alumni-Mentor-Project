@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { Check, ChevronRight, Plus, X, CalendarDays } from 'lucide-react';
 import { DOMAINS, MENTORSHIP_GOALS, DAYS, TIME_SLOTS } from '../lib/constants';
 import { useToast } from '../components/Toast';
@@ -29,6 +29,7 @@ export default function Onboarding({ role = 'student' }) {
   const toast = useToast();
   const u = getCurrentUser();
   const [step, setStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [form, setForm] = useState({
     skills: u?.skills || [],
     interests: u?.interests || [],
@@ -39,7 +40,7 @@ export default function Onboarding({ role = 'student' }) {
     capacity: u?.capacity || 1,
   });
   const [newSkill, setNewSkill] = useState('');
-  if (!u) return null;
+  if (!u) return <Navigate to="/login" replace />;
   const availableSkills = seedSkills().filter((x) => !form.skills.includes(x));
   const toggle = (key, x) =>
     setForm((f) => ({
@@ -62,11 +63,17 @@ export default function Onboarding({ role = 'student' }) {
   };
   const finish = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
     if (!form.skills.length) return toast.error('Please select at least one skill.');
-    const result = await updateUser(u.id, { ...form, profileComplete: true });
-    if (!result.ok) return toast.error(result.error || 'Could not complete onboarding.');
-    toast.success('Profile saved to MongoDB.');
-    nav(role === 'mentor' ? '/mentor' : '/student');
+    setIsSubmitting(true);
+    try {
+      const result = await updateUser(u.id, { ...form, profileComplete: true });
+      if (!result.ok) return toast.error(result.error || 'Could not complete onboarding.');
+      toast.success('Profile saved to MongoDB.');
+      nav(role === 'mentor' ? '/mentor' : '/student');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   return (
     <AppShell role={role}>
@@ -243,8 +250,9 @@ export default function Onboarding({ role = 'student' }) {
                 Continue <ChevronRight size={16} />
               </button>
             ) : (
-              <button className="uiverse-btn">
-                Finish onboarding <Check size={16} />
+              <button className="uiverse-btn" type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Finishing onboarding...' : 'Finish onboarding'}{' '}
+                <Check size={16} />
               </button>
             )}
           </div>

@@ -35,6 +35,25 @@ import {
 } from './pages/WorkspacePages';
 const adminInfoPage = (title, text) => <AdminSimple title={title} text={text} />;
 
+function ProtectedRoute({ role, children }) {
+  const session = getSession();
+
+  if (!session) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (role && session.role !== role) {
+    return (
+      <Navigate
+        to={session.role === 'admin' ? '/admin' : session.role === 'mentor' ? '/mentor' : '/student'}
+        replace
+      />
+    );
+  }
+
+  return children;
+}
+
 const publicRoutes = (
   <>
     <Route path="/" element={<Landing />} />
@@ -47,53 +66,53 @@ const publicRoutes = (
 
 const sharedRoutes = (
   <>
-    <Route path="/account-switcher" element={<AccountSwitcher />} />
-    <Route path="/account/add" element={<AccountAdd />} />
-    <Route path="/profile" element={<Profile />} />
-    <Route path="/notifications" element={<Notifications />} />
-    <Route path="/settings" element={<Settings />} />
+    <Route path="/account-switcher" element={<ProtectedRoute><AccountSwitcher /></ProtectedRoute>} />
+    <Route path="/account/add" element={<ProtectedRoute><AccountAdd /></ProtectedRoute>} />
+    <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+    <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
+    <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
   </>
 );
 
 const studentRoutes = (
   <>
-    <Route path="/onboarding" element={<Onboarding role="student" />} />
-    <Route path="/student" element={<StudentDashboard />} />
-    <Route path="/mentors" element={<FindMentor />} />
-    <Route path="/mentor/:id" element={<MentorProfile />} />
-    <Route path="/request" element={<Request />} />
-    <Route path="/matches" element={<Matches />} />
-    <Route path="/calendar" element={<Calendar />} />
-    <Route path="/meetings" element={<Meetings />} />
-    <Route path="/goals" element={<Goals role="student" />} />
-    <Route path="/feedback" element={<Feedback role="student" />} />
+    <Route path="/onboarding" element={<ProtectedRoute role="student"><Onboarding role="student" /></ProtectedRoute>} />
+    <Route path="/student" element={<ProtectedRoute role="student"><StudentDashboard /></ProtectedRoute>} />
+    <Route path="/mentors" element={<ProtectedRoute role="student"><FindMentor /></ProtectedRoute>} />
+    <Route path="/mentor/:id" element={<ProtectedRoute role="student"><MentorProfile /></ProtectedRoute>} />
+    <Route path="/request" element={<ProtectedRoute role="student"><Request /></ProtectedRoute>} />
+    <Route path="/matches" element={<ProtectedRoute role="student"><Matches /></ProtectedRoute>} />
+    <Route path="/calendar" element={<ProtectedRoute role="student"><Calendar /></ProtectedRoute>} />
+    <Route path="/meetings" element={<ProtectedRoute role="student"><Meetings /></ProtectedRoute>} />
+    <Route path="/goals" element={<ProtectedRoute role="student"><Goals role="student" /></ProtectedRoute>} />
+    <Route path="/feedback" element={<ProtectedRoute role="student"><Feedback role="student" /></ProtectedRoute>} />
   </>
 );
 
 const mentorRoutes = (
   <>
-    <Route path="/mentor/onboarding" element={<Onboarding role="mentor" />} />
-    <Route path="/mentor" element={<MentorDashboard />} />
-    <Route path="/mentor/requests" element={<MentorRequests />} />
-    <Route path="/mentor/mentees" element={<Mentees />} />
-    <Route path="/mentor/calendar" element={<MentorAvailability />} />
-    <Route path="/mentor/meetings" element={<Meetings role="mentor" />} />
-    <Route path="/mentor/goals" element={<Goals role="mentor" />} />
-    <Route path="/mentor/feedback" element={<Feedback role="mentor" />} />
-    <Route path="/mentor/profile" element={<Profile />} />
+    <Route path="/mentor/onboarding" element={<ProtectedRoute role="mentor"><Onboarding role="mentor" /></ProtectedRoute>} />
+    <Route path="/mentor" element={<ProtectedRoute role="mentor"><MentorDashboard /></ProtectedRoute>} />
+    <Route path="/mentor/requests" element={<ProtectedRoute role="mentor"><MentorRequests /></ProtectedRoute>} />
+    <Route path="/mentor/mentees" element={<ProtectedRoute role="mentor"><Mentees /></ProtectedRoute>} />
+    <Route path="/mentor/calendar" element={<ProtectedRoute role="mentor"><MentorAvailability /></ProtectedRoute>} />
+    <Route path="/mentor/meetings" element={<ProtectedRoute role="mentor"><Meetings role="mentor" /></ProtectedRoute>} />
+    <Route path="/mentor/goals" element={<ProtectedRoute role="mentor"><Goals role="mentor" /></ProtectedRoute>} />
+    <Route path="/mentor/feedback" element={<ProtectedRoute role="mentor"><Feedback role="mentor" /></ProtectedRoute>} />
+    <Route path="/mentor/profile" element={<ProtectedRoute role="mentor"><Profile /></ProtectedRoute>} />
   </>
 );
 
 const adminRoutes = (
   <>
-    <Route path="/admin" element={<AdminDashboard />} />
-    <Route path="/admin/users" element={<AdminUsers />} />
-    <Route path="/admin/matching" element={<AdminMatching />} />
-    <Route path="/admin/analytics" element={<AdminAnalytics />} />
-    <Route path="/admin/audit" element={<AdminAudit />} />
-    <Route path="/admin/administrators" element={<AdminAdministrators />} />
-    <Route path="/admin/notifications" element={<AdminNotifications />} />
-    <Route path="/admin/settings" element={<AdminSettings />} />
+    <Route path="/admin" element={<ProtectedRoute role="admin"><AdminDashboard /></ProtectedRoute>} />
+    <Route path="/admin/users" element={<ProtectedRoute role="admin"><AdminUsers /></ProtectedRoute>} />
+    <Route path="/admin/matching" element={<ProtectedRoute role="admin"><AdminMatching /></ProtectedRoute>} />
+    <Route path="/admin/analytics" element={<ProtectedRoute role="admin"><AdminAnalytics /></ProtectedRoute>} />
+    <Route path="/admin/audit" element={<ProtectedRoute role="admin"><AdminAudit /></ProtectedRoute>} />
+    <Route path="/admin/administrators" element={<ProtectedRoute role="admin"><AdminAdministrators /></ProtectedRoute>} />
+    <Route path="/admin/notifications" element={<ProtectedRoute role="admin"><AdminNotifications /></ProtectedRoute>} />
+    <Route path="/admin/settings" element={<ProtectedRoute role="admin"><AdminSettings /></ProtectedRoute>} />
   </>
 );
 

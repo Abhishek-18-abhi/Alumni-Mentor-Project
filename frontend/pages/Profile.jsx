@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Navigate } from 'react-router-dom';
 import { DOMAINS, MENTORSHIP_GOALS } from '../lib/constants';
 import { useToast } from '../components/Toast';
 import AppShell from '../components/AppShell';
@@ -8,6 +9,7 @@ import { updateUser } from '../lib/auth';
 export default function Profile() {
   const toast = useToast();
   const u = getCurrentUser();
+  const [isSaving, setIsSaving] = useState(false);
   const [form, setForm] = useState({
     name: u?.name || '',
     college: u?.college || '',
@@ -31,11 +33,17 @@ export default function Profile() {
     }));
   const save = async (e) => {
     e.preventDefault();
-    const result = await updateUser(u.id, { ...form, profileComplete: true });
-    if (!result.ok) return toast.error(result.error || 'Could not save profile.');
-    toast.success('Profile saved to MongoDB.');
+    if (isSaving) return;
+    setIsSaving(true);
+    try {
+      const result = await updateUser(u.id, { ...form, profileComplete: true });
+      if (!result.ok) return toast.error(result.error || 'Could not save profile.');
+      toast.success('Profile saved to MongoDB.');
+    } finally {
+      setIsSaving(false);
+    }
   };
-  if (!u) return null;
+  if (!u) return <Navigate to="/login" replace />;
   return (
     <AppShell role={u.role}>
       <PageTitle
@@ -191,7 +199,9 @@ export default function Profile() {
               </button>
             ))}
           </div>
-          <button className="uiverse-btn">Save profile</button>
+          <button className="uiverse-btn" type="submit" disabled={isSaving}>
+            {isSaving ? 'Saving profile...' : 'Save profile'}
+          </button>
         </section>
       </form>
     </AppShell>

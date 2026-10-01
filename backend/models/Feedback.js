@@ -11,4 +11,8 @@ const feedbackSchema = new mongoose.Schema(
   { timestamps: true, collection: 'feedback' }
 );
 
+feedbackSchema.index({ toUserId: 1, createdAt: -1 });
+feedbackSchema.index({ fromUserId: 1, createdAt: -1 });
+feedbackSchema.index({ requestId: 1 });
+
 export default mongoose.model('Feedback', feedbackSchema);

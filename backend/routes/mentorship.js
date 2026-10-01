@@ -24,8 +24,18 @@ router.post('/', requireAuth, async (req, res, next) => {
     if (!mongoose.isValidObjectId(mentorId)) return res.status(400).json({ message: 'Invalid mentor ID.' });
     const [mentor, mentorProfile] = await Promise.all([User.findOne({ _id: mentorId, role: 'mentor', isActive: { $ne: false } }), Mentor.findOne({ userId: mentorId })]);
     if (!mentor || !mentorProfile) return res.status(404).json({ message: 'Mentor not found.' });
-    const duplicate = await MentorshipRequest.findOne({ studentId: req.user._id, mentorId, status: 'pending' });
-    if (duplicate) return res.status(409).json({ message: 'You already have a pending request with this mentor.' });
+    const existing = await MentorshipRequest.findOne({
+      studentId: req.user._id,
+      mentorId,
+      status: { $in: ['pending', 'accepted'] },
+    });
+    if (existing) {
+      return res.status(409).json({
+        message: existing.status === 'accepted'
+          ? 'You are already actively paired with this mentor.'
+          : 'You already have a pending request with this mentor.',
+      });
+    }
 
     const request = await MentorshipRequest.create({ studentId: req.user._id, mentorId, message, matchSnapshot });
     if (mentor.settings?.notifications !== false && mentor.settings?.requestAlerts !== false) {
@@ -39,6 +49,7 @@ router.post('/', requireAuth, async (req, res, next) => {
 router.patch('/:id/respond', requireAuth, async (req, res, next) => {
   try {
     if (req.user.role !== 'mentor') return res.status(403).json({ message: 'Only mentors can respond to requests.' });
+    if (!mongoose.isValidObjectId(req.params.id)) return res.status(400).json({ message: 'Invalid request ID.' });
     const { status } = req.body;
     if (!['accepted', 'rejected'].includes(status)) return res.status(400).json({ message: 'Invalid response.' });
     const request = await MentorshipRequest.findOne({ _id: req.params.id, mentorId: req.user._id });

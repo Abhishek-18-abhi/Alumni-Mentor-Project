@@ -102,7 +102,21 @@ export function addAudit(userId, action, resource, status = 'Success') {
 }
 export const getCurrentUser = () => {
   const s = getSession();
-  return s ? getUsers().find((u) => u.id === s.id) : null;
+  if (!s) return null;
+  const found = getUsers().find((u) => u.id === s.id);
+  if (found) return found;
+  return {
+    id: s.id,
+    name: s.name || '',
+    email: s.email || '',
+    role: s.role || 'student',
+    skills: [],
+    interests: [],
+    goals: [],
+    languages: ['English'],
+    availability: [],
+    settings: {},
+  };
 };
 export const splitList = (v) =>
   Array.isArray(v)

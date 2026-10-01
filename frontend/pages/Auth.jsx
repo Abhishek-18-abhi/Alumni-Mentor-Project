@@ -24,18 +24,33 @@ export default function Auth({ register = false, adminLogin = false }) {
     capacity: '1',
   });
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const change = (e) => setForm({ ...form, [e.target.name]: e.target.value });
   const submit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
     setError('');
-    if (register) {
-      const r = await registerUser({ ...form, role: mode, languages: String(form.languages || '').split(',').map((x) => x.trim()).filter(Boolean), capacity: Number(form.capacity) || 1 });
-      if (!r.ok) return setError(r.error);
-      nav(mode === 'mentor' ? '/mentor/onboarding' : '/onboarding');
-    } else {
-      const r = await login(form.email, form.password);
-      if (!r.ok) return setError(r.error);
-      nav(r.user.role === 'admin' ? '/admin' : r.user.role === 'mentor' ? '/mentor' : '/student');
+    setIsSubmitting(true);
+    try {
+      if (register) {
+        const r = await registerUser({ ...form, role: mode, languages: String(form.languages || '').split(',').map((x) => x.trim()).filter(Boolean), capacity: Number(form.capacity) || 1 });
+        if (!r.ok) {
+          setForm((f) => ({ ...f, password: '' }));
+          setError(r.error);
+          return;
+        }
+        nav(mode === 'mentor' ? '/mentor/onboarding' : '/onboarding');
+      } else {
+        const r = await login(form.email, form.password);
+        if (!r.ok) {
+          setForm((f) => ({ ...f, password: '' }));
+          setError(r.error);
+          return;
+        }
+        nav(r.user.role === 'admin' ? '/admin' : r.user.role === 'mentor' ? '/mentor' : '/student');
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
   return (
@@ -72,6 +87,7 @@ export default function Auth({ register = false, adminLogin = false }) {
               type="button"
               className={mode === 'student' ? 'selected' : ''}
               onClick={() => setMode('student')}
+              disabled={isSubmitting}
             >
               <GraduationCap size={20} />
               <b>Student</b>
@@ -81,6 +97,7 @@ export default function Auth({ register = false, adminLogin = false }) {
               type="button"
               className={mode === 'mentor' ? 'selected' : ''}
               onClick={() => setMode('mentor')}
+              disabled={isSubmitting}
             >
               <BriefcaseBusiness size={20} />
               <b>Alumni Mentor</b>
@@ -207,8 +224,15 @@ export default function Auth({ register = false, adminLogin = false }) {
             </>
           )}
           {error && <div className="error-box">{error}</div>}
-          <button className="uiverse-btn full" type="submit">
-            {register ? 'Create account' : 'Sign in'} <ArrowRight size={17} />
+          <button className="uiverse-btn full" type="submit" disabled={isSubmitting}>
+            {isSubmitting
+              ? register
+                ? 'Creating account...'
+                : 'Signing in...'
+              : register
+                ? 'Create account'
+                : 'Sign in'}{' '}
+            <ArrowRight size={17} />
           </button>
         </form>
         {!register && (

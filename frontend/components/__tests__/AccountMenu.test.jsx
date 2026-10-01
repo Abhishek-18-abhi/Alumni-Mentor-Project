@@ -42,4 +42,13 @@ describe('AccountMenu', () => {
     await userEvent.keyboard('{Escape}');
     expect(screen.queryByText('Switch account')).not.toBeInTheDocument();
   });
+
+  it('signs out without recursive call stack overflow', async () => {
+    renderMenu();
+    await userEvent.click(screen.getByText('Test User'));
+    const signoutBtn = screen.getByText('Sign out');
+    expect(signoutBtn).toBeInTheDocument();
+    await userEvent.click(signoutBtn);
+    expect(screen.queryByText('Sign out')).not.toBeInTheDocument();
+  });
 });

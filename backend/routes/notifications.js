@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import mongoose from 'mongoose';
 import Notification from '../models/Notification.js';
 import { requireAuth } from '../middleware/auth.js';
 
@@ -9,7 +10,9 @@ router.post('/broadcast', requireAuth, async (req, res, next) => {
     if (req.user.role !== 'admin') return res.status(403).json({ message: 'Only administrators can send broadcast notifications.' });
     const { userIds = [], title, message, type = 'admin' } = req.body;
     if (!title || !message || !Array.isArray(userIds) || !userIds.length) return res.status(400).json({ message: 'Recipients, title and message are required.' });
-    const docs = userIds.map((userId) => ({ userId, title, message, type }));
+    const validIds = userIds.filter((id) => mongoose.isValidObjectId(id));
+    if (!validIds.length) return res.status(400).json({ message: 'No valid recipient user IDs provided.' });
+    const docs = validIds.map((userId) => ({ userId, title, message, type }));
     const notifications = await Notification.insertMany(docs);
     res.status(201).json({ notifications });
   } catch (err) { next(err); }
@@ -24,6 +27,7 @@ router.get('/', requireAuth, async (req, res, next) => {
 
 router.patch('/:id/read', requireAuth, async (req, res, next) => {
   try {
+    if (!mongoose.isValidObjectId(req.params.id)) return res.status(400).json({ message: 'Invalid notification ID.' });
     const notification = await Notification.findOneAndUpdate(
       { _id: req.params.id, userId: req.user._id },
       { read: true },

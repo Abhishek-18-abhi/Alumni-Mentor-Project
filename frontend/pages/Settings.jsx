@@ -27,6 +27,7 @@ export default function Settings() {
   const [prefs, setPrefs] = useState(() => getPrefs(user));
   const [passwords, setPasswords] = useState({ current: '', next: '', confirm: '' });
   const [saving, setSaving] = useState(false);
+  const [savingPassword, setSavingPassword] = useState(false);
   useEffect(() => {
     document.body.classList.toggle('compact-mode', !!prefs.compactMode);
     return () => document.body.classList.remove('compact-mode');
@@ -48,23 +49,32 @@ export default function Settings() {
   }, [user]);
 
   const savePreferences = async () => {
-    if (!user) return;
+    if (!user || saving) return;
     setSaving(true);
-    const result = await updateUser(user.id, { settings: prefs });
-    setSaving(false);
-    if (result.ok) toast.success('Settings saved to MongoDB.');
-    else toast.error(result.error || 'Could not save settings.');
+    try {
+      const result = await updateUser(user.id, { settings: prefs });
+      if (result.ok) toast.success('Settings saved to MongoDB.');
+      else toast.error(result.error || 'Could not save settings.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const updatePref = (key, value) => setPrefs((p) => ({ ...p, [key]: value }));
 
   const submitPassword = async (e) => {
     e.preventDefault();
+    if (savingPassword) return;
     if (passwords.next !== passwords.confirm) return toast.error('New passwords do not match.');
-    const result = await changePassword(user?.id, passwords.current, passwords.next);
-    if (!result.ok) return toast.error(result.error);
-    setPasswords({ current: '', next: '', confirm: '' });
-    toast.success('Password changed successfully.');
+    setSavingPassword(true);
+    try {
+      const result = await changePassword(user?.id, passwords.current, passwords.next);
+      if (!result.ok) return toast.error(result.error);
+      setPasswords({ current: '', next: '', confirm: '' });
+      toast.success('Password changed successfully.');
+    } finally {
+      setSavingPassword(false);
+    }
   };
 
   const exportData = () => {
@@ -161,7 +171,9 @@ export default function Settings() {
               <label>New password<input required minLength="8" type="password" value={passwords.next} onChange={(e) => setPasswords({ ...passwords, next: e.target.value })} /></label>
               <label>Confirm password<input required minLength="8" type="password" value={passwords.confirm} onChange={(e) => setPasswords({ ...passwords, confirm: e.target.value })} /></label>
             </div>
-            <button className="btn secondary">Change password</button>
+            <button className="btn secondary" type="submit" disabled={savingPassword}>
+              {savingPassword ? 'Changing password...' : 'Change password'}
+            </button>
           </form>
         </section>
 

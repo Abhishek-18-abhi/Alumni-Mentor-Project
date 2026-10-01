@@ -16,35 +16,50 @@ export default function AdminAdministrators() {
   const [f, setF] = useState({ name: '', email: '', password: '' });
   const [error, setError] = useState('');
   const [pendingRemoval, setPendingRemoval] = useState(null);
+  const [isAdding, setIsAdding] = useState(false);
+  const [isRemoving, setIsRemoving] = useState(false);
   const toast = useToast();
   const admins = users.filter((u) => u.role === 'admin');
   const add = async (e) => {
     e.preventDefault();
-    const r = await createAdmin(f);
-    if (!r.ok) return setError(r.error);
-    await hydrateLocalCache({ includeAudit: true });
-    setUsers(getUsers());
-    setF({ name: '', email: '', password: '' });
-    setError('');
-    setShow(false);
-    toast.success('Administrator created.');
+    if (isAdding) return;
+    setIsAdding(true);
+    try {
+      const r = await createAdmin(f);
+      if (!r.ok) return setError(r.error);
+      await hydrateLocalCache({ includeAudit: true });
+      setUsers(getUsers());
+      setF({ name: '', email: '', password: '' });
+      setError('');
+      setShow(false);
+      toast.success('Administrator created.');
+    } finally {
+      setIsAdding(false);
+    }
   };
   const remove = (id) => {
     if (admins.length <= 1) return toast.error('At least one administrator must remain.');
+    if (id === s?.id) return toast.error('You cannot remove your own active administrator account.');
     setPendingRemoval(id);
   };
   const confirmRemove = async () => {
     const id = pendingRemoval;
-    setPendingRemoval(null);
-    if (getUsers().filter((u) => u.role === 'admin').length <= 1)
+    if (isRemoving || !id) return;
+    if (getUsers().filter((u) => u.role === 'admin').length <= 1) {
+      setPendingRemoval(null);
       return toast.error('At least one administrator must remain.');
+    }
+    setIsRemoving(true);
     try {
       await apiDelete(`/users/${id}`);
       await hydrateLocalCache({ includeAudit: true });
       setUsers(getUsers());
+      setPendingRemoval(null);
       toast.success('Administrator removed.');
     } catch (error) {
       toast.error(error.message);
+    } finally {
+      setIsRemoving(false);
     }
   };
   return (
@@ -84,7 +99,8 @@ export default function AdminAdministrators() {
               <span>
                 <button
                   className="icon-btn danger"
-                  disabled={admins.length <= 1}
+                  disabled={admins.length <= 1 || a.id === s?.id}
+                  title={a.id === s?.id ? 'Cannot remove current active administrator' : undefined}
                   onClick={() => remove(a.id)}
                 >
                   <Trash2 size={16} />
@@ -126,7 +142,9 @@ export default function AdminAdministrators() {
               />
             </label>
             {error && <div className="error-box">{error}</div>}
-            <button className="uiverse-btn full">Create administrator</button>
+            <button className="uiverse-btn full" type="submit" disabled={isAdding}>
+              {isAdding ? 'Creating administrator...' : 'Create administrator'}
+            </button>
           </form>
         </ModalShell>
       )}

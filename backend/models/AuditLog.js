@@ -10,4 +10,7 @@ const auditLogSchema = new mongoose.Schema(
   { timestamps: true, collection: 'auditLogs' }
 );
 
+auditLogSchema.index({ createdAt: -1 });
+auditLogSchema.index({ userId: 1, createdAt: -1 });
+
 export default mongoose.model('AuditLog', auditLogSchema);

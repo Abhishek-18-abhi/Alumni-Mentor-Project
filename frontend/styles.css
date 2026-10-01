@@ -255,7 +255,7 @@ a {
   line-height: 1.7;
 }
 .auth-card {
-  margin: auto;
+  margin: 32px auto;
   width: min(100% - 48px, 440px);
   background: #fff;
   border: 1px solid #e4e9f1;

@@ -1,3 +1,5 @@
+import { setSession } from './storage';
+
 const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/$/, '');
 const TOKEN_KEY = 'mc_api_token';
 
@@ -24,7 +26,13 @@ export async function apiRequest(path, options = {}) {
   let data = null;
   try { data = await response.json(); } catch { data = null; }
   if (!response.ok) {
-    if (response.status === 401) clearToken();
+    if (response.status === 401) {
+      clearToken();
+      setSession(null);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('mc:auth-expired'));
+      }
+    }
     throw new Error(data?.message || `Request failed (${response.status}).`);
   }
   return data;
@@ -39,7 +47,18 @@ const idOf = (value) => value?._id || value?.id || value;
 const mapUser = (u) => u ? ({ ...u, id: idOf(u) }) : u;
 const mapRequest = (r) => r ? ({ ...r, id: idOf(r), studentId: idOf(r.studentId), mentorId: idOf(r.mentorId) }) : r;
 const mapMeeting = (m) => m ? ({ ...m, id: idOf(m), mentorId: idOf(m.mentorId), studentId: idOf(m.studentId), status: m.status || 'scheduled' }) : m;
-const mapGoal = (g) => g ? ({ ...g, id: idOf(g), studentId: idOf(g.studentId), createdBy: idOf(g.createdBy), mentorId: idOf(g.createdBy) }) : g;
+const mapGoal = (g) => {
+  if (!g) return g;
+  const studentId = idOf(g.studentId);
+  const createdBy = idOf(g.createdBy);
+  return {
+    ...g,
+    id: idOf(g),
+    studentId,
+    createdBy,
+    mentorId: createdBy && createdBy !== studentId ? createdBy : undefined,
+  };
+};
 const mapFeedback = (f) => f ? ({ ...f, id: idOf(f), fromUserId: idOf(f.fromUserId), toUserId: idOf(f.toUserId), requestId: idOf(f.requestId) }) : f;
 const mapNotification = (n) => n ? ({ ...n, id: idOf(n), userId: idOf(n.userId) }) : n;
 const mapAudit = (a) => a ? ({ ...a, id: idOf(a), userId: idOf(a.userId), timestamp: a.timestamp || a.createdAt }) : a;
@@ -51,6 +70,83 @@ export const normalizeGoal = mapGoal;
 export const normalizeFeedback = mapFeedback;
 export const normalizeNotification = mapNotification;
 export const normalizeAudit = mapAudit;
+
+export async function refetchMeetings() {
+  try {
+    const data = await apiGet('/meetings');
+    const items = (data.meetings || []).map(mapMeeting);
+    localStorage.setItem('mc_meetings', JSON.stringify(items));
+    return items;
+  } catch (e) {
+    console.warn('Failed to refetch meetings:', e.message);
+  }
+}
+
+export async function refetchGoals() {
+  try {
+    const data = await apiGet('/goals');
+    const items = (data.goals || []).map(mapGoal);
+    localStorage.setItem('mc_goals', JSON.stringify(items));
+    return items;
+  } catch (e) {
+    console.warn('Failed to refetch goals:', e.message);
+  }
+}
+
+export async function refetchFeedback() {
+  try {
+    const data = await apiGet('/feedback');
+    const items = (data.feedback || []).map(mapFeedback);
+    localStorage.setItem('mc_feedback', JSON.stringify(items));
+    return items;
+  } catch (e) {
+    console.warn('Failed to refetch feedback:', e.message);
+  }
+}
+
+export async function refetchNotifications() {
+  try {
+    const data = await apiGet('/notifications');
+    const items = (data.notifications || []).map(mapNotification);
+    localStorage.setItem('mc_notifications', JSON.stringify(items));
+    return items;
+  } catch (e) {
+    console.warn('Failed to refetch notifications:', e.message);
+  }
+}
+
+export async function refetchRequests() {
+  try {
+    const data = await apiGet('/mentorship-requests');
+    const items = (data.requests || []).map(mapRequest);
+    localStorage.setItem('mc_requests', JSON.stringify(items));
+    return items;
+  } catch (e) {
+    console.warn('Failed to refetch requests:', e.message);
+  }
+}
+
+export async function refetchUsers() {
+  try {
+    const data = await apiGet('/users');
+    const items = (data.users || []).map(mapUser);
+    localStorage.setItem('mc_users', JSON.stringify(items));
+    return items;
+  } catch (e) {
+    console.warn('Failed to refetch users:', e.message);
+  }
+}
+
+export async function refetchAudit() {
+  try {
+    const data = await apiGet('/audit-logs');
+    const items = (data.audit || []).map(mapAudit);
+    localStorage.setItem('mc_audit', JSON.stringify(items));
+    return items;
+  } catch (e) {
+    console.warn('Failed to refetch audit logs:', e.message);
+  }
+}
 
 export async function hydrateLocalCache({ includeAudit = true } = {}) {
   const results = await Promise.allSettled([

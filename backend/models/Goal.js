@@ -12,4 +12,7 @@ const goalSchema = new mongoose.Schema(
   { timestamps: true, collection: 'goals' }
 );
 
+goalSchema.index({ studentId: 1, createdAt: -1 });
+goalSchema.index({ createdBy: 1, createdAt: -1 });
+
 export default mongoose.model('Goal', goalSchema);

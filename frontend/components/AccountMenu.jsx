@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { ChevronDown, LogOut, UserRound, Repeat2, Shield, Plus, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getSession, getUsers } from '../lib/storage';
-import { logout } from '../lib/auth';
+import { logout as authLogout } from '../lib/auth';
 export default function AccountMenu() {
   const [open, setOpen] = useState(false);
   const wrapRef = useRef(null);
@@ -28,8 +28,8 @@ export default function AccountMenu() {
   const users = getUsers();
   const roleLabel =
     s?.role === 'admin' ? 'Administrator' : s?.role === 'mentor' ? 'Alumni Mentor' : 'Student';
-  const logout = () => {
-    logout();
+  const handleLogout = () => {
+    authLogout();
     setOpen(false);
     nav('/login');
   };
@@ -102,7 +102,7 @@ export default function AccountMenu() {
             Settings
           </button>
           <div className="menu-divider" />
-          <button className="danger-text" onClick={logout}>
+          <button className="danger-text" onClick={handleLogout}>
             <LogOut size={17} />
             Sign out
           </button>

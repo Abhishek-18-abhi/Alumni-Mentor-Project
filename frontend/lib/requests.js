@@ -1,11 +1,17 @@
-import { apiPatch, apiPost, hydrateLocalCache, normalizeRequest } from './api';
-import { getRequests } from './storage';
+import {
+  apiPatch,
+  apiPost,
+  normalizeRequest,
+  refetchRequests,
+  refetchNotifications,
+  refetchUsers,
+} from './api';
 
 export async function createMentorshipRequest(student, mentor, message, matchSnapshot) {
   try {
     const result = await apiPost('/mentorship-requests', { mentorId: mentor.id, message, matchSnapshot });
     const request = normalizeRequest(result.request);
-    await hydrateLocalCache({ includeAudit: false });
+    await Promise.allSettled([refetchRequests(), refetchNotifications()]);
     return { ok: true, request };
   } catch (error) {
     return { ok: false, error: error.message };
@@ -17,7 +23,7 @@ export async function respondToRequest(_mentorId, requestId, status) {
   try {
     const result = await apiPatch(`/mentorship-requests/${requestId}/respond`, { status });
     const request = normalizeRequest(result.request);
-    await hydrateLocalCache({ includeAudit: false });
+    await Promise.allSettled([refetchRequests(), refetchUsers(), refetchNotifications()]);
     return { ok: true, request };
   } catch (error) {
     return { ok: false, error: error.message };
