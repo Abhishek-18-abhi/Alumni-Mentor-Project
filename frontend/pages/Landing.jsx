@@ -11,8 +11,6 @@ export default function Landing() {
         <Logo />
         <nav>
           <a href="#how">How it works</a>
-          <a href="#features">Features</a>
-          <a href="#about">About</a>
           <Link to="/admin/login">
             Administrator <FiExternalLink size={13} />
           </Link>
@@ -69,7 +67,7 @@ export default function Landing() {
           <span className="eyebrow">How it works</span>
           <h2>A real mentorship workflow</h2>
         </div>
-        <div id="features" className="feature-grid">
+        <div className="feature-grid">
           <Feature
             icon={Users}
             title="Create profiles"
