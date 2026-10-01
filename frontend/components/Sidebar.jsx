@@ -15,9 +15,10 @@ import {
   UserCog,
   Bell,
   LogOut,
+  ArrowRight,
 } from 'lucide-react';
 import Logo from './Logo';
-import { getSession, getRequests, getUsers } from '../lib/storage';
+import { getSession, getRequests, getUsers, getMeetings } from '../lib/storage';
 import { logout as authLogout } from '../lib/auth';
 
 const navMaps = {
@@ -262,6 +263,30 @@ export default function Sidebar({ role = 'student', isOpen = false, onClose = ()
     }
   };
 
+  let pendingRequestsCount = 0;
+  let userMeetingsCount = 0;
+  try {
+    const allReqs = getRequests();
+    const allMeetings = getMeetings();
+    pendingRequestsCount = allReqs.filter(
+      (r) => r.mentorId === user?.id && r.status === 'pending'
+    ).length;
+    userMeetingsCount = allMeetings.filter(
+      (m) => (m.studentId === user?.id || m.mentorId === user?.id) && m.status !== 'cancelled'
+    ).length;
+  } catch {
+    // fallback gracefully
+  }
+
+  const getNavBadge = (to) => {
+    if (to === '/matches') return 'Live';
+    if (to === '/mentor/requests' && pendingRequestsCount > 0) return String(pendingRequestsCount);
+    if ((to === '/meetings' || to === '/mentor/meetings') && userMeetingsCount > 0) return String(userMeetingsCount);
+    if (to === '/admin/audit') return 'Live';
+    if (to === '/admin/matching') return 'AI';
+    return null;
+  };
+
   return (
     <aside className={`sidebar${isOpen ? ' mobile-open' : ''}`}>
       {/* Brand Header */}
@@ -281,12 +306,16 @@ export default function Sidebar({ role = 'student', isOpen = false, onClose = ()
 
       {/* Main Navigation */}
       <nav className="sidebar-nav">
-        {navItems.map(([label, to, Icon]) => (
-          <NavLink key={to} to={to} end onClick={onClose}>
-            <Icon size={18} />
-            <span>{label}</span>
-          </NavLink>
-        ))}
+        {navItems.map(([label, to, Icon]) => {
+          const badge = getNavBadge(to);
+          return (
+            <NavLink key={to} to={to} end onClick={onClose}>
+              <Icon size={18} />
+              <span>{label}</span>
+              {badge && <span className="sidebar-nav-badge">{badge}</span>}
+            </NavLink>
+          );
+        })}
       </nav>
 
       {/* Role-Specific Contacts / Mentors / Mentees Section */}
@@ -301,6 +330,28 @@ export default function Sidebar({ role = 'student', isOpen = false, onClose = ()
             />
           ))}
         </div>
+      </div>
+
+      {/* Shopeers Promo Callout Card */}
+      <div className="sidebar-promo-card">
+        <div className="promo-badge-icon">
+          <Sparkles size={17} />
+        </div>
+        <h4 className="promo-title">AI Match Pro</h4>
+        <p className="promo-copy">
+          Unlock instant AI matching, priority session booking, and detailed career analytics.
+        </p>
+        <button
+          type="button"
+          className="promo-btn"
+          onClick={() => {
+            onClose();
+            nav(role === 'mentor' ? '/mentor/calendar' : '/matches');
+          }}
+        >
+          <span>Upgrade to Pro!</span>
+          <ArrowRight size={13} />
+        </button>
       </div>
 
       {/* Bottom User Card / Actions */}
