@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#2563EB"/>
+      <stop offset="100%" stop-color="#1E40AF"/>
+    </linearGradient>
+    <linearGradient id="capGrad" x1="12" y1="14" x2="52" y2="46" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#EFF6FF"/>
+    </linearGradient>
+    <filter id="shadow" x="6" y="8" width="52" height="48" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#0F172A" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+  
+  <!-- Rounded Base with Gradient -->
+  <rect width="64" height="64" rx="16" fill="url(#bgGrad)"/>
+  
+  <!-- Modern Graduation Cap & Interconnected Mentorship Nodes -->
+  <g filter="url(#shadow)">
+    <!-- Mortarboard Diamond -->
+    <path d="M32 14L12 24.5L32 35L52 24.5L32 14Z" fill="url(#capGrad)"/>
+    
+    <!-- Cap Base Arc -->
+    <path d="M19 28.5V40C19 45.5 24.8 49 32 49C39.2 49 45 45.5 45 40V28.5" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+    
+    <!-- Tassel String and Ring -->
+    <path d="M48 26.5V41" stroke="#93C5FD" stroke-width="2.5" stroke-linecap="round"/>
+    <circle cx="48" cy="42.5" r="2.5" fill="#BFDBFE"/>
+    
+    <!-- Connected Mentorship Center Nodes -->
+    <circle cx="32" cy="24.5" r="3" fill="#2563EB"/>
+    <circle cx="32" cy="39" r="3" fill="#60A5FA"/>
+    <path d="M32 27.5V36" stroke="#93C5FD" stroke-width="2" stroke-linecap="round" stroke-dasharray="2 2"/>
+  </g>
+</svg>

@@ -40,9 +40,10 @@ a {
   border-radius: 11px;
   display: grid;
   place-items: center;
-  background: #111827;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
   color: white;
   font-weight: 900;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
 }
 .landing {
   min-height: 100vh;
