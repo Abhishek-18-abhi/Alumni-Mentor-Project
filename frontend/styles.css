@@ -5,10 +5,13 @@
    ========================================================================== */
 
 :root {
-  /* Shopeers Modern SaaS Canvas & Surfaces */
-  --background: #f4f6fa;
+  /* Modern Clean Canvas & Surfaces (Harmonized with Landing Page) */
+  --background: #f8fafc;
   --surface: #ffffff;
   --surface-raised: #ffffff;
+  --surface-muted: #f8fafc;
+  --surface-accent: #f0f7ff;
+  --surface-accent-border: #e0f2fe;
   --foreground: #0f172a;
   --foreground-muted: #64748b;
   --foreground-subtle: #475569;
@@ -19,17 +22,18 @@
   --primary-foreground: #ffffff;
   --primary-subtle: #eff6ff;
   --primary-border: #bfdbfe;
-  --ring: rgba(37, 99, 235, 0.22);
+  --ring: rgba(37, 99, 235, 0.2);
 
-  /* Deep Slate & Dark Accents */
-  --dark-primary: #0f172a;
-  --dark-primary-hover: #1e293b;
+  /* Deep Brand Navy (Landing Page Primary Action) */
+  --dark-primary: #0f274a;
+  --dark-primary-hover: #1e3a8a;
   --dark-primary-foreground: #ffffff;
 
   /* Secondary & Neutral Tints */
   --secondary: #f1f5f9;
   --secondary-hover: #e2e8f0;
   --secondary-foreground: #0f172a;
+  --secondary-border: #e2e8f0;
 
   /* Borders & Hairlines */
   --border: #e2e8f0;
@@ -37,20 +41,23 @@
   --border-hover: #cbd5e1;
 
   /* Status Accents */
-  --success: #10b981;
+  --success: #059669;
   --success-surface: #ecfdf5;
   --success-border: #a7f3d0;
   --success-text: #059669;
 
-  --warning: #f59e0b;
+  --warning: #d97706;
   --warning-surface: #fffbeb;
   --warning-border: #fde68a;
   --warning-text: #d97706;
 
-  --danger: #f43f5e;
-  --danger-surface: #fff1f2;
+  --danger: #dc2626;
+  --danger-surface: #fef2f2;
   --danger-border: #fecdd3;
-  --danger-text: #e11d48;
+  --danger-text: #dc2626;
+
+  /* Typography */
+  --font-sans: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
   /* Accent Tints for Analytics & Charts */
   --chart-blue: #2563eb;
@@ -86,19 +93,17 @@
 
 body {
   margin: 0;
-  font-family:
-    'Inter',
-    ui-sans-serif,
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    Roboto,
-    sans-serif;
+  font-family: var(--font-sans, 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif);
   color: var(--foreground);
   background: var(--background);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-sans, 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif);
+  color: var(--foreground);
+  letter-spacing: -0.025em;
 }
 
 button,
@@ -133,19 +138,24 @@ a {
 .brand-mark {
   width: 32px;
   height: 32px;
-  border-radius: var(--radius-sm);
+  border-radius: 9px;
   display: grid;
   place-items: center;
-  background: linear-gradient(135deg, #03045e 0%, #0077b6 100%);
+  background: var(--dark-primary, #0f274a);
   color: white;
   font-weight: 800;
-  box-shadow: 0 2px 10px rgba(0, 119, 182, 0.28);
+  box-shadow: 0 2px 8px rgba(15, 39, 74, 0.2);
+  transition: transform 0.15s ease;
+}
+
+.brand:hover .brand-mark {
+  transform: scale(1.04);
 }
 
 .brand-text {
   font-weight: 800;
-  font-size: 1.15rem;
-  letter-spacing: -0.03em;
+  font-size: 1.18rem;
+  letter-spacing: -0.025em;
   color: var(--foreground);
   display: inline-flex;
   align-items: center;
@@ -162,8 +172,8 @@ a {
 
 .btn {
   border: 1px solid transparent;
-  border-radius: var(--radius-md);
-  padding: 8px 15px;
+  border-radius: var(--radius-pill, 9999px);
+  padding: 8px 18px;
   font-size: 0.875rem;
   font-weight: 600;
   letter-spacing: -0.01em;
@@ -172,21 +182,39 @@ a {
   justify-content: center;
   gap: 8px;
   text-decoration: none;
-  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
   box-shadow: var(--shadow-xs);
+  cursor: pointer;
 }
 
 .btn.primary {
-  background: var(--primary);
+  background: var(--dark-primary, #0f274a);
   color: #ffffff;
   border-color: transparent;
-  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+  box-shadow: 0 2px 8px rgba(15, 39, 74, 0.15);
 }
 
 .btn.primary:hover {
+  background: var(--dark-primary-hover, #1e3a8a);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(15, 39, 74, 0.25);
+  color: #ffffff;
+}
+
+.btn.blue,
+.btn.accent {
+  background: var(--primary);
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.2);
+}
+
+.btn.blue:hover,
+.btn.accent:hover {
   background: var(--primary-hover);
   transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+  color: #ffffff;
 }
 
 .btn.dark {
@@ -198,20 +226,21 @@ a {
 .btn.dark:hover {
   background: var(--dark-primary-hover);
   transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 4px 14px rgba(15, 39, 74, 0.25);
 }
 
 .btn.secondary {
   background: #ffffff;
   color: var(--foreground);
-  border: 1px solid var(--border);
+  border: 1.5px solid var(--border);
   box-shadow: var(--shadow-xs);
 }
 
 .btn.secondary:hover {
-  background: var(--background);
+  background: var(--surface-muted);
   border-color: var(--border-hover);
-  color: var(--foreground);
+  color: var(--primary);
+  transform: translateY(-1px);
 }
 
 .btn.ghost {
@@ -222,16 +251,22 @@ a {
 }
 
 .btn.ghost:hover {
-  background: var(--secondary);
-  color: var(--foreground);
+  background: var(--primary-subtle);
+  color: var(--primary);
 }
 
 .btn.mini {
-  padding: 4px 10px;
+  padding: 4px 12px;
   font-size: 0.78rem;
-  font-weight: 550;
-  border-radius: var(--radius-sm);
+  font-weight: 600;
+  border-radius: var(--radius-pill);
   margin-left: 6px;
+}
+
+.btn.small {
+  padding: 6px 14px;
+  font-size: 0.82rem;
+  border-radius: var(--radius-pill);
 }
 
 /* ==========================================================================
@@ -240,7 +275,7 @@ a {
 
 .landing {
   min-height: 100vh;
-  background: radial-gradient(100% 55% at 50% 0%, #caf0f8 0%, #f4f9fc 70%, #ffffff 100%), #ffffff;
+  background: radial-gradient(100% 55% at 50% 0%, rgba(191, 219, 254, 0.4) 0%, #f8fafc 70%, #ffffff 100%), #ffffff;
 }
 
 .landing-nav {
@@ -305,7 +340,7 @@ a {
 }
 
 .hero h1 span {
-  background: linear-gradient(135deg, #023e8a 0%, #0077b6 50%, #00b4d8 100%);
+  background: linear-gradient(135deg, #0f274a 0%, #2563eb 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -515,7 +550,7 @@ a {
   align-items: center;
   justify-content: center;
   padding: 40px 20px;
-  background: radial-gradient(circle at 50% 0%, #caf0f8, #f4f9fc 75%), var(--background);
+  background: radial-gradient(ellipse at 50% 0%, rgba(191, 219, 254, 0.45) 0%, #f8fafc 65%, #ffffff 100%), #f8fafc;
 }
 
 .auth-side {
@@ -524,12 +559,12 @@ a {
 
 .auth-card {
   margin: auto;
-  width: min(100%, 450px);
-  background: var(--surface);
+  width: min(100%, 460px);
+  background: #ffffff;
   border: 1px solid var(--border);
-  border-radius: var(--radius-xl);
-  padding: 34px 30px;
-  box-shadow: var(--shadow-lg);
+  border-radius: 22px;
+  padding: 38px 34px;
+  box-shadow: 0 14px 40px rgba(15, 23, 42, 0.06), 0 2px 8px rgba(15, 23, 42, 0.03);
 }
 
 .auth-card.register-mode {
@@ -1488,15 +1523,16 @@ textarea:focus {
 .mentor-card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 20px;
-  box-shadow: var(--shadow-sm);
-  transition: all 0.15s ease;
+  border-radius: 16px;
+  padding: 22px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02), 0 6px 18px rgba(15, 23, 42, 0.03);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .mentor-card:hover {
   border-color: var(--border-hover);
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+  transform: translateY(-2px);
 }
 
 .mentor-avatar,
@@ -1815,7 +1851,7 @@ textarea:focus {
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(3, 4, 94, 0.45);
+  background: rgba(15, 23, 42, 0.55);
   backdrop-filter: blur(5px);
   display: grid;
   place-items: center;
@@ -2419,21 +2455,21 @@ textarea:focus {
 }
 
 .shopeers-kpi-card {
-  background: var(--surface);
+  background: #ffffff;
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 20px 22px;
+  border-radius: 16px;
+  padding: 22px 24px;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02), 0 6px 18px rgba(15, 23, 42, 0.03);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
 }
 
 .shopeers-kpi-card:hover {
   border-color: var(--border-hover);
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
   transform: translateY(-2px);
 }
 
@@ -3616,7 +3652,7 @@ textarea:focus {
   width: 38px;
   height: 38px;
   border-radius: var(--radius-md);
-  background: linear-gradient(135deg, #03045e, #0077b6);
+  background: linear-gradient(135deg, #0f274a, #2563eb);
   color: white;
   font-weight: 750;
   display: grid;
@@ -3691,7 +3727,7 @@ textarea:focus {
 
 .sim-bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, #023e8a, #0077b6, #00b4d8);
+  background: linear-gradient(90deg, #0f274a, #2563eb);
   border-radius: inherit;
   transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }

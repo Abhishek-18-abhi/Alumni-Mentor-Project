@@ -75,6 +75,7 @@ app.use(metricsMiddleware);
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 500,
+  skip: (req) => process.env.NODE_ENV !== 'production' || req.ip === '127.0.0.1' || req.ip === '::1' || req.ip === '::ffff:127.0.0.1',
   standardHeaders: true,
   legacyHeaders: false,
   message: { message: 'Too many requests, please try again later.' },

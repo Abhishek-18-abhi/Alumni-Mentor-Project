@@ -24,15 +24,15 @@ export default function Logo({ showText = true, size = 34 }) {
           />
 
           {/* Tassel String and Ring */}
-          <path d="M49 26V40.5" stroke="#90E0EF" strokeWidth="2.8" strokeLinecap="round" />
-          <circle cx="49" cy="42" r="2.5" fill="#CAF0F8" />
+          <path d="M49 26V40.5" stroke="#93c5fd" strokeWidth="2.8" strokeLinecap="round" />
+          <circle cx="49" cy="42" r="2.5" fill="#bfdbfe" />
 
           {/* Connected Mentorship Nodes */}
-          <circle cx="32" cy="24" r="3" fill="#0077B6" />
-          <circle cx="32" cy="38" r="3" fill="#00B4D8" />
+          <circle cx="32" cy="24" r="3" fill="#2563eb" />
+          <circle cx="32" cy="38" r="3" fill="#3b82f6" />
           <path
             d="M32 27V35"
-            stroke="#90E0EF"
+            stroke="#93c5fd"
             strokeWidth="2.2"
             strokeLinecap="round"
             strokeDasharray="2 2"

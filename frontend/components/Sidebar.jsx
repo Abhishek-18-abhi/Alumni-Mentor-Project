@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import React from 'react';
+import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
   Users,
@@ -14,11 +14,9 @@ import {
   Settings,
   UserCog,
   Bell,
-  LogOut,
 } from 'lucide-react';
 import Logo from './Logo';
 import { getSession } from '../lib/storage';
-import { logout as authLogout } from '../lib/auth';
 import { useMentorshipRequests, useMeetings } from '../hooks/useApi';
 
 const navMaps = {
@@ -31,7 +29,6 @@ const navMaps = {
     ['Goals', '/goals', Target],
     ['Feedback', '/feedback', Star],
     ['Notifications', '/notifications', Bell],
-    ['Settings', '/settings', Settings],
   ],
   mentor: [
     ['Dashboard', '/mentor', LayoutDashboard],
@@ -42,7 +39,6 @@ const navMaps = {
     ['Goals', '/mentor/goals', Target],
     ['Feedback', '/mentor/feedback', Star],
     ['Notifications', '/notifications', Bell],
-    ['Settings', '/settings', Settings],
   ],
   admin: [
     ['Overview', '/admin', LayoutDashboard],
@@ -57,13 +53,7 @@ const navMaps = {
 };
 
 export default function Sidebar({ role = 'student', isOpen = false, onClose = () => {} }) {
-  const nav = useNavigate();
   const user = getSession();
-
-  const handleLogout = () => {
-    authLogout();
-    nav('/login');
-  };
 
   const navItems = navMaps[role] || navMaps.student;
 
@@ -115,7 +105,7 @@ export default function Sidebar({ role = 'student', isOpen = false, onClose = ()
               ? 'Administrator'
               : role === 'mentor'
                 ? 'Alumni Mentor'
-                : 'Student Hub'}
+                : 'Student'}
           </span>
         </div>
       </div>
@@ -133,41 +123,6 @@ export default function Sidebar({ role = 'student', isOpen = false, onClose = ()
           );
         })}
       </nav>
-
-      {/* Bottom User Card / Actions */}
-      <div className="sidebar-footer">
-        <div className="sidebar-user-card">
-          <div className="sidebar-user-avatar">{user?.name?.[0]?.toUpperCase() || 'U'}</div>
-          <div className="sidebar-user-info">
-            <b>{user?.name || 'Account'}</b>
-            <span>{user?.email || (role === 'admin' ? 'Administrator' : 'Active User')}</span>
-          </div>
-          <div className="sidebar-user-actions">
-            <NavLink
-              to={
-                role === 'admin'
-                  ? '/admin/settings'
-                  : role === 'mentor'
-                    ? '/mentor/profile'
-                    : '/settings'
-              }
-              className="sidebar-mini-icon-btn"
-              title="Settings"
-              onClick={onClose}
-            >
-              <Settings size={15} />
-            </NavLink>
-            <button
-              type="button"
-              className="sidebar-mini-icon-btn danger"
-              title="Log Out"
-              onClick={handleLogout}
-            >
-              <LogOut size={15} />
-            </button>
-          </div>
-        </div>
-      </div>
     </aside>
   );
 }
