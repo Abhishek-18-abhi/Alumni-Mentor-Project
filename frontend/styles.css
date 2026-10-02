@@ -284,11 +284,15 @@ a {
 .hero {
   max-width: 1200px;
   margin: auto;
-  padding: 85px 32px 100px;
+  padding: 36px 32px 80px;
   display: grid;
   grid-template-columns: 1.1fr 0.9fr;
-  gap: 60px;
-  align-items: center;
+  gap: 50px;
+  align-items: start;
+}
+
+.hero-copy {
+  padding-top: 10px;
 }
 
 .hero h1 {
