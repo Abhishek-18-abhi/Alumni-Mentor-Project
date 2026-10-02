@@ -40,17 +40,28 @@ export default function AdminNotifications() {
 
     setSending(true);
     try {
-      // Create notification for recipients
-      await Promise.all(
-        recipients.map((r) =>
-          apiPost('/notifications', {
-            userId: r.id || r._id,
-            title: title.trim(),
-            message: message.trim(),
-            type: 'info',
-          }).catch((e) => console.warn('Failed for recipient:', r.email, e.message))
-        )
-      );
+      const recipientIds = recipients.map((r) => r.id || r._id).filter(Boolean);
+
+      try {
+        await apiPost('/notifications/broadcast', {
+          userIds: recipientIds,
+          title: title.trim(),
+          message: message.trim(),
+          type: 'info',
+        });
+      } catch (broadcastErr) {
+        // Fallback to individual posts if bulk endpoint has an issue
+        await Promise.all(
+          recipientIds.map((uId) =>
+            apiPost('/notifications', {
+              userId: uId,
+              title: title.trim(),
+              message: message.trim(),
+              type: 'info',
+            })
+          )
+        );
+      }
 
       toast.success(`Broadcast notification sent to ${recipients.length} users.`);
       setTitle('');
