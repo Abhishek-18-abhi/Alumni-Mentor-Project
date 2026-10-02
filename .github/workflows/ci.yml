@@ -40,6 +40,9 @@ jobs:
       - name: Run Backend Tests (Node Test Runner + MongoMemoryServer)
         working-directory: ./backend
         run: npm test
+        env:
+          NODE_ENV: test
+          JWT_SECRET: test-jwt-secret-key-12345678901234567890
 
       - name: Build Frontend Application
         run: npm run build

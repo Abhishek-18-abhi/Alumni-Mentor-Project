@@ -150,7 +150,13 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: 'Internal server error.' });
 });
 
-if (!process.env.VERCEL && process.env.NODE_ENV !== 'test') {
+const isTestMode =
+  process.env.NODE_ENV === 'test' ||
+  process.env.VITEST ||
+  Boolean(process.env.TEST) ||
+  process.execArgv.some((a) => a.includes('test'));
+
+if (!process.env.VERCEL && !isTestMode) {
   connectDB()
     .then(() => {
       app.listen(PORT, () => {
