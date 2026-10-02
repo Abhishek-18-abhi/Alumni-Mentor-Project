@@ -9,7 +9,7 @@ on:
 jobs:
   test-and-build:
     name: Lint, Test & Container Build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout Code
@@ -20,6 +20,9 @@ jobs:
         with:
           node-version: 22
           cache: 'npm'
+
+      - name: Install System Dependencies for In-Memory MongoDB
+        run: sudo apt-get update && sudo apt-get install -y libcurl4 libssl-dev
 
       - name: Install Frontend & Root Dependencies
         run: npm ci
