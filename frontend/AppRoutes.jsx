@@ -273,7 +273,7 @@ const mentorRoutes = (
       path="/mentor/calendar"
       element={
         <ProtectedRoute role="mentor">
-          <MentorAvailability />
+          <Meetings role="mentor" />
         </ProtectedRoute>
       }
     />

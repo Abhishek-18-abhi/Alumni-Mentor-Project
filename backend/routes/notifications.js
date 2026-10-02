@@ -25,6 +25,21 @@ router.get('/', requireAuth, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// Mark all read (support both /mark-all-read and /read-all)
+router.patch('/mark-all-read', requireAuth, async (req, res, next) => {
+  try {
+    await Notification.updateMany({ userId: req.user._id, read: false }, { read: true });
+    res.json({ message: 'Notifications marked as read.' });
+  } catch (err) { next(err); }
+});
+
+router.patch('/read-all', requireAuth, async (req, res, next) => {
+  try {
+    await Notification.updateMany({ userId: req.user._id, read: false }, { read: true });
+    res.json({ message: 'Notifications marked as read.' });
+  } catch (err) { next(err); }
+});
+
 router.patch('/:id/read', requireAuth, async (req, res, next) => {
   try {
     if (!mongoose.isValidObjectId(req.params.id)) return res.status(400).json({ message: 'Invalid notification ID.' });
@@ -38,10 +53,17 @@ router.patch('/:id/read', requireAuth, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-router.patch('/read-all', requireAuth, async (req, res, next) => {
+router.patch('/:id', requireAuth, async (req, res, next) => {
   try {
-    await Notification.updateMany({ userId: req.user._id, read: false }, { read: true });
-    res.json({ message: 'Notifications marked as read.' });
+    if (!mongoose.isValidObjectId(req.params.id)) return res.status(400).json({ message: 'Invalid notification ID.' });
+    const read = req.body.read !== undefined ? Boolean(req.body.read) : true;
+    const notification = await Notification.findOneAndUpdate(
+      { _id: req.params.id, userId: req.user._id },
+      { read },
+      { new: true }
+    );
+    if (!notification) return res.status(404).json({ message: 'Notification not found.' });
+    res.json({ notification });
   } catch (err) { next(err); }
 });
 

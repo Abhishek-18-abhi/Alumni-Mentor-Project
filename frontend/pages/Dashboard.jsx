@@ -11,7 +11,6 @@ import {
   Clock,
   Sparkles,
   Award,
-  ShieldCheck,
   CheckCircle2,
   ArrowRight,
   PauseCircle,
@@ -146,45 +145,6 @@ export function StudentDashboard() {
               ))}
             </div>
           )}
-        </section>
-
-        {/* Quick Mentorship Actions */}
-        <section className="card">
-          <h3 style={{ margin: '0 0 14px 0', fontSize: '1.05rem', fontWeight: 700 }}>
-            Quick Actions
-          </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <Link to="/matches" className="quick-action-row">
-              <div className="quick-action-icon blue">
-                <Sparkles size={16} />
-              </div>
-              <div style={{ flex: 1 }}>
-                <b>View Explainable Matches</b>
-                <p>Browse alumni ranked transparently by factor overlap</p>
-              </div>
-              <ArrowRight size={14} />
-            </Link>
-            <Link to="/goals" className="quick-action-row">
-              <div className="quick-action-icon green">
-                <Target size={16} />
-              </div>
-              <div style={{ flex: 1 }}>
-                <b>Milestone Goal Tracker</b>
-                <p>Record career objectives and generate AI SMART goals</p>
-              </div>
-              <ArrowRight size={14} />
-            </Link>
-            <Link to="/profile" className="quick-action-row">
-              <div className="quick-action-icon purple">
-                <Award size={16} />
-              </div>
-              <div style={{ flex: 1 }}>
-                <b>Update Profile Skills & Goals</b>
-                <p>Keep your technical skills and domain preferences current</p>
-              </div>
-              <ArrowRight size={14} />
-            </Link>
-          </div>
         </section>
       </div>
     </DashboardLayout>
@@ -484,45 +444,6 @@ export function AdminDashboard() {
               ))}
             </div>
           )}
-        </section>
-
-        {/* System Administration Quick Links */}
-        <section className="card">
-          <h3 style={{ margin: '0 0 14px 0', fontSize: '1.05rem', fontWeight: 700 }}>
-            Audit & Platform Controls
-          </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <Link to="/admin/audit" className="quick-action-row">
-              <div className="quick-action-icon blue">
-                <ShieldCheck size={16} />
-              </div>
-              <div style={{ flex: 1 }}>
-                <b>Cryptographic Audit Ledger</b>
-                <p>Verify SHA-256 tamper-evident hash chain across all state changes</p>
-              </div>
-              <ArrowRight size={14} />
-            </Link>
-            <Link to="/admin/matching" className="quick-action-row">
-              <div className="quick-action-icon purple">
-                <Sparkles size={16} />
-              </div>
-              <div style={{ flex: 1 }}>
-                <b>Algorithm Inspector</b>
-                <p>Simulate pairings and inspect transparent factor score contributions</p>
-              </div>
-              <ArrowRight size={14} />
-            </Link>
-            <Link to="/admin/analytics" className="quick-action-row">
-              <div className="quick-action-icon green">
-                <Activity size={16} />
-              </div>
-              <div style={{ flex: 1 }}>
-                <b>Capacity Balance & Funnel Analytics</b>
-                <p>Monitor mentor load distribution and accept-rate funnels</p>
-              </div>
-              <ArrowRight size={14} />
-            </Link>
-          </div>
         </section>
       </div>
     </DashboardLayout>

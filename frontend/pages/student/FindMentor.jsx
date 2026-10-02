@@ -278,7 +278,25 @@ export default function FindMentor() {
               const canRequest = !isFull && !isPaused;
 
               return (
-                <article key={m.id || m._id} className="mentor-card">
+                <article
+                  key={m.id || m._id}
+                  className="mentor-card"
+                  role="button"
+                  tabIndex={0}
+                  onClick={(e) => {
+                    if (!e.target.closest('button') && !e.target.closest('a')) {
+                      handleOpenWhyDrawer(m);
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      if (!e.target.closest('button') && !e.target.closest('a')) {
+                        e.preventDefault();
+                        handleOpenWhyDrawer(m);
+                      }
+                    }
+                  }}
+                >
                   <div className="mentor-avatar">{m.name?.[0] || 'M'}</div>
                   <div className="mentor-main">
                     <div>

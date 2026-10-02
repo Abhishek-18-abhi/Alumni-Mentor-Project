@@ -36,9 +36,10 @@
   --secondary-border: #e2e8f0;
 
   /* Borders & Hairlines */
-  --border: #e2e8f0;
-  --border-subtle: #f1f5f9;
-  --border-hover: #cbd5e1;
+  --border: #cbd5e1;
+  --border-subtle: #e2e8f0;
+  --border-hover: #2563eb;
+  --card-border: #cbd5e1;
 
   /* Status Accents */
   --success: #059669;
@@ -1412,15 +1413,14 @@ textarea:focus {
   display: flex;
   gap: 14px;
   align-items: center;
-  box-shadow: var(--shadow-sm);
-  transition:
-    border-color 0.15s ease,
-    box-shadow 0.15s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03), 0 2px 6px rgba(15, 23, 42, 0.03);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .stat:hover {
-  border-color: var(--border-hover);
-  box-shadow: var(--shadow-md);
+  border-color: var(--border-hover, #2563eb);
+  box-shadow: 0 8px 20px -2px rgba(37, 99, 235, 0.12);
+  transform: translateY(-2px);
 }
 
 .stat-icon {
@@ -1458,7 +1458,13 @@ textarea:focus {
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 22px;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03), 0 2px 8px rgba(15, 23, 42, 0.03);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.card:hover {
+  border-color: var(--border-hover, #2563eb);
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.08);
 }
 
 .empty-panel {
@@ -1542,19 +1548,40 @@ textarea:focus {
 
 .mentor-card {
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: 1.5px solid var(--border);
   border-radius: 16px;
   padding: 22px;
   box-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.02),
-    0 6px 18px rgba(15, 23, 42, 0.03);
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    0 1px 3px rgba(0, 0, 0, 0.03),
+    0 4px 14px rgba(15, 23, 42, 0.04);
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  cursor: pointer;
 }
 
 .mentor-card:hover {
-  border-color: var(--border-hover);
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
-  transform: translateY(-2px);
+  border-color: var(--primary, #2563eb);
+  box-shadow:
+    0 12px 28px -4px rgba(37, 99, 235, 0.18),
+    0 0 0 1.5px rgba(37, 99, 235, 0.85);
+  transform: translateY(-3px);
+  background: #ffffff;
+}
+
+.mentor-card:active {
+  transform: translateY(-1px) scale(0.995);
+  box-shadow:
+    0 6px 16px rgba(37, 99, 235, 0.25),
+    0 0 0 2px var(--primary-hover, #1d4ed8);
+  border-color: var(--primary-hover, #1d4ed8);
+}
+
+.mentor-card:focus-visible {
+  outline: none;
+  border-color: var(--primary, #2563eb);
+  box-shadow:
+    0 0 0 3px rgba(37, 99, 235, 0.35),
+    0 8px 20px rgba(37, 99, 235, 0.15);
 }
 
 .mentor-avatar,
@@ -1597,17 +1624,51 @@ textarea:focus {
 .tag-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 5px;
+  gap: 6px;
 }
 
+.category-pill-tech,
 .tag-row span {
-  background: var(--background);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 4px 8px;
-  font-size: 0.74rem;
+  background: #eff6ff !important;
+  color: #1d4ed8 !important;
+  border: 1px solid #bfdbfe !important;
+  border-radius: 6px;
+  padding: 3px 9px;
+  font-size: 0.76rem;
   font-weight: 600;
-  color: var(--foreground-muted);
+  letter-spacing: 0.01em;
+  display: inline-flex;
+  align-items: center;
+  transition: all 0.15s ease;
+  line-height: 1.35;
+}
+
+.category-pill-tech:hover,
+.tag-row span:hover {
+  background: #dbeafe !important;
+  border-color: #93c5fd !important;
+  color: #1e40af !important;
+}
+
+.category-pill-purple {
+  background: #f5f3ff !important;
+  color: #6d28d9 !important;
+  border: 1px solid #ddd6fe !important;
+  border-radius: 6px;
+  padding: 3px 9px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  display: inline-flex;
+  align-items: center;
+  transition: all 0.15s ease;
+  line-height: 1.35;
+}
+
+.category-pill-purple:hover {
+  background: #ede9fe !important;
+  border-color: #c4b5fd !important;
+  color: #5b21b6 !important;
 }
 
 .mentor-actions {
@@ -2358,7 +2419,14 @@ textarea:focus {
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 18px;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03), 0 2px 6px rgba(15, 23, 42, 0.03);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.goal-card:hover {
+  border-color: var(--border-hover, #2563eb);
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.1);
+  transform: translateY(-2px);
 }
 
 .goal-card > svg {
@@ -3899,7 +3967,7 @@ textarea:focus {
 .tabs-bar {
   display: inline-flex;
   align-items: center;
-  background: var(--background);
+  background: var(--surface-sunken, #f1f5f9);
   border: 1px solid var(--border);
   border-radius: var(--radius-pill);
   padding: 4px;
@@ -3920,18 +3988,24 @@ textarea:focus {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  transition: all 0.15s ease;
+  transition: all 0.18s ease;
 }
 
 .tab-btn:hover {
   color: var(--foreground);
+  background: rgba(255, 255, 255, 0.7);
 }
 
 .tab-btn.active {
-  background: var(--surface);
-  color: var(--foreground);
+  background: var(--primary, #2563eb);
+  color: #ffffff;
   font-weight: 700;
-  box-shadow: var(--shadow-xs);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.32);
+}
+
+.tab-btn.active:hover {
+  background: var(--primary-hover, #1d4ed8);
+  color: #ffffff;
 }
 
 .tab-count {
@@ -3941,16 +4015,18 @@ textarea:focus {
   min-width: 18px;
   height: 18px;
   border-radius: var(--radius-pill);
-  padding: 0 5px;
-  background: var(--secondary);
-  font-size: 0.7rem;
+  padding: 0 6px;
+  background: var(--surface);
+  font-size: 0.72rem;
   font-weight: 700;
-  color: var(--foreground);
+  color: var(--foreground-subtle, #475569);
+  transition: all 0.15s ease;
 }
 
 .tab-btn.active .tab-count {
-  background: var(--primary-subtle);
-  color: var(--primary);
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.35);
 }
 
 /* Color Hunt Pastel Category Badges */

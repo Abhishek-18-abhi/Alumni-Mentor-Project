@@ -9,12 +9,10 @@ import ProgressModal from '../../components/ProgressModal';
 import { useGoals, useMeetings, useUsers, useMentorshipRequests } from '../../hooks/useApi';
 import { getSession } from '../../lib/storage';
 import { apiPost, apiPatch, suggestGoalsWithAi } from '../../lib/api';
-import { downloadCsv } from '../../lib/exportUtils';
 import { useToast } from '../../components/Toast';
 import {
   Target,
   Sparkles,
-  Download,
   CalendarDays,
   Plus,
   CheckCircle,
@@ -180,9 +178,10 @@ export default function Goals({ role }) {
     if (!progressGoal) return;
     try {
       const gId = progressGoal.id || progressGoal._id;
+      const numVal = Math.min(100, Math.max(0, Number(newVal) || 0));
       await apiPatch(`/goals/${gId}`, {
-        progress: Number(newVal),
-        status: newVal >= 100 ? 'completed' : 'in_progress',
+        progress: numVal,
+        status: numVal >= 100 ? 'completed' : 'active',
       });
 
       toast.success('Milestone progress updated.');
@@ -191,22 +190,6 @@ export default function Goals({ role }) {
     } catch (err) {
       toast.error(err?.message || 'Failed to update progress.');
     }
-  };
-
-  const handleExportCsv = () => {
-    downloadCsv(
-      'mentorship_goals_report.csv',
-      ['Goal Title', 'Success Criteria', 'Target Date', 'Linked Meeting', 'Progress %', 'Status'],
-      studentGoals.map((g) => [
-        g.title,
-        g.target || '',
-        g.targetDate || 'None',
-        g.meetingId ? 'Linked' : 'None',
-        `${g.progress || 0}%`,
-        g.status || 'in_progress',
-      ])
-    );
-    toast.success('Goals exported to CSV.');
   };
 
   const tabs = [
@@ -250,17 +233,6 @@ export default function Goals({ role }) {
           >
             <Sparkles size={15} /> {isAiLoading ? 'Synthesizing...' : 'AI SMART Goal Suggestions'}
           </button>
-
-          {studentGoals.length > 0 && (
-            <button
-              type="button"
-              className="btn secondary"
-              onClick={handleExportCsv}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
-            >
-              <Download size={14} /> Export CSV
-            </button>
-          )}
         </div>
       </div>
 

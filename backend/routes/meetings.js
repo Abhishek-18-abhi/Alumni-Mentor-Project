@@ -18,7 +18,7 @@ router.get('/', requireAuth, async (req, res, next) => {
         ? {}
         : { $or: [{ mentorId: req.user._id }, { studentId: req.user._id }] };
     const meetings = await Meeting.find(filter)
-      .populate('mentorId studentId', 'name email role')
+      .populate('mentorId studentId', 'name email role jobTitle avatar company')
       .sort({ date: 1, time: 1 });
     res.json({ meetings });
   } catch (err) {
@@ -28,7 +28,21 @@ router.get('/', requireAuth, async (req, res, next) => {
 
 router.post('/', requireAuth, async (req, res, next) => {
   try {
-    const { mentorId, studentId, date, time, mode = 'Online', log = '', status = 'scheduled' } = req.body;
+    let {
+      mentorId,
+      studentId,
+      title = 'Mentorship Session',
+      link = '',
+      date,
+      time,
+      mode = 'Online',
+      log = '',
+      status = 'scheduled',
+    } = req.body;
+
+    if (!studentId && req.user.role === 'student') studentId = req.user._id.toString();
+    if (!mentorId && req.user.role === 'mentor') mentorId = req.user._id.toString();
+
     if (!date || !time) {
       return res.status(400).json({ message: 'Date and time are required.' });
     }
@@ -57,7 +71,9 @@ router.post('/', requireAuth, async (req, res, next) => {
     }
 
     if (req.user.role !== 'admin') {
-      const meetingDateTime = new Date(`${date}T${time}`);
+      const startTime = String(time).includes('-') ? String(time).split('-')[0].trim() : String(time).trim();
+      const cleanTime = startTime.match(/\d{1,2}:\d{2}/) ? startTime.match(/\d{1,2}:\d{2}/)[0] : startTime;
+      const meetingDateTime = new Date(`${date}T${cleanTime}:00`);
       if (isNaN(meetingDateTime.getTime())) {
         return res.status(400).json({ message: 'Invalid date or time format.' });
       }
@@ -76,13 +92,16 @@ router.post('/', requireAuth, async (req, res, next) => {
         });
       }
 
-      // 1. Verify that the requested slot exists in mentor's availability
-      const slotMatches = isSlotInAvailability(date, time, mentorProfile?.availability || []);
-      if (!slotMatches) {
-        return res.status(400).json({
-          message: "The selected date and time does not match any of the mentor's available slots.",
-          availability: mentorProfile?.availability || [],
-        });
+      // 1. Verify slot matches mentor's availability if student is scheduling and mentor published slots
+      const mentorSlots = mentorProfile?.availability || mentor.availability || [];
+      if (req.user.role === 'student' && Array.isArray(mentorSlots) && mentorSlots.length > 0) {
+        const slotMatches = isSlotInAvailability(date, time, mentorSlots);
+        if (!slotMatches) {
+          return res.status(400).json({
+            message: "The selected date and time does not match any of the mentor's available slots.",
+            availability: mentorSlots,
+          });
+        }
       }
     }
 
@@ -104,7 +123,17 @@ router.post('/', requireAuth, async (req, res, next) => {
       });
     }
 
-    const meeting = await Meeting.create({ mentorId, studentId, date, time, mode, log, status });
+    const meeting = await Meeting.create({
+      mentorId,
+      studentId,
+      title: title?.trim() || 'Mentorship Session',
+      link: link?.trim() || '',
+      date,
+      time,
+      mode,
+      log,
+      status,
+    });
 
     if (mentor._id.toString() !== req.user._id.toString()) {
       await Notification.create({
@@ -160,7 +189,18 @@ router.patch('/:id', requireAuth, async (req, res, next) => {
     }
 
     const patch = {};
-    for (const key of ['date', 'time', 'mode', 'log', 'notes', 'outcome', 'nextSteps', 'status']) {
+    for (const key of [
+      'title',
+      'link',
+      'date',
+      'time',
+      'mode',
+      'log',
+      'notes',
+      'outcome',
+      'nextSteps',
+      'status',
+    ]) {
       if (req.body[key] !== undefined) patch[key] = req.body[key];
     }
     Object.assign(meeting, patch);

@@ -78,15 +78,26 @@ router.post('/', requireAuth, async (req, res, next) => {
 
 router.patch('/:id', requireAuth, async (req, res, next) => {
   try {
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid goal ID.' });
+    }
     const goal = await Goal.findById(req.params.id);
     if (!goal) return res.status(404).json({ message: 'Goal not found.' });
     const allowed = ['title', 'target', 'progress', 'status'];
     const patch = Object.fromEntries(Object.entries(req.body).filter(([key]) => allowed.includes(key)));
     if (patch.progress !== undefined) {
       patch.progress = Math.min(100, Math.max(0, Number(patch.progress)));
-      if (patch.progress >= 100) patch.status = 'completed';
+      if (patch.progress >= 100) {
+        patch.status = 'completed';
+      }
     }
-    const canEdit = req.user.role === 'admin' || goal.studentId.toString() === req.user._id.toString() || goal.createdBy.toString() === req.user._id.toString();
+    if (patch.status && !['active', 'in_progress', 'completed'].includes(patch.status)) {
+      patch.status = 'active';
+    }
+    const canEdit =
+      req.user.role === 'admin' ||
+      goal.studentId.toString() === req.user._id.toString() ||
+      goal.createdBy.toString() === req.user._id.toString();
     if (!canEdit) return res.status(403).json({ message: 'You cannot update this goal.' });
     Object.assign(goal, patch);
     await goal.save();

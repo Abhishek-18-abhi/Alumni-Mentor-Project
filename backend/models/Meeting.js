@@ -4,6 +4,8 @@ const meetingSchema = new mongoose.Schema(
   {
     mentorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     studentId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    title: { type: String, default: 'Mentorship Session' },
+    link: { type: String, default: '' },
     date: { type: String, required: true },
     time: { type: String, required: true },
     mode: { type: String, default: 'Online' },
