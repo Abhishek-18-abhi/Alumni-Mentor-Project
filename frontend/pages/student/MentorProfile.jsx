@@ -90,11 +90,6 @@ export default function MentorProfile() {
                   }}
                 >
                   {mentor.name}
-                  {Boolean(mentor.verified || mentor.isVerified) && (
-                    <span className="bento-badge" style={{ fontSize: '0.7rem' }}>
-                      Verified Alumnus
-                    </span>
-                  )}
                 </h2>
                 <p
                   style={{

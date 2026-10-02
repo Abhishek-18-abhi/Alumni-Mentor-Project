@@ -41,7 +41,6 @@ const AdminAnalytics = lazy(() => import('./pages/admin/AdminAnalytics'));
 const AdminAudit = lazy(() => import('./pages/admin/AdminAudit'));
 const AdminAdministrators = lazy(() => import('./pages/AdminAdministrators'));
 const AdminNotifications = lazy(() => import('./pages/admin/AdminNotifications'));
-const AdminSettings = lazy(() => import('./pages/admin/AdminSettings'));
 
 // Shared Pages
 const Meetings = lazy(() => import('./pages/shared/Meetings'));
@@ -381,14 +380,7 @@ const adminRoutes = (
         </ProtectedRoute>
       }
     />
-    <Route
-      path="/admin/settings"
-      element={
-        <ProtectedRoute role="admin">
-          <AdminSettings />
-        </ProtectedRoute>
-      }
-    />
+    <Route path="/admin/settings" element={<Navigate to="/settings" replace />} />
   </>
 );
 

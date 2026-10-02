@@ -89,7 +89,7 @@ export default function Request() {
         <EmptyState
           icon={Users}
           title="No mentor selected"
-          text="Please select a verified mentor from the Find Mentor page to send an inquiry."
+          text="Please select a mentor from the Find Mentor page to send an inquiry."
           actionLabel="Find a Mentor"
           onAction={() => nav('/mentors')}
         />

@@ -647,6 +647,13 @@ label {
   color: var(--foreground);
 }
 
+.form-stack label > span:first-child,
+label > span:first-child {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .form-stack input,
 .form-stack select,
 .form-stack textarea,

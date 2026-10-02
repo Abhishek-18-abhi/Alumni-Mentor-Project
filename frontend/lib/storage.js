@@ -105,7 +105,14 @@ export const getCurrentUser = () => {
   const s = getSession();
   if (!s) return null;
   const found = getUsers().find((u) => u.id === s.id);
-  if (found) return found;
+  if (found) {
+    return {
+      ...found,
+      email: found.email || s.email || '',
+      name: found.name || s.name || '',
+      role: found.role || s.role || 'student',
+    };
+  }
   return {
     id: s.id,
     name: s.name || '',

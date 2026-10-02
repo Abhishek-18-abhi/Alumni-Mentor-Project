@@ -3,12 +3,11 @@ import AppShell from '../../components/AppShell';
 import PageTitle from '../../components/PageTitle';
 import EmptyState from '../../components/EmptyState';
 import StatCard from '../../components/StatCard';
-import { fetchAdminAnalytics, fetchSystemMetrics, summarizeFeedbackWithAi } from '../../lib/api';
+import { fetchAdminAnalytics, fetchSystemMetrics } from '../../lib/api';
 import {
   BarChart3,
   Users,
   Award,
-  Sparkles,
   TrendingUp,
   AlertTriangle,
   CheckCircle,
@@ -23,8 +22,6 @@ export default function AdminAnalytics() {
   const [metrics, setMetrics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [feedbackSummary, setFeedbackSummary] = useState(null);
-  const [isSummarizingFeedback, setIsSummarizingFeedback] = useState(false);
 
   const loadData = async () => {
     setLoading(true);
@@ -48,21 +45,6 @@ export default function AdminAnalytics() {
   useEffect(() => {
     loadData();
   }, []);
-
-  const handleSynthesizeFeedback = async () => {
-    if (isSummarizingFeedback) return;
-    setIsSummarizingFeedback(true);
-    try {
-      const res = await summarizeFeedbackWithAi();
-      if (res?.summary) {
-        setFeedbackSummary(res);
-      }
-    } catch {
-      // handled gracefully
-    } finally {
-      setIsSummarizingFeedback(false);
-    }
-  };
 
   const overview = analytics?.overview || {};
   const funnel = analytics?.funnel || {};
@@ -392,111 +374,6 @@ export default function AdminAnalytics() {
         )}
       </section>
 
-      {/* AI Qualitative Feedback Synthesis */}
-      <section className="card" style={{ marginTop: 20 }}>
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: 14,
-            flexWrap: 'wrap',
-            gap: 10,
-          }}
-        >
-          <div>
-            <h2
-              style={{
-                fontSize: '1.1rem',
-                margin: '0 0 4px 0',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-              }}
-            >
-              <Sparkles size={16} style={{ color: 'var(--primary)' }} /> Qualitative Feedback & AI
-              Thematic Synthesis
-            </h2>
-            <p style={{ margin: 0, fontSize: '0.84rem', color: 'var(--foreground-muted)' }}>
-              Synthesizes qualitative review comments across all student evaluations without
-              exposing student names.
-            </p>
-          </div>
-          <button
-            type="button"
-            className="btn mini secondary"
-            disabled={isSummarizingFeedback}
-            onClick={handleSynthesizeFeedback}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
-          >
-            <Sparkles size={13} />{' '}
-            {isSummarizingFeedback ? 'Synthesizing...' : 'Synthesize Survey Themes'}
-          </button>
-        </div>
-
-        {feedbackSummary ? (
-          <div
-            style={{
-              padding: 14,
-              background: 'var(--surface-sunken, #f8fafc)',
-              borderRadius: 8,
-              border: '1px solid var(--border)',
-            }}
-          >
-            <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 10 }}>
-              <span
-                className={`status-chip ${
-                  feedbackSummary.overallSentiment === 'Positive'
-                    ? 'status-accepted'
-                    : 'status-pending'
-                }`}
-              >
-                Sentiment: {feedbackSummary.overallSentiment || 'Positive'}
-              </span>
-              <span style={{ fontSize: '0.82rem', color: 'var(--foreground-muted)' }}>
-                Sample: {feedbackSummary.sampleSize || feedbackStats.totalReviews || 0} reviews
-                analyzed
-              </span>
-            </div>
-            <p style={{ margin: '0 0 12px 0', fontSize: '0.88rem', lineHeight: 1.55 }}>
-              {feedbackSummary.summary}
-            </p>
-            {feedbackSummary.themes && feedbackSummary.themes.length > 0 && (
-              <div>
-                <b
-                  style={{
-                    fontSize: '0.78rem',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em',
-                    color: 'var(--foreground-muted)',
-                  }}
-                >
-                  Key Identified Themes:
-                </b>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
-                  {feedbackSummary.themes.map((theme, i) => (
-                    <span key={i} className="skill-pill core" style={{ fontSize: '0.78rem' }}>
-                      {theme}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        ) : (
-          <div
-            style={{
-              padding: '16px 0',
-              textAlign: 'center',
-              color: 'var(--foreground-muted)',
-              fontSize: '0.86rem',
-            }}
-          >
-            Click &quot;Synthesize Survey Themes&quot; to aggregate qualitative feedback with AI
-            analysis.
-          </div>
-        )}
-      </section>
     </AppShell>
   );
 }

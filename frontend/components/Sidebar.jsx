@@ -11,7 +11,6 @@ import {
   ClipboardList,
   BarChart3,
   ShieldCheck,
-  Settings,
   UserCog,
   Bell,
 } from 'lucide-react';
@@ -48,7 +47,6 @@ const navMaps = {
     ['Audit Logs', '/admin/audit', ShieldCheck],
     ['Administrators', '/admin/administrators', UserCog],
     ['Notifications', '/admin/notifications', Bell],
-    ['Settings', '/admin/settings', Settings],
   ],
 };
 

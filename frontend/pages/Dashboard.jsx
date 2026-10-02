@@ -433,7 +433,7 @@ export function AdminDashboard() {
           gap: 20,
         }}
       >
-        {/* Pending Verifications Panel */}
+        {/* Registered Alumni Mentors Panel */}
         <section className="card">
           <div
             className="section-head"
@@ -445,17 +445,17 @@ export function AdminDashboard() {
             }}
           >
             <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700 }}>
-              Pending Mentor Verifications
+              Registered Alumni Mentors
             </h3>
             <Link to="/admin/users" className="text-link" style={{ fontSize: '0.84rem' }}>
-              View all ({metrics?.pendingVerificationsCount || 0})
+              View all ({metrics?.mentorCount || 0})
             </Link>
           </div>
 
           {recentItems.length === 0 ? (
             <EmptyState
-              title="No pending verifications"
-              text="All registered alumni mentor profiles have been verified."
+              title="No mentors registered"
+              text="Registered alumni mentors will appear here."
             />
           ) : (
             <div className="table-list">
@@ -478,7 +478,7 @@ export function AdminDashboard() {
                     className="btn mini secondary"
                     onClick={() => nav('/admin/users')}
                   >
-                    Verify
+                    Manage
                   </button>
                 </div>
               ))}

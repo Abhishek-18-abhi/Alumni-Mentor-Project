@@ -8,7 +8,8 @@ import {
   Trash2,
   UserRound,
   AlertTriangle,
-  Key,
+  Sliders,
+  Save,
 } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import PageTitle from '../components/PageTitle';
@@ -16,7 +17,7 @@ import ConfirmModal from '../components/ConfirmModal';
 import { useToast } from '../components/Toast';
 import { getCurrentUser, getSession } from '../lib/storage';
 import { updateUser, changePassword, logout } from '../lib/auth';
-import { apiGet, apiDelete } from '../lib/api';
+import { apiGet, apiPatch, apiDelete, getToken } from '../lib/api';
 
 const ROLE_LABELS = { admin: 'Administrator', mentor: 'Alumni Mentor', student: 'Student' };
 const DEFAULT_PREFS = {
@@ -41,7 +42,7 @@ function getPrefs(user) {
 
 export default function Settings() {
   const session = getSession();
-  const user = getCurrentUser();
+  const [user, setUser] = useState(() => getCurrentUser() || {});
   const toast = useToast();
 
   const [prefs, setPrefs] = useState(() => getPrefs(user));
@@ -52,6 +53,30 @@ export default function Settings() {
   const [savingPassword, setSavingPassword] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [platformSettings, setPlatformSettings] = useState({
+    matchingEnabled: true,
+    registrationsEnabled: true,
+    defaultMentorCapacity: 5,
+    aiAdvisoryEnabled: true,
+  });
+  const [savingPlatform, setSavingPlatform] = useState(false);
+
+  // Sync fresh user data from server on mount
+  useEffect(() => {
+    let mounted = true;
+    if (getToken()) {
+      apiGet('/auth/me')
+        .then((res) => {
+          if (mounted && res?.user) {
+            setUser((prev) => ({ ...prev, ...res.user }));
+          }
+        })
+        .catch(() => {});
+    }
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   // Live real activity counts from server API
   const [apiCounts, setApiCounts] = useState({
@@ -97,6 +122,27 @@ export default function Settings() {
   const role = session?.role;
   const roleLabel = ROLE_LABELS[role] || role || 'User';
 
+  // Load platform settings for administrators
+  useEffect(() => {
+    let mounted = true;
+    if (role === 'admin') {
+      apiGet('/platform-settings')
+        .then((res) => {
+          if (mounted && res?.settings) {
+            setPlatformSettings((prev) => ({
+              ...prev,
+              ...res.settings,
+              aiAdvisoryEnabled: res.settings.aiEnabled ?? res.settings.aiAdvisoryEnabled ?? true,
+            }));
+          }
+        })
+        .catch((err) => console.warn('Failed to load platform settings:', err));
+    }
+    return () => {
+      mounted = false;
+    };
+  }, [role]);
+
   const calculatePasswordStrength = (pwd) => {
     if (!pwd) return { label: 'Empty', score: 0, color: 'var(--border)' };
     let score = 0;
@@ -127,6 +173,22 @@ export default function Settings() {
       else toast.error(result.error || 'Could not save settings.');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleSavePlatformSettings = async () => {
+    if (savingPlatform) return;
+    setSavingPlatform(true);
+    try {
+      await apiPatch('/platform-settings', {
+        ...platformSettings,
+        aiEnabled: platformSettings.aiAdvisoryEnabled,
+      });
+      toast.success('Platform operational settings updated successfully.');
+    } catch (err) {
+      toast.error(err?.message || 'Failed to update platform settings.');
+    } finally {
+      setSavingPlatform(false);
     }
   };
 
@@ -164,16 +226,16 @@ export default function Settings() {
       const payload = {
         exportedAt: new Date().toISOString(),
         account: {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          college: user.college,
-          skills: user.skills,
-          interests: user.interests,
-          goals: user.goals,
-          languages: user.languages,
-          bio: user.bio,
+          id: user?.id || session?.id,
+          name: user?.name || session?.name,
+          email: user?.email || session?.email,
+          role: user?.role || session?.role,
+          college: user?.college,
+          skills: user?.skills,
+          interests: user?.interests,
+          goals: user?.goals,
+          languages: user?.languages,
+          bio: user?.bio,
         },
         notifications: n.status === 'fulfilled' ? n.value.notifications : [],
         meetings: m.status === 'fulfilled' ? m.value.meetings : [],
@@ -186,7 +248,7 @@ export default function Settings() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `mentorconnect-${user.id}-export.json`;
+      a.download = `mentorconnect-${user?.id || session?.id || 'account'}-export.json`;
       a.click();
       URL.revokeObjectURL(url);
       toast.success('Your account data export was downloaded.');
@@ -210,7 +272,7 @@ export default function Settings() {
     }
   };
 
-  if (!user) return null;
+  if (!session) return null;
 
   return (
     <AppShell role={role}>
@@ -234,19 +296,16 @@ export default function Settings() {
           </div>
           <div className="detail-list">
             <span>
-              Name <b>{user.name}</b>
+              Name <b>{user?.name || session?.name || 'User'}</b>
             </span>
             <span>
-              Email <b>{user.email}</b>
+              Email <b>{user?.email || session?.email || '—'}</b>
             </span>
             <span>
-              Role <b>{roleLabel}</b>
+              Role <b>{ROLE_LABELS[user?.role || session?.role] || roleLabel}</b>
             </span>
             <span>
-              Status <b>{user.isActive !== false ? 'Active' : 'Deactivated'}</b>
-            </span>
-            <span>
-              Verification <b>{user.isVerified ? 'Verified' : 'Standard'}</b>
+              Status <b>{user?.isActive !== false ? 'Active' : 'Deactivated'}</b>
             </span>
           </div>
         </section>
@@ -502,42 +561,105 @@ export default function Settings() {
           </form>
         </section>
 
-        {/* Real Session Information */}
-        <section className="card settings-card">
-          <div className="settings-heading">
-            <div className="settings-icon">
-              <Key size={19} />
+        {/* Platform Features & Governance (Admin Only) */}
+        {role === 'admin' && (
+          <section className="card settings-card">
+            <div className="settings-heading">
+              <div className="settings-icon">
+                <Sliders size={19} />
+              </div>
+              <div>
+                <h2>Platform Features & Governance</h2>
+                <p>
+                  Configure algorithmic matching parameters, user registration policies, and AI
+                  advisory controls.
+                </p>
+              </div>
             </div>
-            <div>
-              <h2>Active Session Telemetry</h2>
-              <p>Browser security environment and token integrity.</p>
+            <div className="settings-options">
+              <label className="setting-toggle">
+                <span>
+                  <b>Algorithmic Matching Engine</b>
+                  <small>
+                    Allow students to discover and calculate multi-factor compatibility scores
+                  </small>
+                </span>
+                <input
+                  type="checkbox"
+                  checked={platformSettings.matchingEnabled}
+                  onChange={(e) =>
+                    setPlatformSettings((prev) => ({
+                      ...prev,
+                      matchingEnabled: e.target.checked,
+                    }))
+                  }
+                />
+              </label>
+
+              <label className="setting-toggle">
+                <span>
+                  <b>Public User Registrations</b>
+                  <small>Allow new students and alumni mentors to create platform accounts</small>
+                </span>
+                <input
+                  type="checkbox"
+                  checked={platformSettings.registrationsEnabled}
+                  onChange={(e) =>
+                    setPlatformSettings((prev) => ({
+                      ...prev,
+                      registrationsEnabled: e.target.checked,
+                    }))
+                  }
+                />
+              </label>
+
+              <label className="setting-toggle">
+                <span>
+                  <b>AI Advisory Features (Explanations & Goal Suggestions)</b>
+                  <small>Enable LLM reasoning assistance grounded strictly in factor scores</small>
+                </span>
+                <input
+                  type="checkbox"
+                  checked={platformSettings.aiAdvisoryEnabled}
+                  onChange={(e) =>
+                    setPlatformSettings((prev) => ({
+                      ...prev,
+                      aiAdvisoryEnabled: e.target.checked,
+                    }))
+                  }
+                />
+              </label>
+
+              <div style={{ marginTop: 12 }}>
+                <label style={{ display: 'block', fontWeight: 600, marginBottom: 4 }}>
+                  Default New Mentor Capacity Limit
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="20"
+                  value={platformSettings.defaultMentorCapacity}
+                  onChange={(e) =>
+                    setPlatformSettings((prev) => ({
+                      ...prev,
+                      defaultMentorCapacity: parseInt(e.target.value, 10) || 5,
+                    }))
+                  }
+                  style={{ maxWidth: 200 }}
+                />
+              </div>
             </div>
-          </div>
-          <div className="detail-list">
-            <span>
-              Session ID <code>{user.id}</code>
-            </span>
-            <span>
-              Client Browser{' '}
-              <b>
-                {typeof navigator !== 'undefined'
-                  ? navigator.userAgent.split(' ')[0]
-                  : 'Web Client'}
-              </b>
-            </span>
-            <span>
-              Platform{' '}
-              <b>
-                {typeof navigator !== 'undefined'
-                  ? navigator.platform || 'Modern Browser'
-                  : 'Standard'}
-              </b>
-            </span>
-            <span>
-              Authentication Token <b>JWT Valid</b>
-            </span>
-          </div>
-        </section>
+            <button
+              type="button"
+              className="uiverse-btn"
+              disabled={savingPlatform}
+              onClick={handleSavePlatformSettings}
+              style={{ marginTop: 16, display: 'inline-flex', alignItems: 'center', gap: 6 }}
+            >
+              <Save size={15} /> {savingPlatform ? 'Saving...' : 'Save Platform Settings'}
+            </button>
+          </section>
+        )}
 
         {/* Data Export */}
         <section className="card settings-card">

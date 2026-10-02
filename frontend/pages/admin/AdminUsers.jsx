@@ -28,28 +28,6 @@ export default function AdminUsers() {
 
   const { data: users = [], loading, refetch } = useUsers();
 
-  const handleVerifyMentor = async (user) => {
-    const uId = user.id || user._id;
-    if (updatingId) return;
-    setUpdatingId(uId);
-
-    try {
-      const nextStatus = !Boolean(user.verified || user.isVerified);
-      await apiPatch(`/users/${uId}`, {
-        verified: nextStatus,
-        isVerified: nextStatus,
-      });
-      toast.success(
-        nextStatus ? `Mentor ${user.name} verified.` : `Verification revoked for ${user.name}.`
-      );
-      await refetch();
-    } catch (err) {
-      toast.error(err?.message || 'Failed to update verification status.');
-    } finally {
-      setUpdatingId(null);
-    }
-  };
-
   const handleToggleActive = async (user) => {
     const uId = user.id || user._id;
     if (updatingId) return;
@@ -112,14 +90,7 @@ export default function AdminUsers() {
             {u.name?.[0] || 'U'}
           </div>
           <div>
-            <b style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              {u.name}
-              {Boolean(u.verified || u.isVerified) && (
-                <span className="bento-badge" style={{ fontSize: '0.65rem', padding: '1px 5px' }}>
-                  Verified
-                </span>
-              )}
-            </b>
+            <b>{u.name}</b>
             <p
               style={{ margin: '2px 0 0 0', fontSize: '0.8rem', color: 'var(--foreground-muted)' }}
             >
@@ -161,33 +132,18 @@ export default function AdminUsers() {
       align: 'right',
       accessor: (u) => {
         const uId = u.id || u._id;
-        const isVerified = Boolean(u.verified || u.isVerified);
         const isActive = u.isActive !== false;
 
         return (
-          <div style={{ display: 'inline-flex', gap: 6 }}>
-            {u.role === 'mentor' && (
-              <button
-                type="button"
-                className={`btn mini ${isVerified ? 'secondary' : 'primary'}`}
-                disabled={updatingId === uId}
-                onClick={() => handleVerifyMentor(u)}
-                title={isVerified ? 'Revoke verification badge' : 'Grant verified alumni status'}
-              >
-                {isVerified ? 'Unverify' : 'Verify Mentor'}
-              </button>
-            )}
-
-            <button
-              type="button"
-              className="btn mini secondary"
-              disabled={updatingId === uId || u.role === 'admin'}
-              onClick={() => handleToggleActive(u)}
-              title={isActive ? 'Deactivate user access' : 'Activate user access'}
-            >
-              {isActive ? 'Deactivate' : 'Activate'}
-            </button>
-          </div>
+          <button
+            type="button"
+            className="btn mini secondary"
+            disabled={updatingId === uId || u.role === 'admin'}
+            onClick={() => handleToggleActive(u)}
+            title={isActive ? 'Deactivate user access' : 'Activate user access'}
+          >
+            {isActive ? 'Deactivate' : 'Activate'}
+          </button>
         );
       },
     },
@@ -198,7 +154,7 @@ export default function AdminUsers() {
       <PageTitle
         eyebrow="Administrator Platform Portal"
         title="User & Account Management"
-        text="Audit registered students, alumni mentors, and institutional accounts. Verify credentials and enforce access."
+        text="Audit registered students, alumni mentors, and institutional accounts and manage platform access."
       />
 
       <section className="card" style={{ marginBottom: 16 }}>

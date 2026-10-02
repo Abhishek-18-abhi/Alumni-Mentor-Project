@@ -286,14 +286,6 @@ export default function FindMentor() {
                         style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}
                       >
                         {m.name}
-                        {Boolean(m.verified || m.isVerified) && (
-                          <span
-                            className="bento-badge"
-                            style={{ fontSize: '0.66rem', padding: '1px 6px' }}
-                          >
-                            Verified
-                          </span>
-                        )}
                       </h3>
                       <p>
                         {m.jobTitle} {m.company ? `· ${m.company}` : ''}

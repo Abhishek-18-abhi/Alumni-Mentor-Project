@@ -15,7 +15,17 @@ export async function login(email, password) {
     const result = await apiPost('/auth/login', { email, password });
     setToken(result.token);
     const user = normalizeUser(result.user);
-    setSession({ id: user.id, name: user.name, email: user.email, role: user.role });
+    const emailToSave = user.email || email;
+    setSession({ id: user.id, name: user.name, email: emailToSave, role: user.role });
+    const users = getUsers();
+    localStorage.setItem(
+      'mc_users',
+      JSON.stringify(
+        users.some((u) => u.id === user.id)
+          ? users.map((u) => (u.id === user.id ? { ...u, ...user, email: emailToSave } : u))
+          : [{ ...user, email: emailToSave }, ...users]
+      )
+    );
     return { ok: true, user: publicUser(user) };
   } catch (error) {
     return { ok: false, error: error.message };
@@ -28,7 +38,17 @@ export async function registerUser(data) {
     const result = await apiPost('/auth/register', data);
     setToken(result.token);
     const user = normalizeUser(result.user);
-    setSession({ id: user.id, name: user.name, email: user.email, role: user.role });
+    const emailToSave = user.email || data.email;
+    setSession({ id: user.id, name: user.name, email: emailToSave, role: user.role });
+    const users = getUsers();
+    localStorage.setItem(
+      'mc_users',
+      JSON.stringify(
+        users.some((u) => u.id === user.id)
+          ? users.map((u) => (u.id === user.id ? { ...u, ...user, email: emailToSave } : u))
+          : [{ ...user, email: emailToSave }, ...users]
+      )
+    );
     return { ok: true, user: publicUser(user) };
   } catch (error) {
     return { ok: false, error: error.message };
@@ -41,7 +61,17 @@ export async function setupAdmin(data) {
     const result = await apiPost('/auth/setup-admin', data);
     setToken(result.token);
     const user = normalizeUser(result.user);
-    setSession({ id: user.id, name: user.name, email: user.email, role: user.role });
+    const emailToSave = user.email || data.email;
+    setSession({ id: user.id, name: user.name, email: emailToSave, role: user.role });
+    const users = getUsers();
+    localStorage.setItem(
+      'mc_users',
+      JSON.stringify(
+        users.some((u) => u.id === user.id)
+          ? users.map((u) => (u.id === user.id ? { ...u, ...user, email: emailToSave } : u))
+          : [{ ...user, email: emailToSave }, ...users]
+      )
+    );
     return { ok: true, user: publicUser(user) };
   } catch (error) {
     return { ok: false, error: error.message };
@@ -52,18 +82,26 @@ export async function updateUser(userId, patch) {
   try {
     const result = await apiPatch(`/users/${userId}`, patch);
     const user = normalizeUser(result.user);
+    const session = JSON.parse(localStorage.getItem('mc_session') || 'null');
+    const emailToSave = user.email || session?.email || '';
     const users = getUsers();
     localStorage.setItem(
       'mc_users',
       JSON.stringify(
         users.some((u) => u.id === user.id)
-          ? users.map((u) => (u.id === user.id ? { ...u, ...user } : u))
-          : [user, ...users]
+          ? users.map((u) =>
+              u.id === user.id ? { ...u, ...user, email: user.email || u.email || emailToSave } : u
+            )
+          : [{ ...user, email: emailToSave }, ...users]
       )
     );
-    const session = JSON.parse(localStorage.getItem('mc_session') || 'null');
     if (session?.id === user.id)
-      setSession({ id: user.id, name: user.name, email: user.email, role: user.role });
+      setSession({
+        id: user.id,
+        name: user.name,
+        email: emailToSave,
+        role: user.role || session.role,
+      });
     return { ok: true, user: publicUser(user) };
   } catch (error) {
     return { ok: false, error: error.message };

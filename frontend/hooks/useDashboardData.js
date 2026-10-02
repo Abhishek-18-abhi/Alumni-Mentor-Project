@@ -103,18 +103,16 @@ export function useDashboardData(role) {
 
         const students = users.filter((u) => u.role === 'student');
         const mentors = users.filter((u) => u.role === 'mentor');
-        const pendingMentors = mentors.filter((m) => !m.verified && !m.isVerified);
 
         setMetrics({
           studentCount: students.length,
           mentorCount: mentors.length,
-          pendingVerificationsCount: pendingMentors.length,
           activeMentorships: analytics.activeMentorships ?? 0,
           systemStatus: health.ok ? 'Healthy' : 'Degraded',
           dbStatus: health.database || 'connected',
         });
 
-        setRecentItems(pendingMentors.slice(0, 5));
+        setRecentItems(mentors.slice(0, 5));
       }
     } catch (err) {
       setError(err?.message || 'Failed to load dashboard data.');

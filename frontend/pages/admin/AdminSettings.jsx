@@ -1,20 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import AppShell from '../../components/AppShell';
 import PageTitle from '../../components/PageTitle';
-import StatCard from '../../components/StatCard';
-import { apiGet, apiPatch, fetchAiStatus, fetchSystemMetrics } from '../../lib/api';
+import { apiGet, apiPatch } from '../../lib/api';
 import { useToast } from '../../components/Toast';
-import {
-  Settings,
-  Sparkles,
-  Server,
-  Activity,
-  CheckCircle,
-  AlertCircle,
-  Save,
-  Cpu,
-  Clock,
-} from 'lucide-react';
+import { Save } from 'lucide-react';
 
 export default function AdminSettings() {
   const toast = useToast();
@@ -24,36 +13,18 @@ export default function AdminSettings() {
     defaultMentorCapacity: 5,
     aiAdvisoryEnabled: true,
   });
-  const [metrics, setMetrics] = useState(null);
-  const [aiStatus, setAiStatus] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     let mounted = true;
     const fetchConfig = async () => {
       try {
-        const [settingsRes, metricsRes, aiRes] = await Promise.allSettled([
-          apiGet('/platform-settings'),
-          fetchSystemMetrics(),
-          fetchAiStatus(),
-        ]);
-
-        if (mounted) {
-          if (settingsRes.status === 'fulfilled' && settingsRes.value?.settings) {
-            setPlatformSettings((prev) => ({ ...prev, ...settingsRes.value.settings }));
-          }
-          if (metricsRes.status === 'fulfilled' && metricsRes.value) {
-            setMetrics(metricsRes.value);
-          }
-          if (aiRes.status === 'fulfilled' && aiRes.value) {
-            setAiStatus(aiRes.value);
-          }
+        const res = await apiGet('/platform-settings');
+        if (mounted && res?.settings) {
+          setPlatformSettings((prev) => ({ ...prev, ...res.settings }));
         }
       } catch (err) {
         console.warn('Failed to load admin settings:', err);
-      } finally {
-        if (mounted) setLoading(false);
       }
     };
 
@@ -81,45 +52,8 @@ export default function AdminSettings() {
       <PageTitle
         eyebrow="Administrator Platform Portal"
         title="Platform & System Settings"
-        text="Configure algorithmic matching parameters, system health thresholds, and AI advisory controls."
+        text="Configure algorithmic matching parameters, user registration policies, and AI advisory controls."
       />
-
-      {/* System Telemetry & Metrics Panel */}
-      <section className="card" style={{ marginBottom: 20 }}>
-        <h2 style={{ fontSize: '1.15rem', margin: '0 0 14px 0' }}>
-          System Health & Latency Telemetry
-        </h2>
-        <div className="shopeers-kpi-grid">
-          <StatCard
-            label="API Latency (p50)"
-            value={metrics?.latency?.p50 !== undefined ? `${metrics.latency.p50} ms` : '< 10 ms'}
-            icon={Clock}
-            color="blue"
-            subtext={`p95: ${metrics?.latency?.p95 !== undefined ? `${metrics.latency.p95} ms` : '< 30 ms'}`}
-          />
-          <StatCard
-            label="HTTP Request Count"
-            value={metrics?.requests?.total || 0}
-            icon={Activity}
-            color="green"
-            subtext={`Error rate: ${metrics?.requests?.errorRate || '0.0%'}`}
-          />
-          <StatCard
-            label="AI Advisory Calls"
-            value={aiStatus?.totalCalls || metrics?.ai?.totalCalls || 0}
-            icon={Sparkles}
-            color="purple"
-            subtext={`Fallback rate: ${aiStatus?.fallbackRate || '0.0%'}`}
-          />
-          <StatCard
-            label="Service Uptime"
-            value={metrics?.uptimeFormatted || 'Healthy'}
-            icon={Server}
-            color="orange"
-            subtext="Node/Express API Cluster"
-          />
-        </div>
-      </section>
 
       {/* Platform Configuration Form */}
       <form onSubmit={handleSaveSettings}>
