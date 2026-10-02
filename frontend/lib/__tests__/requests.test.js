@@ -43,9 +43,11 @@ describe('createMentorshipRequest', () => {
   });
 
   it('handles backend error when creating mentorship request', async () => {
-    global.fetch = vi.fn().mockResolvedValue(
-      mockResponse({ message: 'A pending request already exists for this mentor.' }, 400)
-    );
+    global.fetch = vi
+      .fn()
+      .mockResolvedValue(
+        mockResponse({ message: 'A pending request already exists for this mentor.' }, 400)
+      );
 
     const r = await createMentorshipRequest({ id: 's1' }, { id: 'm1' }, 'Hi');
     expect(r.ok).toBe(false);
@@ -79,7 +81,9 @@ describe('respondToRequest', () => {
       // refetch mocks
       if (url.includes('/mentorship-requests')) {
         return mockResponse({
-          requests: [{ _id: 'req1', studentId: 'student1', mentorId: 'mentor1', status: 'accepted' }],
+          requests: [
+            { _id: 'req1', studentId: 'student1', mentorId: 'mentor1', status: 'accepted' },
+          ],
         });
       }
       return mockResponse({});
@@ -112,9 +116,9 @@ describe('respondToRequest', () => {
   });
 
   it('propagates capacity error when mentor is full', async () => {
-    global.fetch = vi.fn().mockResolvedValue(
-      mockResponse({ message: 'Mentor is already at full capacity.' }, 400)
-    );
+    global.fetch = vi
+      .fn()
+      .mockResolvedValue(mockResponse({ message: 'Mentor is already at full capacity.' }, 400));
 
     const r = await respondToRequest('mentor1', 'req1', 'accepted');
     expect(r.ok).toBe(false);
@@ -122,9 +126,11 @@ describe('respondToRequest', () => {
   });
 
   it('rejects responding to a request that does not belong to the mentor', async () => {
-    global.fetch = vi.fn().mockResolvedValue(
-      mockResponse({ message: 'Not authorized to respond to this request.' }, 403)
-    );
+    global.fetch = vi
+      .fn()
+      .mockResolvedValue(
+        mockResponse({ message: 'Not authorized to respond to this request.' }, 403)
+      );
 
     const r = await respondToRequest('someone-else', 'req1', 'accepted');
     expect(r.ok).toBe(false);
@@ -132,9 +138,9 @@ describe('respondToRequest', () => {
   });
 
   it('rejects responding to an already-answered request', async () => {
-    global.fetch = vi.fn().mockResolvedValue(
-      mockResponse({ message: 'Mentorship request is already accepted.' }, 400)
-    );
+    global.fetch = vi
+      .fn()
+      .mockResolvedValue(mockResponse({ message: 'Mentorship request is already accepted.' }, 400));
 
     const r = await respondToRequest('mentor1', 'req1', 'accepted');
     expect(r.ok).toBe(false);

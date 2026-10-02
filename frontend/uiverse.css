@@ -32,7 +32,9 @@
 
 .uiverse-btn:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px var(--primary, #2563eb);
+  box-shadow:
+    0 0 0 2px #ffffff,
+    0 0 0 4px var(--primary, #2563eb);
 }
 
 .uiverse-btn.full {

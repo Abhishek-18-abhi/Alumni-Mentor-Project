@@ -53,11 +53,23 @@ router.post('/register', async (req, res, next) => {
     await AuditLog.create({ userId: createdUser._id, action: 'Account created', resource: 'Account' }).catch((e) => console.warn('Audit error:', e.message));
     await Notification.create({ userId: createdUser._id, title: 'Welcome to MentorConnect', message: 'Complete your profile to start using mentorship features.' }).catch((e) => console.warn('Notification error:', e.message));
 
-    res.status(201).json({ token: tokenFor(createdUser), user: await getPublicUser(createdUser) });
+    res.status(201).json({ token: tokenFor(createdUser), user: await getPublicUser(createdUser, createdUser) });
   } catch (err) {
     if (createdUser?._id) {
       await rollbackUserCreation(createdUser._id).catch((e) => console.error('Rollback failed:', e));
     }
+    next(err);
+  }
+});
+
+router.get('/setup-status', async (req, res, next) => {
+  try {
+    const adminCount = await User.countDocuments({ role: 'admin' });
+    res.json({
+      setupNeeded: adminCount === 0,
+      adminCount,
+    });
+  } catch (err) {
     next(err);
   }
 });
@@ -100,26 +112,34 @@ router.post('/login', async (req, res, next) => {
       return res.status(403).json({ message: 'Account is deactivated. Please contact an administrator.' });
     }
     await AuditLog.create({ userId: user._id, action: 'Signed in', resource: 'Account' }).catch((e) => console.warn('Audit error:', e.message));
-    res.json({ token: tokenFor(user), user: await getPublicUser(user) });
+    res.json({ token: tokenFor(user), user: await getPublicUser(user, user) });
   } catch (err) { next(err); }
 });
 
 router.get('/me', requireAuth, async (req, res, next) => {
-  try { res.json({ user: await getPublicUser(req.user) }); } catch (err) { next(err); }
+  try { res.json({ user: await getPublicUser(req.user, req.user) }); } catch (err) { next(err); }
 });
 
-router.patch('/change-password', requireAuth, async (req, res, next) => {
+const handleChangePassword = async (req, res, next) => {
   try {
-    const { currentPassword, nextPassword } = req.body;
-    if (!nextPassword || nextPassword.length < MIN_PASSWORD_LENGTH) return res.status(400).json({ message: `Password must be at least ${MIN_PASSWORD_LENGTH} characters.` });
+    const { currentPassword, nextPassword, newPassword } = req.body;
+    const targetPassword = newPassword || nextPassword;
+    if (!targetPassword || targetPassword.length < MIN_PASSWORD_LENGTH) {
+      return res.status(400).json({ message: `Password must be at least ${MIN_PASSWORD_LENGTH} characters.` });
+    }
     const user = await User.findById(req.user._id).select('+passwordHash');
-    if (!(await bcrypt.compare(String(currentPassword || ''), user.passwordHash))) return res.status(400).json({ message: 'Current password is incorrect.' });
-    user.passwordHash = await bcrypt.hash(nextPassword, 10);
+    if (!(await bcrypt.compare(String(currentPassword || ''), user.passwordHash))) {
+      return res.status(400).json({ message: 'Current password is incorrect.' });
+    }
+    user.passwordHash = await bcrypt.hash(targetPassword, 10);
     await user.save();
     await AuditLog.create({ userId: user._id, action: 'Changed password', resource: 'Account' }).catch((e) => console.warn('Audit error:', e.message));
     res.json({ message: 'Password changed successfully.' });
   } catch (err) { next(err); }
-});
+};
+
+router.patch('/change-password', requireAuth, handleChangePassword);
+router.post('/change-password', requireAuth, handleChangePassword);
 
 router.post('/admins', requireAuth, requireRole('admin'), async (req, res, next) => {
   let createdUser = null;

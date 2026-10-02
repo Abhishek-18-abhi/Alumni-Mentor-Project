@@ -17,7 +17,7 @@ const requestSchema = new mongoose.Schema(
     studentId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     mentorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     message: { type: String, default: '' },
-    status: { type: String, enum: ['pending', 'accepted', 'rejected'], default: 'pending' },
+    status: { type: String, enum: ['pending', 'accepted', 'rejected', 'withdrawn', 'cancelled'], default: 'pending' },
     matchSnapshot: {
       score: Number,
       algorithmVersion: String,

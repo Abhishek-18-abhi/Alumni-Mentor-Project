@@ -6,6 +6,7 @@ const platformSettingsSchema = new mongoose.Schema(
     matchingEnabled: { type: Boolean, default: true },
     registrationsEnabled: { type: Boolean, default: true },
     maintenanceMode: { type: Boolean, default: false },
+    aiEnabled: { type: Boolean, default: true },
     defaultMentorCapacity: { type: Number, default: 3, min: 0 }
   },
   { timestamps: true, collection: 'platformSettings' }

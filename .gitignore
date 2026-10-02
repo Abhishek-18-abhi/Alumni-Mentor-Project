@@ -1,5 +1,6 @@
 # Dependencies
 node_modules/
+backend/node_modules/
 
 # Build outputs
 dist/
@@ -9,7 +10,12 @@ dist-ssr/
 .env
 .env.local
 .env.*.local
+backend/.env
+backend/.env.*
+**/.env
+**/.env.*
 !.env.example
+!backend/.env.example
 
 # Logs
 *.log
@@ -22,7 +28,7 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Test artifacts
+# Test / Eval artifacts
 *.png
 workspace_test_results.json
-
+eval/output/

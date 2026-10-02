@@ -14,7 +14,7 @@ router.get('/', requireAuth, async (req, res, next) => {
 
 router.patch('/', requireAuth, requireRole('admin'), async (req, res, next) => {
   try {
-    const allowed = ['platformName', 'matchingEnabled', 'registrationsEnabled', 'maintenanceMode', 'defaultMentorCapacity'];
+    const allowed = ['platformName', 'matchingEnabled', 'registrationsEnabled', 'maintenanceMode', 'aiEnabled', 'defaultMentorCapacity'];
     const patch = Object.fromEntries(Object.entries(req.body).filter(([key]) => allowed.includes(key)));
     if (patch.defaultMentorCapacity !== undefined) patch.defaultMentorCapacity = Math.max(0, Number(patch.defaultMentorCapacity) || 0);
     const settings = await PlatformSettings.findOneAndUpdate({}, patch, { new: true, upsert: true, setDefaultsOnInsert: true });

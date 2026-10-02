@@ -9,6 +9,9 @@ import './uiverse.css';
 createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <a href="#main-content" className="skip-to-content">
+        Skip to main content
+      </a>
       <ToastProvider>
         <AppRoutes />
       </ToastProvider>

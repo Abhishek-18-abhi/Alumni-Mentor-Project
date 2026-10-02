@@ -8,6 +8,9 @@ const meetingSchema = new mongoose.Schema(
     time: { type: String, required: true },
     mode: { type: String, default: 'Online' },
     log: { type: String, default: '' },
+    notes: { type: String, default: '' },
+    outcome: { type: String, default: '' },
+    nextSteps: { type: String, default: '' },
     status: { type: String, enum: ['scheduled', 'completed', 'cancelled'], default: 'scheduled' }
   },
   { timestamps: true, collection: 'meetings' }

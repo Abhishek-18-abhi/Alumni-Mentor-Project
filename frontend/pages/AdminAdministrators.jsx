@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Shield, Trash2 } from 'lucide-react';
+import { Plus, Shield, Trash2, RefreshCw } from 'lucide-react';
 import { MIN_PASSWORD_LENGTH } from '../lib/constants';
 import { useToast } from '../components/Toast';
 import ConfirmModal from '../components/ConfirmModal';
@@ -7,11 +7,13 @@ import ModalShell from '../components/ModalShell';
 import AppShell from '../components/AppShell';
 import PageTitle from '../components/PageTitle';
 import { createAdmin } from '../lib/auth';
-import { apiDelete, hydrateLocalCache } from '../lib/api';
-import { getSession, getUsers } from '../lib/storage';
+import { apiDelete } from '../lib/api';
+import { getSession } from '../lib/storage';
+import { useUsers } from '../hooks/useApi';
+
 export default function AdminAdministrators() {
   const s = getSession();
-  const [users, setUsers] = useState(getUsers());
+  const { data: usersList, loading, refetch } = useUsers();
   const [show, setShow] = useState(false);
   const [f, setF] = useState({ name: '', email: '', password: '' });
   const [error, setError] = useState('');
@@ -19,7 +21,10 @@ export default function AdminAdministrators() {
   const [isAdding, setIsAdding] = useState(false);
   const [isRemoving, setIsRemoving] = useState(false);
   const toast = useToast();
+
+  const users = usersList || [];
   const admins = users.filter((u) => u.role === 'admin');
+
   const add = async (e) => {
     e.preventDefault();
     if (isAdding) return;
@@ -27,8 +32,7 @@ export default function AdminAdministrators() {
     try {
       const r = await createAdmin(f);
       if (!r.ok) return setError(r.error);
-      await hydrateLocalCache({ includeAudit: true });
-      setUsers(getUsers());
+      await refetch();
       setF({ name: '', email: '', password: '' });
       setError('');
       setShow(false);
@@ -37,27 +41,30 @@ export default function AdminAdministrators() {
       setIsAdding(false);
     }
   };
+
   const remove = (id) => {
     if (admins.length <= 1) return toast.error('At least one administrator must remain.');
-    if (id === s?.id) return toast.error('You cannot remove your own active administrator account.');
+    const currentSessionId = s?.id || s?._id;
+    if (id === currentSessionId)
+      return toast.error('You cannot remove your own active administrator account.');
     setPendingRemoval(id);
   };
+
   const confirmRemove = async () => {
     const id = pendingRemoval;
     if (isRemoving || !id) return;
-    if (getUsers().filter((u) => u.role === 'admin').length <= 1) {
+    if (admins.length <= 1) {
       setPendingRemoval(null);
       return toast.error('At least one administrator must remain.');
     }
     setIsRemoving(true);
     try {
       await apiDelete(`/users/${id}`);
-      await hydrateLocalCache({ includeAudit: true });
-      setUsers(getUsers());
+      await refetch();
       setPendingRemoval(null);
       toast.success('Administrator removed.');
-    } catch (error) {
-      toast.error(error.message);
+    } catch (err) {
+      toast.error(err.message);
     } finally {
       setIsRemoving(false);
     }
@@ -83,31 +90,36 @@ export default function AdminAdministrators() {
             <span>Role</span>
             <span>Action</span>
           </div>
-          {admins.map((a) => (
-            <div className="table-row" key={a.id}>
-              <span className="person-cell">
-                <span className="mini-avatar">
-                  <Shield size={15} />
+          {admins.map((a) => {
+            const adminId = a.id || a._id;
+            const currentSessionId = s?.id || s?._id;
+            const isSelf = adminId === currentSessionId;
+            return (
+              <div className="table-row" key={adminId}>
+                <span className="person-cell">
+                  <span className="mini-avatar">
+                    <Shield size={15} />
+                  </span>
+                  <b>{a.name}</b>
                 </span>
-                <b>{a.name}</b>
-              </span>
-              <span>{a.email}</span>
-              <span>{new Date(a.createdAt).toLocaleDateString()}</span>
-              <span>
-                <span className="status-chip">Administrator</span>
-              </span>
-              <span>
-                <button
-                  className="icon-btn danger"
-                  disabled={admins.length <= 1 || a.id === s?.id}
-                  title={a.id === s?.id ? 'Cannot remove current active administrator' : undefined}
-                  onClick={() => remove(a.id)}
-                >
-                  <Trash2 size={16} />
-                </button>
-              </span>
-            </div>
-          ))}
+                <span>{a.email}</span>
+                <span>{new Date(a.createdAt).toLocaleDateString()}</span>
+                <span>
+                  <span className="status-chip">Administrator</span>
+                </span>
+                <span>
+                  <button
+                    className="icon-btn danger"
+                    disabled={admins.length <= 1 || isSelf}
+                    title={isSelf ? 'Cannot remove current active administrator' : undefined}
+                    onClick={() => remove(adminId)}
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </span>
+              </div>
+            );
+          })}
         </div>
       </section>
       {show && (

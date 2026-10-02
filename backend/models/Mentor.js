@@ -15,6 +15,7 @@ const mentorSchema = new mongoose.Schema(
     availability: { type: [String], default: [] },
     capacity: { type: Number, default: 1, min: 0 },
     currentMentees: { type: Number, default: 0, min: 0 },
+    pauseRequests: { type: Boolean, default: false },
     profileComplete: { type: Boolean, default: false }
   },
   { timestamps: true, collection: 'mentors' }

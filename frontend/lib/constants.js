@@ -54,3 +54,18 @@ export const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Sa
 export const TIME_SLOTS = ['09:00-12:00', '13:00-16:00', '17:00-20:00'];
 
 export const MIN_PASSWORD_LENGTH = 8;
+
+export const LANGUAGES = [
+  'English',
+  'Hindi',
+  'Gujarati',
+  'Marathi',
+  'Bengali',
+  'Tamil',
+  'Telugu',
+  'Kannada',
+  'Malayalam',
+  'French',
+  'German',
+  'Spanish',
+];

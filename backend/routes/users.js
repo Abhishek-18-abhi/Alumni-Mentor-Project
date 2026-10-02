@@ -9,14 +9,14 @@ import Meeting from '../models/Meeting.js';
 import Goal from '../models/Goal.js';
 import Feedback from '../models/Feedback.js';
 import Notification from '../models/Notification.js';
-import AuditLog from '../models/AuditLog.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
 import { getPublicUser, getPublicUsers } from '../utils/publicUser.js';
+import { recordAudit } from '../services/auditService.js';
 
 const router = Router();
-const studentFields = ['college','course','year','bio','skills','interests','goals','languages','availability','profileComplete'];
-const mentorFields = ['jobTitle','company','experience','domain','bio','skills','interests','goals','languages','availability','capacity','profileComplete'];
-const adminFields = ['adminType','title','department','permissions'];
+const studentFields = ['college', 'course', 'year', 'bio', 'skills', 'interests', 'goals', 'languages', 'availability', 'profileComplete'];
+const mentorFields = ['jobTitle', 'company', 'experience', 'domain', 'bio', 'skills', 'interests', 'goals', 'languages', 'availability', 'capacity', 'profileComplete', 'pauseRequests'];
+const adminFields = ['adminType', 'title', 'department', 'permissions'];
 
 async function updateRoleProfile(user, body) {
   if (user.role === 'student') {
@@ -38,46 +38,92 @@ router.get('/', requireAuth, async (req, res, next) => {
     if (typeof req.query.role === 'string' && ['student', 'mentor', 'admin'].includes(req.query.role)) {
       filter.role = req.query.role;
     }
+    // Non-admins must not see inactive accounts
     if (req.user.role !== 'admin') {
       filter.isActive = { $ne: false };
     }
     const users = await User.find(filter).sort({ createdAt: -1 });
-    res.json({ users: await getPublicUsers(users) });
-  } catch (err) { next(err); }
+    res.json({ users: await getPublicUsers(users, req.user) });
+  } catch (err) {
+    next(err);
+  }
 });
 
 router.get('/mentors', requireAuth, async (req, res, next) => {
   try {
-    const mentors = await User.find({ role: 'mentor', 'settings.profileVisible': { $ne: false }, isActive: { $ne: false } }).sort({ name: 1 });
-    res.json({ users: await getPublicUsers(mentors) });
-  } catch (err) { next(err); }
+    const filter = {
+      role: 'mentor',
+      'settings.profileVisible': { $ne: false },
+      isActive: { $ne: false },
+    };
+    const mentors = await User.find(filter).sort({ name: 1 });
+    res.json({ users: await getPublicUsers(mentors, req.user) });
+  } catch (err) {
+    next(err);
+  }
 });
 
 router.get('/:id', requireAuth, async (req, res, next) => {
   try {
-    if (!mongoose.isValidObjectId(req.params.id)) return res.status(400).json({ message: 'Invalid user ID.' });
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid user ID.' });
+    }
     const user = await User.findById(req.params.id);
-    if (!user) return res.status(404).json({ message: 'User not found.' });
-    res.json({ user: await getPublicUser(user) });
-  } catch (err) { next(err); }
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+
+    // Non-admins cannot view inactive users (unless viewing their own self)
+    const isSelf = req.user._id.toString() === user._id.toString();
+    if (!user.isActive && req.user.role !== 'admin' && !isSelf) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+
+    res.json({ user: await getPublicUser(user, req.user) });
+  } catch (err) {
+    next(err);
+  }
 });
 
 router.patch('/:id', requireAuth, async (req, res, next) => {
   try {
-    if (!mongoose.isValidObjectId(req.params.id)) return res.status(400).json({ message: 'Invalid user ID.' });
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid user ID.' });
+    }
     const user = await User.findById(req.params.id);
-    if (!user) return res.status(404).json({ message: 'User not found.' });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
     const isSelf = req.user._id.toString() === req.params.id;
-    if (!isSelf && req.user.role !== 'admin') return res.status(403).json({ message: 'You can only update your own profile.' });
+    if (!isSelf && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'You can only update your own profile.' });
+    }
 
     const common = {};
-    for (const key of ['name', 'settings', 'isActive']) if (req.body[key] !== undefined && (key !== 'isActive' || req.user.role === 'admin')) common[key] = req.body[key];
+    for (const key of ['name', 'avatar', 'settings', 'isActive']) {
+      if (req.body[key] !== undefined && (key !== 'isActive' || req.user.role === 'admin')) {
+        common[key] = req.body[key];
+      }
+    }
     if (common.name !== undefined) common.name = String(common.name).trim();
-    const updatedUser = Object.keys(common).length ? await User.findByIdAndUpdate(user._id, common, { new: true, runValidators: true }) : user;
+
+    const updatedUser = Object.keys(common).length
+      ? await User.findByIdAndUpdate(user._id, common, { new: true, runValidators: true })
+      : user;
+
     await updateRoleProfile(updatedUser, req.body);
-    await AuditLog.create({ userId: req.user._id, action: 'Updated profile', resource: req.params.id });
-    res.json({ user: await getPublicUser(updatedUser) });
-  } catch (err) { next(err); }
+    await recordAudit({
+      req,
+      userId: req.user._id,
+      action: 'Updated profile',
+      resource: req.params.id,
+      details: { updatedFields: Object.keys(req.body) },
+    });
+
+    res.json({ user: await getPublicUser(updatedUser, req.user) });
+  } catch (err) {
+    next(err);
+  }
 });
 
 router.delete('/:id', requireAuth, requireRole('admin'), async (req, res, next) => {
@@ -89,7 +135,9 @@ router.delete('/:id', requireAuth, requireRole('admin'), async (req, res, next) 
       return res.status(400).json({ message: 'An administrator cannot delete their own account from this endpoint.' });
     }
     const user = await User.findById(req.params.id);
-    if (!user) return res.status(404).json({ message: 'User not found.' });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
 
     if (user.role === 'admin') {
       const adminCount = await User.countDocuments({ role: 'admin' });
@@ -117,9 +165,18 @@ router.delete('/:id', requireAuth, requireRole('admin'), async (req, res, next) 
       Notification.deleteMany({ userId: user._id }),
     ]);
 
-    await AuditLog.create({ userId: req.user._id, action: 'Deleted user', resource: req.params.id });
+    await recordAudit({
+      req,
+      userId: req.user._id,
+      action: 'Deleted user',
+      resource: req.params.id,
+      details: { role: user.role, name: user.name },
+    });
+
     res.json({ message: 'User and associated records deleted successfully.' });
-  } catch (err) { next(err); }
+  } catch (err) {
+    next(err);
+  }
 });
 
 export default router;

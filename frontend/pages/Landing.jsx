@@ -9,85 +9,196 @@ import {
   ShieldCheck,
   ChevronDown,
   Check,
+  ExternalLink,
+  Menu,
+  X,
+  GraduationCap,
+  Activity,
+  Layers,
 } from 'lucide-react';
-import { FiExternalLink } from 'react-icons/fi';
 import Logo from '../components/Logo';
+import ScoreBreakdown from '../components/ScoreBreakdown';
+import { scoreMatch, WEIGHTS } from '../lib/matching';
+import { usePublicStats } from '../hooks/useApi';
 
-const SIMULATOR_SKILLS = [
-  { id: 'react', label: 'React / Web', weight: 8 },
-  { id: 'sysdesign', label: 'System Design', weight: 9 },
-  { id: 'aws', label: 'AWS & Cloud', weight: 6 },
-  { id: 'dsa', label: 'DSA & Algorithms', weight: 8 },
-  { id: 'aiml', label: 'AI & Machine Learning', weight: 5 },
+const SAMPLE_MENTORS = [
+  {
+    id: 'sample-aarav',
+    name: 'Aarav Sharma',
+    avatar: 'AS',
+    title: 'Sr. Software Engineer · Google',
+    graduationYear: 2021,
+    degree: 'BCA',
+    skills: ['React', 'Node.js', 'System Design', 'Cloud Computing', 'DSA'],
+    interests: ['Web Development', 'Distributed Systems', 'Career Growth'],
+    goals: ['Software Engineering', 'Full Stack Development'],
+    languages: ['English', 'Hindi'],
+    availability: ['Sat 10:00', 'Sun 16:00'],
+    capacity: 3,
+    currentMentees: 1,
+  },
+  {
+    id: 'sample-priya',
+    name: 'Priya Patel',
+    avatar: 'PP',
+    title: 'AI Research Engineer · Microsoft',
+    graduationYear: 2020,
+    degree: 'BCA / MCA',
+    skills: ['Python', 'Machine Learning', 'AI & ML', 'Data Science', 'PyTorch'],
+    interests: ['Artificial Intelligence', 'Deep Learning', 'Research'],
+    goals: ['AI/ML Engineering', 'Research Publications'],
+    languages: ['English', 'Gujarati', 'Hindi'],
+    availability: ['Sat 14:00', 'Sun 11:00'],
+    capacity: 2,
+    currentMentees: 0,
+  },
+];
+
+const AVAILABLE_SIM_SKILLS = [
+  'React',
+  'Node.js',
+  'System Design',
+  'DSA',
+  'Python',
+  'Machine Learning',
+  'Cloud Computing',
 ];
 
 const FAQ_ITEMS = [
   {
-    q: 'How does the explainable matching algorithm calculate match score?',
-    a: 'MentorConnect utilizes a weighted multi-factor matching model across four dimensions: Skill Overlap (40%), Career Goal Alignment (30%), Weekly Calendar Availability (20%), and Active Mentor Capacity (10%). Unlike black-box AI, each factor provides an audit trail explaining exactly why a mentor was recommended.',
+    q: 'How does the explainable matching algorithm calculate match scores?',
+    a: `MentorConnect evaluates transparent criteria across six weighted dimensions: Technical Skills (${Math.round(WEIGHTS.skills * 100)}%), Career Interests (${Math.round(WEIGHTS.interests * 100)}%), Learning Goals (${Math.round(WEIGHTS.goals * 100)}%), Languages (${Math.round(WEIGHTS.languages * 100)}%), Calendar Availability (${Math.round(WEIGHTS.availability * 100)}%), and Active Mentor Capacity (${Math.round(WEIGHTS.capacity * 100)}%). Unlike black-box models, every single recommendation shows an exact breakdown of points contributed by each factor.`,
   },
   {
     q: 'Can an alumnus mentor multiple students simultaneously?',
-    a: 'Yes. Each mentor sets an active mentee capacity limit (e.g., 2 to 5 concurrent students) during onboarding. The algorithm automatically caps incoming requests when capacity is reached to prevent mentor burnout and ensure high-quality guidance.',
+    a: 'Yes. Each mentor configures an active mentee capacity threshold (e.g. 1 to 5 students). When a mentor reaches maximum capacity, the platform automatically throttles new incoming requests to prevent burnout and ensure responsive mentorship.',
   },
   {
     q: 'How are meetings scheduled and conducted?',
-    a: 'Mentors configure weekly availability slots (e.g., Saturday 4:00 PM). Accepted students can book directly from open slots, with one-click Google Meet video links generated automatically and linked to both user calendars.',
+    a: 'Mentors publish recurring availability slots in their dashboard calendar. Paired students can book open slots without scheduling conflicts. Meetings track agendas, notes, and post-session milestone progress.',
   },
   {
     q: 'How does the platform ensure alumni credibility?',
-    a: 'Alumni must provide their graduation year, degree, and current organization (e.g., Google, Amazon, Microsoft). College coordinators and administrators have direct oversight via the Admin Portal to audit profiles and maintain network integrity.',
+    a: 'Alumni provide graduation year, degree, and current employer upon registration. Administrator accounts review and verify alumni profiles before their listings receive verified mentor status in the marketplace.',
   },
   {
     q: 'Is student and mentor data private and secure?',
-    a: 'Yes. MentorConnect enforces strict Role-Based Access Control (RBAC) via secure JWT tokens. Student academic details and personal contact information are protected and accessible only to paired mentors and verified coordinators.',
+    a: 'Yes. MentorConnect enforces strict role-based access control (RBAC). Sensitive contact details are never exposed to public crawlers or third-party AI models. The system logs all critical state transitions to an audit ledger.',
   },
 ];
 
 export default function Landing() {
   const nav = useNavigate();
-  const [selectedSkills, setSelectedSkills] = useState(['react', 'sysdesign', 'dsa']);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openFaq, setOpenFaq] = useState(0);
 
-  const toggleSkill = (id) => {
-    setSelectedSkills((prev) =>
-      prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]
+  // Simulator state: pure real scoreMatch inputs
+  const [selectedMentorIdx, setSelectedMentorIdx] = useState(0);
+  const [studentSkills, setStudentSkills] = useState(['React', 'System Design', 'DSA']);
+  const [studentGoal, setStudentGoal] = useState('Software Engineering');
+
+  // Fetch real platform statistics (no fabricated data)
+  const { data: stats } = usePublicStats();
+
+  const activeMentor = SAMPLE_MENTORS[selectedMentorIdx];
+
+  // Synthesize student profile for live pure scoreMatch
+  const simulatedStudent = {
+    id: 'sim-student',
+    name: 'Sample Student',
+    role: 'student',
+    skills: studentSkills,
+    interests: ['Web Development', 'Artificial Intelligence', 'Career Growth'],
+    goals: [studentGoal],
+    languages: ['English', 'Hindi'],
+    availability: ['Sat 10:00', 'Sun 16:00'],
+  };
+
+  const matchResult = scoreMatch(simulatedStudent, activeMentor);
+
+  const toggleSkill = (skill) => {
+    setStudentSkills((prev) =>
+      prev.includes(skill) ? prev.filter((s) => s !== skill) : [...prev, skill]
     );
   };
 
-  // Base score 65% + weights for each selected skill
-  const calculatedScore = Math.min(
-    98,
-    65 +
-      selectedSkills.reduce((acc, id) => {
-        const item = SIMULATOR_SKILLS.find((s) => s.id === id);
-        return acc + (item ? item.weight : 0);
-      }, 0)
-  );
-
   return (
     <div className="landing">
+      {/* Navigation Header */}
       <header className="landing-nav">
         <Logo />
-        <nav>
+
+        {/* Desktop Navigation */}
+        <nav className="landing-nav-links">
+          <a href="#simulator">Algorithm Simulator</a>
           <a href="#how">How it works</a>
           <a href="#faq">FAQ</a>
-          <Link to="/admin/login">
-            Administrator <FiExternalLink size={13} />
-          </Link>
         </nav>
-        <div>
+
+        <div className="landing-nav-actions">
           <button className="btn secondary" onClick={() => nav('/login')}>
             Login
           </button>
           <button className="btn primary" onClick={() => nav('/register')}>
             Get Started
           </button>
+          <button
+            type="button"
+            className="mobile-menu-toggle"
+            aria-label="Toggle Navigation Menu"
+            aria-expanded={mobileMenuOpen}
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          >
+            {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+          </button>
         </div>
       </header>
 
-      {/* Hero Section with Interactive Match Simulator */}
-      <section className="hero">
+      {/* Mobile Drawer */}
+      {mobileMenuOpen && (
+        <div className="mobile-nav-drawer" role="dialog" aria-label="Mobile Navigation">
+          <a href="#simulator" onClick={() => setMobileMenuOpen(false)}>
+            Algorithm Simulator
+          </a>
+          <a href="#how" onClick={() => setMobileMenuOpen(false)}>
+            How it works
+          </a>
+          <a href="#faq" onClick={() => setMobileMenuOpen(false)}>
+            FAQ
+          </a>
+          <div className="mobile-nav-buttons">
+            <button
+              className="btn secondary full"
+              onClick={() => {
+                setMobileMenuOpen(false);
+                nav('/login');
+              }}
+            >
+              Login
+            </button>
+            <button
+              className="btn primary full"
+              onClick={() => {
+                setMobileMenuOpen(false);
+                nav('/register');
+              }}
+            >
+              Get Started
+            </button>
+            <Link
+              to="/admin/login"
+              className="admin-footer-link"
+              style={{ textAlign: 'center', marginTop: 8 }}
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Administrator Portal <ExternalLink size={12} />
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {/* Hero Section */}
+      <section className="hero" id="simulator">
         <div className="hero-copy">
           <span className="eyebrow">
             <Sparkles size={15} /> Explainable Mentorship Matching
@@ -98,8 +209,8 @@ export default function Landing() {
             <span>Build your future.</span>
           </h1>
           <p>
-            Connect students with verified college alumni using transparent matching across goals, skills,
-            schedule availability, and mentor capacity.
+            Connect students with verified college alumni using transparent multi-factor matching
+            across skills, career goals, schedule availability, and mentor capacity.
           </p>
           <div className="hero-actions">
             <button className="uiverse-btn" onClick={() => nav('/register')}>
@@ -109,76 +220,175 @@ export default function Landing() {
               Become a mentor
             </button>
           </div>
+
+          {/* Real Platform Statistics strip (grounded in server DB) */}
+          <div className="landing-stats-strip" style={{ marginTop: 32 }}>
+            <div className="stat-pill">
+              <Users size={16} />
+              <span>
+                <b>{stats ? stats.totalStudents : '—'}</b> Active Students
+              </span>
+            </div>
+            <div className="stat-pill">
+              <GraduationCap size={16} />
+              <span>
+                <b>{stats ? stats.totalMentors : '—'}</b> Alumni Mentors
+              </span>
+            </div>
+            <div className="stat-pill">
+              <Activity size={16} />
+              <span>
+                <b>{stats ? stats.activeMentorships : '—'}</b> Pairings
+              </span>
+            </div>
+          </div>
         </div>
 
-        {/* 21st.dev Style Interactive Match Engine Simulator */}
+        {/* Live Explainable Match Engine Simulator */}
         <div className="hero-panel">
           <div className="match-simulator">
-            <div className="sim-top">
-              <div className="sim-mentor-meta">
-                <div className="sim-avatar">AS</div>
-                <div className="sim-mentor-info">
-                  <b>Aarav Sharma</b>
-                  <span>Sr. Software Engineer · Google</span>
-                </div>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: 12,
+              }}
+            >
+              <span className="sim-skills-label" style={{ margin: 0 }}>
+                Select Sample Alumni Mentor:
+              </span>
+              <div style={{ display: 'flex', gap: 6 }}>
+                {SAMPLE_MENTORS.map((m, idx) => (
+                  <button
+                    key={m.id}
+                    type="button"
+                    className={`btn small ${selectedMentorIdx === idx ? 'primary' : 'secondary'}`}
+                    style={{ fontSize: '0.78rem', padding: '4px 10px' }}
+                    onClick={() => setSelectedMentorIdx(idx)}
+                  >
+                    {m.name.split(' ')[0]}
+                  </button>
+                ))}
               </div>
-              <span className="sim-badge">Alumni '21</span>
             </div>
 
+            <div className="sim-top">
+              <div className="sim-mentor-meta">
+                <div className="sim-avatar">{activeMentor.avatar}</div>
+                <div className="sim-mentor-info">
+                  <b>{activeMentor.name}</b>
+                  <span>{activeMentor.title}</span>
+                </div>
+              </div>
+              <span className="sim-badge">
+                Alumni '{activeMentor.graduationYear.toString().slice(-2)}
+              </span>
+            </div>
+
+            {/* Score Display */}
             <div className="sim-score-box">
               <div>
                 <div className="sim-score-value">
-                  {calculatedScore}% <small>match</small>
+                  {matchResult.score}% <small>match</small>
                 </div>
-                <div className="sim-bar" style={{ width: '140px' }}>
-                  <div className="sim-bar-fill" style={{ width: `${calculatedScore}%` }} />
+                <div className="sim-bar" style={{ width: '130px' }}>
+                  <div className="sim-bar-fill" style={{ width: `${matchResult.score}%` }} />
                 </div>
               </div>
               <div className="sim-score-label">
                 Explainable Score
                 <br />
-                <span style={{ color: 'var(--success-text)', fontWeight: 700 }}>
-                  {calculatedScore >= 85 ? 'High Compatibility' : 'Moderate Compatibility'}
+                <span
+                  style={{
+                    color: matchResult.score >= 70 ? 'var(--success-text)' : 'var(--warning-text)',
+                    fontWeight: 700,
+                  }}
+                >
+                  {matchResult.score >= 70 ? 'High Compatibility' : 'Moderate Compatibility'}
                 </span>
               </div>
             </div>
 
+            {/* Simulator Controls: Skills */}
             <div className="sim-skills-section">
-              <div className="sim-skills-label">Interactive Simulator: Toggle Target Skills</div>
+              <div className="sim-skills-label">Toggle Student Target Skills:</div>
               <div className="sim-chips-grid">
-                {SIMULATOR_SKILLS.map((item) => {
-                  const active = selectedSkills.includes(item.id);
+                {AVAILABLE_SIM_SKILLS.map((skill) => {
+                  const active = studentSkills.includes(skill);
                   return (
                     <button
-                      key={item.id}
+                      key={skill}
                       type="button"
                       className={`sim-chip-btn ${active ? 'active' : ''}`}
-                      onClick={() => toggleSkill(item.id)}
+                      onClick={() => toggleSkill(skill)}
                     >
-                      {active ? <Check size={13} /> : '+'}
-                      {item.label}
+                      {active ? <Check size={13} /> : '+'} {skill}
                     </button>
                   );
                 })}
               </div>
             </div>
 
-            <div className="sim-reasons">
-              <span className="sim-reason-pill">✓ {selectedSkills.length} Target Skills Overlap</span>
-              <span className="sim-reason-pill">✓ Goal: Software Engineering</span>
-              <span className="sim-reason-pill">✓ Weekend Slots Available</span>
-              <span className="sim-reason-pill">✓ Mentor Capacity: 2 Slots Open</span>
+            {/* Simulator Controls: Goal */}
+            <div
+              style={{
+                marginTop: 10,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+                fontSize: '0.82rem',
+              }}
+            >
+              <span style={{ color: 'var(--foreground-muted)', fontWeight: 600 }}>
+                Target Goal:
+              </span>
+              <select
+                value={studentGoal}
+                onChange={(e) => setStudentGoal(e.target.value)}
+                style={{
+                  padding: '4px 8px',
+                  borderRadius: 6,
+                  border: '1px solid var(--border)',
+                  background: 'var(--surface)',
+                  fontSize: '0.8rem',
+                }}
+              >
+                <option value="Software Engineering">Software Engineering</option>
+                <option value="AI/ML Engineering">AI/ML Engineering</option>
+                <option value="Cloud Architecture">Cloud Architecture</option>
+              </select>
+            </div>
+
+            {/* Transparent Factor Breakdown */}
+            <div style={{ marginTop: 14 }}>
+              <div
+                style={{
+                  fontSize: '0.78rem',
+                  fontWeight: 700,
+                  color: 'var(--foreground-muted)',
+                  marginBottom: 8,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.04em',
+                }}
+              >
+                Algorithmic Factor Contributions:
+              </div>
+              <ScoreBreakdown factors={matchResult.factors} />
             </div>
           </div>
         </div>
       </section>
 
-      {/* Modern 21st.dev & shadcn Bento Grid Section */}
+      {/* Platform Architecture & Explainable Matching Bento Grid */}
       <section id="how" className="section">
         <div className="section-heading">
           <span className="eyebrow">Platform Architecture</span>
           <h2>A Real Mentorship Workflow</h2>
-          <p>Everything students, alumni mentors, and institutional coordinators need in one unified ecosystem.</p>
+          <p>
+            Everything students, alumni mentors, and institutional coordinators need in one unified
+            ecosystem.
+          </p>
         </div>
 
         <div className="bento-grid">
@@ -192,37 +402,52 @@ export default function Landing() {
             </div>
             <h3>Explainable Multi-Factor Matching</h3>
             <p>
-              Unlike black-box algorithms, our matching engine evaluates transparent criteria—giving students and
-              coordinators clear insights into why an alumni pairing succeeds.
+              Unlike opaque black-box algorithms, our matching engine evaluates transparent
+              criteria—giving students and coordinators clear insights into why an alumni pairing
+              succeeds.
             </p>
             <div className="bento-meter-grid">
               <div className="bento-meter">
                 <span>Technical Skills Overlap</span>
                 <div className="bar-track">
-                  <i style={{ width: '85%' }} />
+                  <i style={{ width: `${WEIGHTS.skills * 100}%` }} />
                 </div>
-                <b>40% Weight</b>
+                <b>{Math.round(WEIGHTS.skills * 100)}% Weight</b>
+              </div>
+              <div className="bento-meter">
+                <span>Domain & Career Interests</span>
+                <div className="bar-track">
+                  <i style={{ width: `${WEIGHTS.interests * 100}%` }} />
+                </div>
+                <b>{Math.round(WEIGHTS.interests * 100)}% Weight</b>
               </div>
               <div className="bento-meter">
                 <span>Career Goal Alignment</span>
                 <div className="bar-track">
-                  <i style={{ width: '75%' }} />
+                  <i style={{ width: `${WEIGHTS.goals * 100}%` }} />
                 </div>
-                <b>30% Weight</b>
+                <b>{Math.round(WEIGHTS.goals * 100)}% Weight</b>
+              </div>
+              <div className="bento-meter">
+                <span>Communication Languages</span>
+                <div className="bar-track">
+                  <i style={{ width: `${WEIGHTS.languages * 100}%` }} />
+                </div>
+                <b>{Math.round(WEIGHTS.languages * 100)}% Weight</b>
               </div>
               <div className="bento-meter">
                 <span>Weekly Schedule Match</span>
                 <div className="bar-track">
-                  <i style={{ width: '90%' }} />
+                  <i style={{ width: `${WEIGHTS.availability * 100}%` }} />
                 </div>
-                <b>20% Weight</b>
+                <b>{Math.round(WEIGHTS.availability * 100)}% Weight</b>
               </div>
               <div className="bento-meter">
                 <span>Mentor Capacity Throttling</span>
                 <div className="bar-track">
-                  <i style={{ width: '100%' }} />
+                  <i style={{ width: `${WEIGHTS.capacity * 100}%` }} />
                 </div>
-                <b>10% Weight</b>
+                <b>{Math.round(WEIGHTS.capacity * 100)}% Weight</b>
               </div>
             </div>
           </div>
@@ -233,31 +458,36 @@ export default function Landing() {
               <div className="feature-icon">
                 <ShieldCheck size={20} />
               </div>
-              <span className="bento-badge">Industry Alumni</span>
+              <span className="bento-badge">Verified Credentials</span>
             </div>
-            <h3>Verified Network</h3>
-            <p>Connect directly with college graduates working across leading global technology organizations.</p>
+            <h3>Admin-Audited Alumni</h3>
+            <p>
+              Every alumnus account undergoes verification of graduation year and career track
+              before pairing.
+            </p>
             <div className="bento-chips-row">
-              <span className="company-pill">Google</span>
-              <span className="company-pill">Microsoft</span>
-              <span className="company-pill">Amazon</span>
-              <span className="company-pill">Uber</span>
+              <span className="company-pill">BCA Alumni</span>
+              <span className="company-pill">MCA Alumni</span>
+              <span className="company-pill">Verified Status</span>
             </div>
           </div>
 
-          {/* Card 3: 1-column span - Frictionless Scheduling */}
+          {/* Card 3: 1-column span - Conflict-Free Scheduling */}
           <div className="bento-card">
             <div className="bento-header">
               <div className="feature-icon">
                 <CalendarDays size={20} />
               </div>
-              <span className="bento-badge">Google Meet</span>
+              <span className="bento-badge">Scheduling</span>
             </div>
-            <h3>Frictionless Scheduling</h3>
-            <p>Reserve available mentor calendar slots with instant meeting links and attendance records.</p>
+            <h3>Conflict-Free Booking</h3>
+            <p>
+              Direct slot booking with double-booking prevention, calendar export, and structured
+              meeting logs.
+            </p>
             <div className="bento-slot-preview">
-              <span>📅 Sat 4:00 PM · Confirmed</span>
-              <span>🎥 One-Click Video Call</span>
+              <span>📅 Available Slots Only</span>
+              <span>⚡ Conflict-Free Validation</span>
             </div>
           </div>
 
@@ -267,23 +497,21 @@ export default function Landing() {
               <div className="feature-icon">
                 <Target size={20} />
               </div>
-              <span className="bento-badge">Measurable Outcomes</span>
+              <span className="bento-badge">Accountability</span>
             </div>
             <h3>Milestone Tracking & 360° Feedback</h3>
             <p>
-              Students set tangible milestone goals, while mentors provide progress check-ins and confidential reviews
-              to evaluate mentorship effectiveness.
+              Students set tangible milestone goals, while mentors provide progress check-ins and
+              confidential reviews to evaluate mentorship effectiveness.
             </p>
             <div className="bento-goal-row">
               <div className="bento-goal-item">
                 <span>System Design & Architecture Review</span>
-                <span className="status-chip">Completed</span>
+                <span className="status-chip active">Completed</span>
               </div>
               <div className="bento-goal-item">
                 <span>Technical Interview Simulation</span>
-                <span className="status-chip" style={{ background: '#eff6ff', color: '#1d4ed8', borderColor: '#bfdbfe' }}>
-                  In Progress
-                </span>
+                <span className="status-chip pending">In Progress</span>
               </div>
             </div>
           </div>
@@ -297,22 +525,28 @@ export default function Landing() {
               <span className="bento-badge">RBAC Architecture</span>
             </div>
             <h3>Tailored Workspaces</h3>
-            <p>Segregated, secure dashboards for Students, Alumni Mentors, and Academic Coordinators.</p>
+            <p>
+              Segregated, secure dashboards for Students, Alumni Mentors, and Institutional
+              Administrators.
+            </p>
             <div className="bento-chips-row">
-              <span className="role-pill">🎓 Student</span>
-              <span className="role-pill">💼 Mentor</span>
-              <span className="role-pill">🛡️ Admin</span>
+              <span className="role-pill">Student</span>
+              <span className="role-pill">Mentor</span>
+              <span className="role-pill">Admin</span>
             </div>
           </div>
         </div>
       </section>
 
-      {/* shadcn Style Collapsible FAQ Accordion */}
+      {/* FAQ Accordion */}
       <section id="faq" className="section faq-section">
         <div className="section-heading">
           <span className="eyebrow">Academic & Platform Insights</span>
           <h2>Frequently Asked Questions</h2>
-          <p>Everything you need to know about the algorithm, platform security, and mentorship workflows.</p>
+          <p>
+            Everything you need to know about the algorithm, platform security, and mentorship
+            workflows.
+          </p>
         </div>
 
         <div className="faq-container">
@@ -340,9 +574,29 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Footer with Administrator link moved to footer */}
       <footer className="landing-footer">
-        <Logo showText size={26} />
-        <p>© {new Date().getFullYear()} MentorConnect. Empowering alumni-student mentorship.</p>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: 16,
+          }}
+        >
+          <Logo showText size={26} />
+          <p style={{ margin: 0 }}>
+            © {new Date().getFullYear()} MentorConnect. Explainable Alumni-Mentor Matching.
+          </p>
+          <Link
+            to="/admin/login"
+            className="admin-footer-link"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: '0.85rem' }}
+          >
+            Administrator Access <ExternalLink size={14} />
+          </Link>
+        </div>
       </footer>
     </div>
   );

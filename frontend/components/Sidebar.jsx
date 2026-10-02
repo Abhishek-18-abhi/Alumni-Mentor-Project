@@ -17,8 +17,9 @@ import {
   LogOut,
 } from 'lucide-react';
 import Logo from './Logo';
-import { getSession, getRequests, getMeetings } from '../lib/storage';
+import { getSession } from '../lib/storage';
 import { logout as authLogout } from '../lib/auth';
+import { useMentorshipRequests, useMeetings } from '../hooks/useApi';
 
 const navMaps = {
   student: [
@@ -29,6 +30,7 @@ const navMaps = {
     ['Meetings', '/meetings', MessageSquare],
     ['Goals', '/goals', Target],
     ['Feedback', '/feedback', Star],
+    ['Notifications', '/notifications', Bell],
     ['Settings', '/settings', Settings],
   ],
   mentor: [
@@ -39,7 +41,8 @@ const navMaps = {
     ['Meetings', '/mentor/meetings', MessageSquare],
     ['Goals', '/mentor/goals', Target],
     ['Feedback', '/mentor/feedback', Star],
-    ['Settings', '/mentor/profile', Settings],
+    ['Notifications', '/notifications', Bell],
+    ['Settings', '/settings', Settings],
   ],
   admin: [
     ['Overview', '/admin', LayoutDashboard],
@@ -64,29 +67,33 @@ export default function Sidebar({ role = 'student', isOpen = false, onClose = ()
 
   const navItems = navMaps[role] || navMaps.student;
 
+  const { data: allReqs = [] } = useMentorshipRequests({
+    enabled: !!user,
+    retry: false,
+    initialData: [],
+  });
+  const { data: allMeetings = [] } = useMeetings({
+    enabled: !!user,
+    retry: false,
+    initialData: [],
+  });
 
+  const pendingRequestsCount = (allReqs || []).filter(
+    (r) =>
+      ((r.mentorId?._id || r.mentorId) === user?.id) &&
+      r.status === 'pending'
+  ).length;
 
-  let pendingRequestsCount = 0;
-  let userMeetingsCount = 0;
-  try {
-    const allReqs = getRequests();
-    const allMeetings = getMeetings();
-    pendingRequestsCount = allReqs.filter(
-      (r) => r.mentorId === user?.id && r.status === 'pending'
-    ).length;
-    userMeetingsCount = allMeetings.filter(
-      (m) => (m.studentId === user?.id || m.mentorId === user?.id) && m.status !== 'cancelled'
-    ).length;
-  } catch {
-    // fallback gracefully
-  }
+  const userMeetingsCount = (allMeetings || []).filter((m) => {
+    const sId = m.studentId?._id || m.studentId;
+    const mId = m.mentorId?._id || m.mentorId;
+    return (sId === user?.id || mId === user?.id) && m.status !== 'cancelled';
+  }).length;
 
   const getNavBadge = (to) => {
-    if (to === '/matches') return 'Live';
     if (to === '/mentor/requests' && pendingRequestsCount > 0) return String(pendingRequestsCount);
-    if ((to === '/meetings' || to === '/mentor/meetings') && userMeetingsCount > 0) return String(userMeetingsCount);
-    if (to === '/admin/audit') return 'Live';
-    if (to === '/admin/matching') return 'AI';
+    if ((to === '/meetings' || to === '/mentor/meetings') && userMeetingsCount > 0)
+      return String(userMeetingsCount);
     return null;
   };
 
@@ -103,7 +110,13 @@ export default function Sidebar({ role = 'student', isOpen = false, onClose = ()
         </NavLink>
         <div className="sidebar-role-badge">
           <span className="role-pulse" />
-          <span>{role === 'admin' ? 'Administrator' : role === 'mentor' ? 'Alumni Mentor' : 'Student Hub'}</span>
+          <span>
+            {role === 'admin'
+              ? 'Administrator'
+              : role === 'mentor'
+                ? 'Alumni Mentor'
+                : 'Student Hub'}
+          </span>
         </div>
       </div>
 
@@ -124,16 +137,20 @@ export default function Sidebar({ role = 'student', isOpen = false, onClose = ()
       {/* Bottom User Card / Actions */}
       <div className="sidebar-footer">
         <div className="sidebar-user-card">
-          <div className="sidebar-user-avatar">
-            {user?.name?.[0]?.toUpperCase() || 'U'}
-          </div>
+          <div className="sidebar-user-avatar">{user?.name?.[0]?.toUpperCase() || 'U'}</div>
           <div className="sidebar-user-info">
             <b>{user?.name || 'Account'}</b>
             <span>{user?.email || (role === 'admin' ? 'Administrator' : 'Active User')}</span>
           </div>
           <div className="sidebar-user-actions">
             <NavLink
-              to={role === 'admin' ? '/admin/settings' : role === 'mentor' ? '/mentor/profile' : '/settings'}
+              to={
+                role === 'admin'
+                  ? '/admin/settings'
+                  : role === 'mentor'
+                    ? '/mentor/profile'
+                    : '/settings'
+              }
               className="sidebar-mini-icon-btn"
               title="Settings"
               onClick={onClose}

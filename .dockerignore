@@ -4,9 +4,14 @@ dist
 .git
 .gitignore
 .env
+.env.local
+.env.*.local
+backend/.env
+backend/.env.*
+eval/output
+*.png
 README.md
 CHANGES.md
-*.md
 .vscode
 .idea
 __tests__

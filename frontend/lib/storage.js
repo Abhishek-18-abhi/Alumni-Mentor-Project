@@ -51,13 +51,14 @@ export const getGoals = () => read(KEYS.goals, []);
 export const saveGoals = (x) => write(KEYS.goals, x);
 export const getFeedback = () => read(KEYS.feedback, []);
 export const saveFeedback = (x) => write(KEYS.feedback, x);
-export const getPlatformSettings = () => read(KEYS.platformSettings, {
-  platformName: 'MentorConnect',
-  matchingEnabled: true,
-  registrationsEnabled: true,
-  maintenanceMode: false,
-  defaultMentorCapacity: 3,
-});
+export const getPlatformSettings = () =>
+  read(KEYS.platformSettings, {
+    platformName: 'MentorConnect',
+    matchingEnabled: true,
+    registrationsEnabled: true,
+    maintenanceMode: false,
+    defaultMentorCapacity: 3,
+  });
 export const savePlatformSettings = (x) => write(KEYS.platformSettings, x);
 export const uid = (p = 'id') => `${p}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 /**

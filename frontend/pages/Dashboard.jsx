@@ -1,590 +1,193 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import AppShell from '../components/AppShell';
-import PageTitle from '../components/PageTitle';
+import DashboardLayout from '../components/DashboardLayout';
+import { useDashboardData } from '../hooks/useDashboardData';
+import EmptyState from '../components/EmptyState';
+import StatusChip from '../components/StatusChip';
 import {
   Users,
   CalendarDays,
   Target,
-  Sparkles,
-  TrendingUp,
   Clock,
-  CheckCircle2,
+  Sparkles,
   Award,
-  Star,
+  ShieldCheck,
+  CheckCircle2,
   ArrowRight,
-  Search,
-  Plus,
-  X,
-  Compass,
-  Briefcase,
-  Layers,
-  BarChart2,
+  PauseCircle,
+  PlayCircle,
+  Activity,
+  HeartPulse,
 } from 'lucide-react';
-import { getUsers, getMeetings, getRequests, getGoals, getSession } from '../lib/storage';
-
-/* -------------------------------------------------------------------------- */
-/* Shopeers 4-Card KPI Metric Row                                             */
-/* -------------------------------------------------------------------------- */
-function ShopeersKpiGrid({ metrics }) {
-  return (
-    <div className="shopeers-kpi-grid">
-      {metrics.map((m, idx) => {
-        const Icon = m.icon;
-        return (
-          <div key={idx} className="shopeers-kpi-card">
-            <div className="kpi-header">
-              <span className="kpi-title">{m.label}</span>
-              <div className={`kpi-icon-badge ${m.color || 'blue'}`}>
-                <Icon size={18} />
-              </div>
-            </div>
-            <div className="kpi-body">
-              <span className="kpi-value">{m.value}</span>
-              <div className={`kpi-trend ${m.isNegative ? 'negative' : 'positive'}`}>
-                <TrendingUp size={12} style={{ transform: m.isNegative ? 'rotate(180deg)' : 'none' }} />
-                <span>{m.trend}</span>
-              </div>
-            </div>
-            <span className="kpi-period">{m.period || 'vs. last month'}</span>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-/* -------------------------------------------------------------------------- */
-/* Shopeers Area Chart Card ("Mentorship Activity & Growth" / "Total Profit")  */
-/* -------------------------------------------------------------------------- */
-function ShopeersAreaChart({ title, subtitle, total, trend, breakdown = [] }) {
-  const [period, setPeriod] = useState('Monthly');
-  const [hoveredPoint, setHoveredPoint] = useState({ x: 440, y: 55, label: 'Jan 20: 38 hrs • 94% match' });
-
-  return (
-    <div className="shopeers-chart-card">
-      <div className="chart-card-header">
-        <div className="chart-card-title">
-          <h3>{title}</h3>
-          <p>{subtitle}</p>
-        </div>
-        <div className="chart-filters">
-          {['Weekly', 'Monthly', 'Yearly'].map((p) => (
-            <button
-              key={p}
-              type="button"
-              className={`chart-filter-btn${period === p ? ' active' : ''}`}
-              onClick={() => setPeriod(p)}
-            >
-              {p}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="chart-card-metric">
-        <span className="chart-metric-total">{total}</span>
-        <div className="kpi-trend positive">
-          <TrendingUp size={13} />
-          <span>{trend}</span>
-        </div>
-      </div>
-
-      {/* SVG Spline Curve with Gradient Fill */}
-      <div className="chart-visual-wrapper">
-        <svg
-          className="chart-svg"
-          viewBox="0 0 700 200"
-          preserveAspectRatio="none"
-          onMouseMove={(e) => {
-            const rect = e.currentTarget.getBoundingClientRect();
-            const relX = Math.max(0, Math.min(680, ((e.clientX - rect.left) / rect.width) * 700));
-            // Curve with comfortable top margin
-            const relY = Math.max(45, Math.min(160, 120 - Math.sin((relX / 700) * Math.PI * 2.2) * 50));
-            setHoveredPoint({
-              x: Math.round(relX),
-              y: Math.round(relY),
-              label: `Day ${Math.max(1, Math.round((relX / 700) * 30))}: ${(relX / 18).toFixed(0)} hrs`,
-            });
-          }}
-        >
-          <defs>
-            <linearGradient id="shopeersAreaGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#2563eb" stopOpacity="0.28" />
-              <stop offset="60%" stopColor="#3b82f6" stopOpacity="0.08" />
-              <stop offset="100%" stopColor="#2563eb" stopOpacity="0.0" />
-            </linearGradient>
-          </defs>
-
-          {/* Subtle Horizontal Grid lines */}
-          <line x1="0" y1="50" x2="700" y2="50" stroke="#f1f5f9" strokeWidth="1" strokeDasharray="4 4" />
-          <line x1="0" y1="100" x2="700" y2="100" stroke="#f1f5f9" strokeWidth="1" strokeDasharray="4 4" />
-          <line x1="0" y1="150" x2="700" y2="150" stroke="#f1f5f9" strokeWidth="1" strokeDasharray="4 4" />
-
-          {/* Area Fill */}
-          <path
-            d="M 0,150 C 90,145 150,85 240,95 C 330,105 410,50 500,60 C 580,72 640,46 700,50 L 700,200 L 0,200 Z"
-            fill="url(#shopeersAreaGradient)"
-          />
-
-          {/* Main Spline Line */}
-          <path
-            d="M 0,150 C 90,145 150,85 240,95 C 330,105 410,50 500,60 C 580,72 640,46 700,50"
-            fill="none"
-            stroke="#2563eb"
-            strokeWidth="3.2"
-            strokeLinecap="round"
-          />
-
-          {/* Interactive Tooltip & Point */}
-          {hoveredPoint && (
-            <g>
-              <line
-                x1={hoveredPoint.x}
-                y1="10"
-                x2={hoveredPoint.x}
-                y2="200"
-                stroke="#94a3b8"
-                strokeWidth="1.2"
-                strokeDasharray="3 3"
-              />
-              <circle
-                cx={hoveredPoint.x}
-                cy={hoveredPoint.y}
-                r="6.5"
-                fill="#2563eb"
-                stroke="#ffffff"
-                strokeWidth="3"
-                style={{ filter: 'drop-shadow(0 2px 5px rgba(37,99,235,0.4))' }}
-              />
-              <rect
-                x={Math.max(10, Math.min(540, hoveredPoint.x - 70))}
-                y={Math.max(8, hoveredPoint.y - 32)}
-                width="140"
-                height="24"
-                rx="6"
-                fill="#0f172a"
-                opacity="0.94"
-              />
-              <text
-                x={Math.max(80, Math.min(610, hoveredPoint.x))}
-                y={Math.max(24, hoveredPoint.y - 16)}
-                fill="#ffffff"
-                fontSize="11"
-                fontWeight="600"
-                textAnchor="middle"
-              >
-                {hoveredPoint.label}
-              </text>
-            </g>
-          )}
-        </svg>
-
-        <div className="chart-x-labels">
-          <span>Jan 01</span>
-          <span>Jan 07</span>
-          <span>Jan 14</span>
-          <span>Jan 21</span>
-          <span>Jan 28</span>
-          <span>Feb 01</span>
-        </div>
-      </div>
-
-      {/* Category Breakdown Row */}
-      <div className="chart-breakdown-row">
-        {breakdown.map((item, idx) => (
-          <div key={idx} className="breakdown-pill">
-            <span className="breakdown-dot" style={{ backgroundColor: item.color }} />
-            <div className="breakdown-info">
-              <span className="breakdown-name">{item.name}</span>
-              <span className="breakdown-val">{item.value}</span>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-/* -------------------------------------------------------------------------- */
-/* Weekly Peak Activity Bar Chart Card ("Most Day Active")                    */
-/* -------------------------------------------------------------------------- */
-function WeeklyActivityCard({ peakDay = 'Tue', peakHours = '8.5 hrs' }) {
-  const baseHeights = {
-    Sun: '35%',
-    Mon: '55%',
-    Tue: '65%',
-    Wed: '50%',
-    Thu: '60%',
-    Fri: '45%',
-    Sat: '30%',
-  };
-  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((label) => ({
-    label,
-    height: label === peakDay ? '90%' : baseHeights[label] || '45%',
-    isPeak: label === peakDay,
-  }));
-
-  return (
-    <div className="weekly-activity-card">
-      <div className="weekly-card-header">
-        <h4>Most Day Active</h4>
-        <span className="weekly-peak-pill">
-          {peakDay} • {peakHours}
-        </span>
-      </div>
-      <div className="weekly-bars-container">
-        {days.map((d) => (
-          <div key={d.label} className={`weekly-bar-col${d.isPeak ? ' peak' : ''}`}>
-            <div className="weekly-bar-track">
-              <div className="weekly-bar-fill" style={{ height: d.height }} />
-            </div>
-            <span className="weekly-bar-label">{d.label}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-/* -------------------------------------------------------------------------- */
-/* Milestone Progress Radial Gauge Card                                       */
-/* -------------------------------------------------------------------------- */
-function MilestoneGaugeCard({
-  percent = 82,
-  label = 'Active Match Retention',
-  change = '+ 8% vs last month',
-}) {
-  const circumference = 2 * Math.PI * 40; // ~251.3
-  const strokeDashoffset = circumference - (percent / 100) * circumference * 0.75;
-
-  return (
-    <div className="milestone-gauge-card">
-      <div className="weekly-card-header" style={{ width: '100%' }}>
-        <h4>Progress Milestone</h4>
-        <span className="weekly-peak-pill" style={{ background: '#ecfdf5', color: '#059669', borderColor: '#a7f3d0' }}>
-          {change}
-        </span>
-      </div>
-      <div className="gauge-svg-wrap">
-        <svg width="130" height="130" viewBox="0 0 100 100">
-          <circle
-            cx="50"
-            cy="50"
-            r="40"
-            fill="none"
-            stroke="#f1f5f9"
-            strokeWidth="8"
-            strokeDasharray={`${circumference * 0.75} ${circumference * 0.25}`}
-            strokeDashoffset="0"
-            strokeLinecap="round"
-            transform="rotate(135 50 50)"
-          />
-          <circle
-            cx="50"
-            cy="50"
-            r="40"
-            fill="none"
-            stroke="#10b981"
-            strokeWidth="8"
-            strokeDasharray={`${circumference * 0.75} ${circumference * 0.25}`}
-            strokeDashoffset={strokeDashoffset}
-            strokeLinecap="round"
-            transform="rotate(135 50 50)"
-            style={{ transition: 'stroke-dashoffset 0.8s cubic-bezier(0.16,1,0.3,1)' }}
-          />
-        </svg>
-        <div className="gauge-center-content">
-          <b style={{ fontSize: '1.45rem', lineHeight: 1 }}>{percent}%</b>
-          <span style={{ fontSize: '0.62rem', lineHeight: 1.15, maxWidth: 76, textAlign: 'center', marginTop: 3 }}>
-            {label}
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* -------------------------------------------------------------------------- */
-/* Shopeers Data Table Card ("Top Recommended Mentors" / "Best Selling...")   */
-/* -------------------------------------------------------------------------- */
-function TopMentorsTableCard({ mentors = [], title = 'Top Recommended Mentors' }) {
-  const [search, setSearch] = useState('');
-  const nav = useNavigate();
-
-  const filtered = mentors.filter((m) => {
-    if (!search.trim()) return true;
-    const term = search.toLowerCase();
-    return (
-      m.name?.toLowerCase().includes(term) ||
-      m.company?.toLowerCase().includes(term) ||
-      m.domain?.toLowerCase().includes(term)
-    );
-  });
-
-  return (
-    <div className="shopeers-table-card">
-      <div className="shopeers-table-header">
-        <h3>{title}</h3>
-        <div className="shopeers-table-actions">
-          <div className="shopeers-search-pill">
-            <Search size={14} color="#94a3b8" />
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Filter mentors..."
-            />
-          </div>
-          <Link to="/mentors" className="topbar-btn outline" style={{ padding: '6px 12px', fontSize: '0.78rem' }}>
-            <span>View All</span>
-            <ArrowRight size={13} />
-          </Link>
-        </div>
-      </div>
-
-      <div style={{ overflowX: 'auto' }}>
-        <table className="shopeers-table">
-          <thead>
-            <tr>
-              <th>Mentor</th>
-              <th>Expertise / Domain</th>
-              <th>Rating</th>
-              <th>Status</th>
-              <th style={{ textAlign: 'right' }}>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.slice(0, 5).map((m) => {
-              const initials = m.name
-                ? m.name
-                    .split(' ')
-                    .map((n) => n[0])
-                    .join('')
-                    .slice(0, 2)
-                    .toUpperCase()
-                : 'M';
-              return (
-                <tr key={m.id}>
-                  <td>
-                    <div className="table-mentor-cell">
-                      {m.avatar ? (
-                        <img src={m.avatar} alt={m.name} className="table-mentor-avatar" />
-                      ) : (
-                        <div className="table-mentor-avatar-fallback">{initials}</div>
-                      )}
-                      <div className="table-mentor-meta">
-                        <b>{m.name}</b>
-                        <span>{m.company || m.role || 'Alumni Mentor'}</span>
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <div className="tag-row">
-                      <span>{m.domain?.split('&')[0]?.trim() || 'Software Engineering'}</span>
-                      {m.yearsOfExperience && <span>{m.yearsOfExperience}y exp</span>}
-                    </div>
-                  </td>
-                  <td>
-                    <div className="table-rating-pill">
-                      <Star size={12} fill="#d97706" color="#d97706" />
-                      <span>{m.rating || '5.0'} (42)</span>
-                    </div>
-                  </td>
-                  <td>
-                    <div className="table-status-pill online">
-                      <span className="role-pulse" />
-                      <span>Available Now</span>
-                    </div>
-                  </td>
-                  <td style={{ textAlign: 'right' }}>
-                    <button
-                      type="button"
-                      className="table-action-btn"
-                      onClick={() => nav('/mentors')}
-                    >
-                      <span>Connect</span>
-                      <ArrowRight size={12} />
-                    </button>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
-
-/* -------------------------------------------------------------------------- */
-/* Shopeers "+ Add Widget" Drawer / Modal Customizer                          */
-/* -------------------------------------------------------------------------- */
-function AddWidgetModal({ isOpen, onClose, activeWidgets, onToggleWidget }) {
-  if (!isOpen) return null;
-
-  const availableWidgets = [
-    { id: 'areaChart', title: 'Mentorship Growth Chart', desc: 'Spline wave chart tracking active hours & bookings.' },
-    { id: 'weeklyActivity', title: 'Most Day Active', desc: 'Weekly peak hours bar chart visualization.' },
-    { id: 'milestoneGauge', title: 'Progress Radial Gauge', desc: 'Circular progress tracking retention & milestones.' },
-    { id: 'tableCard', title: 'Top Recommended Mentors', desc: 'Full-width rich data table of available alumni.' },
-  ];
-
-  return (
-    <div className="widget-modal-backdrop" onClick={onClose}>
-      <div className="widget-modal-sheet" onClick={(e) => e.stopPropagation()}>
-        <div className="widget-modal-head">
-          <h3>Customize Dashboard Widgets</h3>
-          <button type="button" className="icon-btn" onClick={onClose} aria-label="Close">
-            <X size={18} />
-          </button>
-        </div>
-        <div className="widget-modal-grid">
-          {availableWidgets.map((w) => {
-            const isActive = activeWidgets[w.id] !== false;
-            return (
-              <div
-                key={w.id}
-                className={`widget-toggle-card${isActive ? ' active' : ''}`}
-                onClick={() => onToggleWidget(w.id)}
-              >
-                <div className={`kpi-icon-badge ${isActive ? 'blue' : ''}`} style={{ width: 32, height: 32 }}>
-                  {isActive ? <CheckCircle2 size={16} /> : <Plus size={16} />}
-                </div>
-                <div>
-                  <h5>{w.title}</h5>
-                  <p>{w.desc}</p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </div>
-  );
-}
 
 /* ========================================================================== */
 /* STUDENT DASHBOARD                                                          */
 /* ========================================================================== */
 export function StudentDashboard() {
-  const s = getUsers().find((u) => u.id === getSession()?.id);
-  const users = getUsers();
-  const active = getRequests().filter((r) => r.studentId === s?.id && r.status === 'accepted');
-  const meetings = getMeetings().filter((m) => m.studentId === s?.id && m.status !== 'cancelled');
-  const goals = getGoals().filter((g) => g.studentId === s?.id);
-  const mentors = users.filter((u) => u.role === 'mentor' && u.profileComplete);
+  const nav = useNavigate();
+  const { currentUser, metrics, recentItems, loading, error, refetch } =
+    useDashboardData('student');
 
-  const [isWidgetModalOpen, setIsWidgetModalOpen] = useState(false);
-  const [widgets, setWidgets] = useState({
-    areaChart: true,
-    weeklyActivity: true,
-    milestoneGauge: true,
-    tableCard: true,
-  });
-
-  useEffect(() => {
-    const handleOpen = () => setIsWidgetModalOpen(true);
-    window.addEventListener('open-add-widget', handleOpen);
-    return () => window.removeEventListener('open-add-widget', handleOpen);
-  }, []);
-
-  const toggleWidget = (id) => {
-    setWidgets((prev) => ({ ...prev, [id]: !prev[id] }));
-  };
-
-  const metrics = [
+  const stats = [
     {
-      label: 'Total Mentorship Hours',
-      value: `${(meetings.length * 1.5 + 24.5).toFixed(1)} hrs`,
-      trend: '+ 15.5%',
+      label: 'Pending Requests',
+      value: metrics ? `${metrics.pendingRequestsCount} pending` : '0',
       icon: Clock,
       color: 'blue',
-      period: 'vs. last month',
+      subtext: 'Awaiting mentor acceptance',
     },
     {
-      label: 'Sessions Completed',
-      value: `${meetings.length || 12} sessions`,
-      trend: '+ 8.2%',
-      icon: CheckCircle2,
+      label: 'Upcoming Meetings',
+      value: metrics ? `${metrics.upcomingMeetingsCount} scheduled` : '0',
+      icon: CalendarDays,
       color: 'green',
-      period: 'vs. last month',
+      subtext: 'Confirmed 1:1 sessions',
     },
     {
-      label: 'Active Mentor Connections',
-      value: `${active.length || 4} mentors`,
-      trend: '+ 12.0%',
-      icon: Sparkles,
-      color: 'purple',
-      period: 'vs. last month',
-    },
-    {
-      label: 'Milestone Completion',
-      value: `${goals.length ? Math.min(100, Math.round((goals.filter((g) => g.status === 'completed').length / goals.length) * 100)) : 94.2}%`,
-      trend: '+ 4.6%',
+      label: 'Goals Completed',
+      value: metrics ? `${metrics.completedGoalsCount} / ${metrics.totalGoalsCount || 0}` : '0',
       icon: Target,
-      color: 'orange',
-      period: 'vs. last month',
+      color: 'purple',
+      subtext: 'Milestones achieved',
     },
-  ];
-
-  const breakdown = [
-    { name: '1:1 Mentoring', value: '45%', color: '#2563eb' },
-    { name: 'Mock Interviews', value: '30%', color: '#06b6d4' },
-    { name: 'Resume Reviews', value: '15%', color: '#10b981' },
-    { name: 'Career Roadmaps', value: '10%', color: '#f97316' },
+    {
+      label: 'Profile Completion',
+      value: metrics ? `${metrics.profileCompletion}%` : '0%',
+      icon: Award,
+      color: 'orange',
+      subtext: 'Improves match accuracy',
+    },
   ];
 
   return (
-    <AppShell role="student">
-      <PageTitle
-        eyebrow="Student Workspace • BCA Alumni Network"
-        title={`Welcome back${s?.name ? `, ${s.name.split(' ')[0]}` : ''}`}
-        text="Track your mentorship progress, upcoming meeting hours, and career milestones."
-      />
-
-      {/* 4 Shopeers KPI Cards */}
-      <ShopeersKpiGrid metrics={metrics} />
-
-      {/* Two-Column Layout */}
-      <div className="shopeers-dashboard-grid">
-        {/* Left Column: Spline Area Chart */}
-        {widgets.areaChart && (
-          <ShopeersAreaChart
-            title="Mentorship Activity & Growth"
-            subtitle="Monthly cumulative hours and 1-on-1 alumni engagement"
-            total={`${(meetings.length * 1.5 + 148.5).toFixed(1)} hrs`}
-            trend="+ 15.5% vs. last period"
-            breakdown={breakdown}
-          />
-        )}
-
-        {/* Right Column: Stacked Widgets */}
-        <div className="shopeers-side-col">
-          {widgets.weeklyActivity && (
-            <WeeklyActivityCard peakDay="Tue" peakHours="8.5 hrs" />
-          )}
-          {widgets.milestoneGauge && (
-            <MilestoneGaugeCard percent={82} label="Active Match Retention" change="+ 8% vs last month" />
-          )}
+    <DashboardLayout
+      role="student"
+      eyebrow="Student Workspace • BCA Alumni Network"
+      title={`Welcome back${currentUser?.name ? `, ${currentUser.name.split(' ')[0]}` : ''}`}
+      subtitle="Track your mentorship progress, upcoming meeting hours, and career milestones."
+      stats={stats}
+      loading={loading}
+      error={error}
+      onRetry={refetch}
+      actions={
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button type="button" className="btn secondary" onClick={() => nav('/matches')}>
+            <Sparkles size={15} /> View Matches
+          </button>
+          <button type="button" className="btn primary" onClick={() => nav('/mentors')}>
+            Find Mentors
+          </button>
         </div>
+      }
+    >
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+          gap: 20,
+        }}
+      >
+        {/* Upcoming Meetings Panel */}
+        <section className="card">
+          <div
+            className="section-head"
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: 14,
+            }}
+          >
+            <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700 }}>Upcoming Sessions</h3>
+            <Link to="/meetings" className="text-link" style={{ fontSize: '0.84rem' }}>
+              View all
+            </Link>
+          </div>
+
+          {recentItems.length === 0 ? (
+            <EmptyState
+              title="No upcoming sessions"
+              text="When a mentor accepts your request, you can schedule a 1-on-1 meeting."
+              actionLabel="Find a Mentor"
+              onAction={() => nav('/mentors')}
+            />
+          ) : (
+            <div className="table-list">
+              {recentItems.map((m) => (
+                <div key={m.id || m._id} className="table-row" style={{ padding: '10px 0' }}>
+                  <div>
+                    <b>
+                      {m.date} · {m.time}
+                    </b>
+                    <p
+                      style={{
+                        margin: '2px 0 0 0',
+                        fontSize: '0.82rem',
+                        color: 'var(--foreground-muted)',
+                      }}
+                    >
+                      Mode: {m.mode || 'Video call'}
+                    </p>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <StatusChip status={m.status} size="sm" />
+                    {m.link && (
+                      <a
+                        href={m.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn mini join-btn"
+                      >
+                        Join
+                      </a>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* Quick Mentorship Actions */}
+        <section className="card">
+          <h3 style={{ margin: '0 0 14px 0', fontSize: '1.05rem', fontWeight: 700 }}>
+            Quick Actions
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <Link to="/matches" className="quick-action-row">
+              <div className="quick-action-icon blue">
+                <Sparkles size={16} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <b>View Explainable Matches</b>
+                <p>Browse alumni ranked transparently by factor overlap</p>
+              </div>
+              <ArrowRight size={14} />
+            </Link>
+            <Link to="/goals" className="quick-action-row">
+              <div className="quick-action-icon green">
+                <Target size={16} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <b>Milestone Goal Tracker</b>
+                <p>Record career objectives and generate AI SMART goals</p>
+              </div>
+              <ArrowRight size={14} />
+            </Link>
+            <Link to="/profile" className="quick-action-row">
+              <div className="quick-action-icon purple">
+                <Award size={16} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <b>Update Profile Skills & Goals</b>
+                <p>Keep your technical skills and domain preferences current</p>
+              </div>
+              <ArrowRight size={14} />
+            </Link>
+          </div>
+        </section>
       </div>
-
-      {/* Bottom Full-Width Table Card */}
-      {widgets.tableCard && (
-        <TopMentorsTableCard
-          mentors={mentors.length > 0 ? mentors : users.filter((u) => u.role === 'mentor')}
-          title="Top Recommended Mentors"
-        />
-      )}
-
-      {/* Customize Widgets Modal */}
-      <AddWidgetModal
-        isOpen={isWidgetModalOpen}
-        onClose={() => setIsWidgetModalOpen(false)}
-        activeWidgets={widgets}
-        onToggleWidget={toggleWidget}
-      />
-    </AppShell>
+    </DashboardLayout>
   );
 }
 
@@ -592,128 +195,175 @@ export function StudentDashboard() {
 /* MENTOR DASHBOARD                                                           */
 /* ========================================================================== */
 export function MentorDashboard() {
-  const s = getUsers().find((u) => u.id === getSession()?.id);
-  const req = getRequests().filter((r) => r.mentorId === s?.id);
-  const meetings = getMeetings().filter((m) => m.mentorId === s?.id);
-  const mentees = req.filter((r) => r.status === 'accepted');
-  const allUsers = getUsers();
+  const nav = useNavigate();
+  const { currentUser, metrics, recentItems, loading, error, refetch, togglePauseRequests } =
+    useDashboardData('mentor');
 
-  const [isWidgetModalOpen, setIsWidgetModalOpen] = useState(false);
-  const [widgets, setWidgets] = useState({
-    areaChart: true,
-    weeklyActivity: true,
-    milestoneGauge: true,
-    tableCard: true,
-  });
-
-  useEffect(() => {
-    const handleOpen = () => setIsWidgetModalOpen(true);
-    window.addEventListener('open-add-widget', handleOpen);
-    return () => window.removeEventListener('open-add-widget', handleOpen);
-  }, []);
-
-  const toggleWidget = (id) => {
-    setWidgets((prev) => ({ ...prev, [id]: !prev[id] }));
-  };
-
-  const metrics = [
+  const stats = [
     {
-      label: 'Mentoring Hours Delivered',
-      value: `${(meetings.length * 1.5 + 48.0).toFixed(1)} hrs`,
-      trend: '+ 18.2%',
+      label: 'Pending Requests',
+      value: metrics ? `${metrics.pendingRequestsCount} waiting` : '0',
       icon: Clock,
       color: 'blue',
-      period: 'vs. last month',
+      subtext: 'Incoming student requests',
     },
     {
-      label: 'Active Mentees',
-      value: `${mentees.length || 4} students`,
-      trend: '+ 5.0%',
+      label: 'Active Mentees / Capacity',
+      value: metrics ? `${metrics.currentMentees} / ${metrics.capacity}` : '0 / 0',
       icon: Users,
       color: 'green',
-      period: 'vs. last month',
+      subtext:
+        metrics?.currentMentees >= metrics?.capacity ? 'Capacity full' : 'Available capacity open',
     },
     {
-      label: 'Average Mentee Rating',
-      value: '4.95 ★',
-      trend: '+ 2.1%',
-      icon: Star,
+      label: 'Upcoming Sessions',
+      value: metrics ? `${metrics.upcomingMeetingsCount} scheduled` : '0',
+      icon: CalendarDays,
       color: 'purple',
-      period: 'vs. last month',
+      subtext: 'Planned mentoring slots',
     },
     {
-      label: 'Capacity Utilization',
-      value: `${s?.currentMentees || mentees.length || 3} / ${s?.capacity || 5}`,
-      trend: '+ 8.0%',
-      icon: Award,
-      color: 'orange',
-      period: 'vs. last month',
+      label: 'Intake Status',
+      value: metrics?.pauseRequests ? 'Paused' : 'Accepting',
+      icon: metrics?.pauseRequests ? PauseCircle : PlayCircle,
+      color: metrics?.pauseRequests ? 'orange' : 'green',
+      subtext: metrics?.pauseRequests ? 'New requests blocked' : 'Accepting new mentees',
     },
   ];
-
-  const breakdown = [
-    { name: 'Architecture Review', value: '40%', color: '#2563eb' },
-    { name: 'Career Guidance', value: '35%', color: '#06b6d4' },
-    { name: 'Code Walkthrough', value: '15%', color: '#10b981' },
-    { name: 'Placement Prep', value: '10%', color: '#f97316' },
-  ];
-
-  const recommendedStudents = allUsers
-    .filter((u) => u.role === 'student')
-    .map((u) => ({
-      ...u,
-      role: u.course || "BCA '25",
-      domain: u.interests?.join(', ') || 'Web Development, Cloud',
-    }));
 
   return (
-    <AppShell role="mentor">
-      <PageTitle
-        eyebrow="Alumni Mentor Workspace"
-        title={`Welcome back${s?.name ? `, ${s.name.split(' ')[0]}` : ''}`}
-        text="Overview of your active mentees, incoming pairing requests, and weekly session hours."
-      />
-
-      {/* 4 KPI Cards */}
-      <ShopeersKpiGrid metrics={metrics} />
-
-      {/* Two-Column Grid */}
-      <div className="shopeers-dashboard-grid">
-        {widgets.areaChart && (
-          <ShopeersAreaChart
-            title="Mentoring Engagement & Impact"
-            subtitle="Student contact hours and weekly consultation volume"
-            total={`${(meetings.length * 1.5 + 86).toFixed(1)} hrs`}
-            trend="+ 18.2% vs. last period"
-            breakdown={breakdown}
-          />
-        )}
-
-        <div className="shopeers-side-col">
-          {widgets.weeklyActivity && (
-            <WeeklyActivityCard peakDay="Thu" peakHours="6.0 hrs" />
-          )}
-          {widgets.milestoneGauge && (
-            <MilestoneGaugeCard percent={88} label="Mentee Goal Completion" change="+ 12% vs last month" />
-          )}
+    <DashboardLayout
+      role="mentor"
+      eyebrow="Alumni Mentor Workspace"
+      title={`Welcome back${currentUser?.name ? `, ${currentUser.name.split(' ')[0]}` : ''}`}
+      subtitle="Overview of your active mentees, incoming pairing requests, and weekly session hours."
+      stats={stats}
+      loading={loading}
+      error={error}
+      onRetry={refetch}
+      actions={
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button
+            type="button"
+            className={`btn ${metrics?.pauseRequests ? 'primary' : 'secondary'}`}
+            onClick={togglePauseRequests}
+            title={
+              metrics?.pauseRequests
+                ? 'Resume receiving student requests'
+                : 'Pause receiving new student requests'
+            }
+          >
+            {metrics?.pauseRequests ? <PlayCircle size={15} /> : <PauseCircle size={15} />}
+            {metrics?.pauseRequests ? 'Resume Intake' : 'Pause Requests'}
+          </button>
+          <button type="button" className="btn primary" onClick={() => nav('/mentor/requests')}>
+            Review Requests
+          </button>
         </div>
+      }
+    >
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+          gap: 20,
+        }}
+      >
+        {/* Pending Requests Panel */}
+        <section className="card">
+          <div
+            className="section-head"
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: 14,
+            }}
+          >
+            <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700 }}>
+              Pending Student Requests
+            </h3>
+            <Link to="/mentor/requests" className="text-link" style={{ fontSize: '0.84rem' }}>
+              View all ({metrics?.pendingRequestsCount || 0})
+            </Link>
+          </div>
+
+          {recentItems.length === 0 ? (
+            <EmptyState
+              title="No pending requests"
+              text="You are all caught up! New mentorship inquiries from students will appear here."
+            />
+          ) : (
+            <div className="table-list">
+              {recentItems.map((r) => (
+                <div key={r.id || r._id} className="table-row" style={{ padding: '10px 0' }}>
+                  <div>
+                    <b>{r.studentId?.name || 'Student'}</b>
+                    <p
+                      style={{
+                        margin: '2px 0 0 0',
+                        fontSize: '0.82rem',
+                        color: 'var(--foreground-muted)',
+                      }}
+                    >
+                      Match Score:{' '}
+                      {r.matchSnapshot?.score ? `${r.matchSnapshot.score}%` : 'Calculated'}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    className="btn mini secondary"
+                    onClick={() => nav('/mentor/requests')}
+                  >
+                    Review
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* Mentor Availability & Schedule Overview */}
+        <section className="card">
+          <h3 style={{ margin: '0 0 14px 0', fontSize: '1.05rem', fontWeight: 700 }}>
+            Schedule & Availability
+          </h3>
+          <p
+            style={{
+              fontSize: '0.88rem',
+              color: 'var(--foreground-muted)',
+              lineHeight: 1.5,
+              marginBottom: 16,
+            }}
+          >
+            Keep your weekly calendar availability up to date so students can book valid 1-on-1
+            meeting slots.
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <Link to="/mentor/calendar" className="quick-action-row">
+              <div className="quick-action-icon blue">
+                <CalendarDays size={16} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <b>Manage Calendar Availability</b>
+                <p>Configure recurring weekly slots for student bookings</p>
+              </div>
+              <ArrowRight size={14} />
+            </Link>
+            <Link to="/mentor/mentees" className="quick-action-row">
+              <div className="quick-action-icon green">
+                <Users size={16} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <b>My Active Mentees</b>
+                <p>View matched students and ongoing mentorship threads</p>
+              </div>
+              <ArrowRight size={14} />
+            </Link>
+          </div>
+        </section>
       </div>
-
-      {/* Bottom Table Card */}
-      {widgets.tableCard && (
-        <TopMentorsTableCard
-          mentors={recommendedStudents}
-          title="Active Mentees & Pairing Inquiries"
-        />
-      )}
-
-      <AddWidgetModal
-        isOpen={isWidgetModalOpen}
-        onClose={() => setIsWidgetModalOpen(false)}
-        activeWidgets={widgets}
-        onToggleWidget={toggleWidget}
-      />
-    </AppShell>
+    </DashboardLayout>
   );
 }
 
@@ -721,117 +371,160 @@ export function MentorDashboard() {
 /* ADMIN DASHBOARD                                                            */
 /* ========================================================================== */
 export function AdminDashboard() {
-  const users = getUsers();
-  const meetings = getMeetings();
-  const requests = getRequests();
+  const nav = useNavigate();
+  const { metrics, recentItems, loading, error, refetch } = useDashboardData('admin');
 
-  const [isWidgetModalOpen, setIsWidgetModalOpen] = useState(false);
-  const [widgets, setWidgets] = useState({
-    areaChart: true,
-    weeklyActivity: true,
-    milestoneGauge: true,
-    tableCard: true,
-  });
-
-  useEffect(() => {
-    const handleOpen = () => setIsWidgetModalOpen(true);
-    window.addEventListener('open-add-widget', handleOpen);
-    return () => window.removeEventListener('open-add-widget', handleOpen);
-  }, []);
-
-  const toggleWidget = (id) => {
-    setWidgets((prev) => ({ ...prev, [id]: !prev[id] }));
-  };
-
-  const studentCount = users.filter((u) => u.role === 'student').length;
-  const mentorCount = users.filter((u) => u.role === 'mentor').length;
-
-  const metrics = [
+  const stats = [
     {
-      label: 'Platform Engagement',
-      value: '1,280 hrs',
-      trend: '+ 22.4%',
-      icon: Clock,
-      color: 'blue',
-      period: 'vs. last month',
-    },
-    {
-      label: 'Enrolled Students',
-      value: `${studentCount} students`,
-      trend: '+ 14.8%',
+      label: 'Registered Students',
+      value: metrics ? `${metrics.studentCount} students` : '0',
       icon: Users,
-      color: 'green',
-      period: 'vs. last month',
+      color: 'blue',
+      subtext: 'Enrolled in platform',
     },
     {
       label: 'Alumni Mentors',
-      value: `${mentorCount} onboarded`,
-      trend: '+ 9.2%',
+      value: metrics ? `${metrics.mentorCount} mentors` : '0',
       icon: Award,
       color: 'purple',
-      period: 'vs. last month',
+      subtext: 'Registered alumni',
     },
     {
-      label: 'Mentorship Matches',
-      value: `${requests.length || 36} total`,
-      trend: '+ 11.5%',
+      label: 'Active Mentorships',
+      value: metrics ? `${metrics.activeMentorships} pairs` : '0',
       icon: Sparkles,
-      color: 'orange',
-      period: 'vs. last month',
+      color: 'green',
+      subtext: 'Active accepted pairings',
     },
-  ];
-
-  const breakdown = [
-    { name: 'Engineering & Tech', value: '45%', color: '#2563eb' },
-    { name: 'Product & Design', value: '25%', color: '#06b6d4' },
-    { name: 'Data Science & AI', value: '20%', color: '#10b981' },
-    { name: 'Higher Education', value: '10%', color: '#f97316' },
+    {
+      label: 'System Status',
+      value: metrics?.systemStatus || 'Healthy',
+      icon: HeartPulse,
+      color: metrics?.systemStatus === 'Healthy' ? 'green' : 'orange',
+      subtext: `Database: ${metrics?.dbStatus || 'connected'}`,
+    },
   ];
 
   return (
-    <AppShell role="admin">
-      <PageTitle
-        eyebrow="Administrator Platform Portal"
-        title="College Platform Overview"
-        text="University-wide mentorship analytics, pairing ratios, and active alumni engagement."
-      />
-
-      <ShopeersKpiGrid metrics={metrics} />
-
-      <div className="shopeers-dashboard-grid">
-        {widgets.areaChart && (
-          <ShopeersAreaChart
-            title="University-Wide Mentorship Adoption"
-            subtitle="Active student engagements and monthly completed alumni sessions"
-            total="1,280 hrs"
-            trend="+ 22.4% vs. last period"
-            breakdown={breakdown}
-          />
-        )}
-
-        <div className="shopeers-side-col">
-          {widgets.weeklyActivity && (
-            <WeeklyActivityCard peakDay="Wed" peakHours="142 hrs" />
-          )}
-          {widgets.milestoneGauge && (
-            <MilestoneGaugeCard percent={94} label="Match Success Index" change="+ 6% vs last quarter" />
-          )}
+    <DashboardLayout
+      role="admin"
+      eyebrow="Administrator Platform Portal"
+      title="College Platform Overview"
+      subtitle="University-wide mentorship analytics, pairing ratios, and active alumni engagement."
+      stats={stats}
+      loading={loading}
+      error={error}
+      onRetry={refetch}
+      actions={
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button type="button" className="btn secondary" onClick={() => nav('/admin/analytics')}>
+            <Activity size={15} /> Analytics
+          </button>
+          <button type="button" className="btn primary" onClick={() => nav('/admin/users')}>
+            Manage Users
+          </button>
         </div>
+      }
+    >
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+          gap: 20,
+        }}
+      >
+        {/* Pending Verifications Panel */}
+        <section className="card">
+          <div
+            className="section-head"
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: 14,
+            }}
+          >
+            <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700 }}>
+              Pending Mentor Verifications
+            </h3>
+            <Link to="/admin/users" className="text-link" style={{ fontSize: '0.84rem' }}>
+              View all ({metrics?.pendingVerificationsCount || 0})
+            </Link>
+          </div>
+
+          {recentItems.length === 0 ? (
+            <EmptyState
+              title="No pending verifications"
+              text="All registered alumni mentor profiles have been verified."
+            />
+          ) : (
+            <div className="table-list">
+              {recentItems.map((m) => (
+                <div key={m.id || m._id} className="table-row" style={{ padding: '10px 0' }}>
+                  <div>
+                    <b>{m.name}</b>
+                    <p
+                      style={{
+                        margin: '2px 0 0 0',
+                        fontSize: '0.82rem',
+                        color: 'var(--foreground-muted)',
+                      }}
+                    >
+                      {m.jobTitle || 'Alumnus'} · {m.company || 'Industry'}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    className="btn mini secondary"
+                    onClick={() => nav('/admin/users')}
+                  >
+                    Verify
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* System Administration Quick Links */}
+        <section className="card">
+          <h3 style={{ margin: '0 0 14px 0', fontSize: '1.05rem', fontWeight: 700 }}>
+            Audit & Platform Controls
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <Link to="/admin/audit" className="quick-action-row">
+              <div className="quick-action-icon blue">
+                <ShieldCheck size={16} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <b>Cryptographic Audit Ledger</b>
+                <p>Verify SHA-256 tamper-evident hash chain across all state changes</p>
+              </div>
+              <ArrowRight size={14} />
+            </Link>
+            <Link to="/admin/matching" className="quick-action-row">
+              <div className="quick-action-icon purple">
+                <Sparkles size={16} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <b>Algorithm Inspector</b>
+                <p>Simulate pairings and inspect transparent factor score contributions</p>
+              </div>
+              <ArrowRight size={14} />
+            </Link>
+            <Link to="/admin/analytics" className="quick-action-row">
+              <div className="quick-action-icon green">
+                <Activity size={16} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <b>Capacity Balance & Funnel Analytics</b>
+                <p>Monitor mentor load distribution and accept-rate funnels</p>
+              </div>
+              <ArrowRight size={14} />
+            </Link>
+          </div>
+        </section>
       </div>
-
-      {widgets.tableCard && (
-        <TopMentorsTableCard
-          mentors={users.filter((u) => u.role === 'mentor')}
-          title="Top Performing Alumni Mentors"
-        />
-      )}
-
-      <AddWidgetModal
-        isOpen={isWidgetModalOpen}
-        onClose={() => setIsWidgetModalOpen(false)}
-        activeWidgets={widgets}
-        onToggleWidget={toggleWidget}
-      />
-    </AppShell>
+    </DashboardLayout>
   );
 }

@@ -10,7 +10,6 @@ import {
   refetchFeedback,
   refetchNotifications,
 } from './api';
-import { getNotifications, saveNotifications } from './storage';
 
 export async function createMeeting(payload) {
   try {
@@ -78,9 +77,6 @@ export async function markNotificationRead(id) {
 export async function markAllNotificationsRead() {
   try {
     await apiPatch('/notifications/read-all', {});
-    const current = getNotifications();
-    const next = current.map((n) => ({ ...n, read: true }));
-    saveNotifications(next);
     return { ok: true };
   } catch (error) {
     return { ok: false, error: error.message };
@@ -90,7 +86,6 @@ export async function markAllNotificationsRead() {
 export async function updatePlatformSettings(settings) {
   try {
     const result = await apiPatch('/platform-settings', settings);
-    localStorage.setItem('mc_platform_settings', JSON.stringify(result.settings));
     return { ok: true, settings: result.settings };
   } catch (error) {
     return { ok: false, error: error.message };

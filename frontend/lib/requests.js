@@ -9,7 +9,11 @@ import {
 
 export async function createMentorshipRequest(student, mentor, message, matchSnapshot) {
   try {
-    const result = await apiPost('/mentorship-requests', { mentorId: mentor.id, message, matchSnapshot });
+    const result = await apiPost('/mentorship-requests', {
+      mentorId: mentor.id,
+      message,
+      matchSnapshot,
+    });
     const request = normalizeRequest(result.request);
     await Promise.allSettled([refetchRequests(), refetchNotifications()]);
     return { ok: true, request };

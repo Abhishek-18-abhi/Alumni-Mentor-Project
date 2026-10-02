@@ -70,9 +70,9 @@ describe('registerUser', () => {
   });
 
   it('handles duplicate email conflicts gracefully', async () => {
-    global.fetch = vi.fn().mockResolvedValue(
-      mockResponse({ message: 'User already exists with this email' }, 409)
-    );
+    global.fetch = vi
+      .fn()
+      .mockResolvedValue(mockResponse({ message: 'User already exists with this email' }, 409));
 
     const r = await registerUser({
       name: 'Alice2',
@@ -162,9 +162,11 @@ describe('createAdmin', () => {
   });
 
   it('propagates server authorization failures', async () => {
-    global.fetch = vi.fn().mockResolvedValue(
-      mockResponse({ message: 'Access denied. Administrator role required.' }, 403)
-    );
+    global.fetch = vi
+      .fn()
+      .mockResolvedValue(
+        mockResponse({ message: 'Access denied. Administrator role required.' }, 403)
+      );
 
     const r = await createAdmin({
       name: 'Fake Admin',
@@ -189,9 +191,9 @@ describe('changePassword', () => {
   });
 
   it('updates password successfully when valid', async () => {
-    global.fetch = vi.fn().mockResolvedValue(
-      mockResponse({ message: 'Password updated successfully' }, 200)
-    );
+    global.fetch = vi
+      .fn()
+      .mockResolvedValue(mockResponse({ message: 'Password updated successfully' }, 200));
 
     const r = await changePassword('u1', 'oldpassword123', 'newpassword123');
     expect(r.ok).toBe(true);
