@@ -143,7 +143,7 @@ export default function Topbar({ onMenuToggle = () => {} }) {
         >
           <Bell size={19} />
           {unread > 0 && (
-            <span className="notification-badge" role="status" aria-label={`${unread} unread`}>
+            <span className="notification-badge" aria-label={`${unread} unread`}>
               {unread > 9 ? '9+' : unread}
             </span>
           )}

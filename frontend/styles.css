@@ -1144,12 +1144,16 @@ textarea:focus {
   width: 38px;
   height: 38px;
   border-radius: 10px;
-  display: grid;
-  place-items: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   color: var(--foreground-muted);
   position: relative;
   transition: all 0.15s ease;
   box-shadow: var(--shadow-xs);
+  cursor: pointer;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 .icon-btn:hover {
@@ -1158,20 +1162,35 @@ textarea:focus {
   color: var(--foreground);
 }
 
+.bell-btn {
+  position: relative;
+}
+
+.bell-btn svg {
+  flex-shrink: 0;
+  display: block;
+}
+
 .notification-badge {
-  position: absolute;
-  right: -3px;
-  top: -3px;
-  min-width: 17px;
-  height: 17px;
-  border-radius: var(--radius-pill);
-  background: var(--danger);
-  color: white;
-  font-size: 9px;
-  font-weight: 700;
-  display: grid;
-  place-items: center;
-  border: 2px solid white;
+  position: absolute !important;
+  top: -3px !important;
+  right: -3px !important;
+  min-width: 18px !important;
+  height: 18px !important;
+  padding: 0 4px !important;
+  border-radius: var(--radius-pill, 9999px) !important;
+  background: var(--danger, #f43f5e) !important;
+  color: #ffffff !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: 2px solid #ffffff !important;
+  box-shadow: 0 2px 4px rgba(244, 63, 94, 0.3) !important;
+  pointer-events: none !important;
+  z-index: 10 !important;
 }
 
 .account-wrap {
@@ -4395,8 +4414,10 @@ textarea:focus-visible {
   animation: spin 1s linear infinite;
 }
 
-/* role="status" loaders */
-[role='status'] {
+/* role="status" loaders (exclude absolute notification badge) */
+.loading-spinner[role='status'],
+.loader[role='status'],
+[role='status']:not(.notification-badge) {
   position: relative;
 }
 
