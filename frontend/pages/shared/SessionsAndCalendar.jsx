@@ -135,7 +135,11 @@ export default function SessionsAndCalendar({ role, defaultTab = 'calendar' }) {
   // Currently selected partner in booking modal
   const selectedPartner = useMemo(() => {
     if (!bookPartnerId) return availablePartners[0] || null;
-    return (availablePartners || []).find((p) => (p.id || p._id) === bookPartnerId) || availablePartners[0] || null;
+    return (
+      (availablePartners || []).find((p) => (p.id || p._id) === bookPartnerId) ||
+      availablePartners[0] ||
+      null
+    );
   }, [bookPartnerId, availablePartners]);
 
   // Is the currently selected partner an accepted connection?
@@ -265,8 +269,18 @@ export default function SessionsAndCalendar({ role, defaultTab = 'calendar' }) {
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
   const monthNames = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December',
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
   ];
 
   const firstDay = new Date(year, month, 1).getDay();
@@ -473,7 +487,9 @@ export default function SessionsAndCalendar({ role, defaultTab = 'calendar' }) {
       >
         <PageTitle
           eyebrow={currentRole === 'mentor' ? 'Alumni Mentor Workspace' : 'Student Workspace'}
-          title={currentRole === 'mentor' ? 'Sessions & Calendar' : 'Mentorship Meetings & Calendar'}
+          title={
+            currentRole === 'mentor' ? 'Sessions & Calendar' : 'Mentorship Meetings & Calendar'
+          }
           text="Easily schedule 1:1 sessions, visualize your mentorship calendar, join video calls, and record session notes."
         />
 
@@ -623,9 +639,7 @@ export default function SessionsAndCalendar({ role, defaultTab = 'calendar' }) {
                         border: isToday
                           ? '2px solid var(--primary)'
                           : '1px solid var(--border, #e2e8f0)',
-                        background: isToday
-                          ? 'rgba(79, 70, 229, 0.04)'
-                          : 'var(--surface, #ffffff)',
+                        background: isToday ? 'rgba(79, 70, 229, 0.04)' : 'var(--surface, #ffffff)',
                         display: 'flex',
                         flexDirection: 'column',
                         cursor: !isPast ? 'pointer' : 'default',
@@ -667,8 +681,12 @@ export default function SessionsAndCalendar({ role, defaultTab = 'calendar' }) {
                         {dayMeetings.map((m) => {
                           const other =
                             currentRole === 'student'
-                              ? typeof m.mentorId === 'object' ? m.mentorId : null
-                              : typeof m.studentId === 'object' ? m.studentId : null;
+                              ? typeof m.mentorId === 'object'
+                                ? m.mentorId
+                                : null
+                              : typeof m.studentId === 'object'
+                                ? m.studentId
+                                : null;
                           const isCancelled = m.status === 'cancelled';
                           const isCompleted = m.status === 'completed';
 
@@ -690,20 +708,21 @@ export default function SessionsAndCalendar({ role, defaultTab = 'calendar' }) {
                                 background: isCancelled
                                   ? 'rgba(239, 68, 68, 0.12)'
                                   : isCompleted
-                                  ? 'rgba(100, 116, 139, 0.12)'
-                                  : 'rgba(16, 185, 129, 0.12)',
+                                    ? 'rgba(100, 116, 139, 0.12)'
+                                    : 'rgba(16, 185, 129, 0.12)',
                                 color: isCancelled
                                   ? 'var(--danger-text, #b91c1c)'
                                   : isCompleted
-                                  ? 'var(--foreground-muted)'
-                                  : 'var(--success-text, #047857)',
+                                    ? 'var(--foreground-muted)'
+                                    : 'var(--success-text, #047857)',
                                 whiteSpace: 'nowrap',
                                 overflow: 'hidden',
                                 textOverflow: 'ellipsis',
                                 cursor: 'pointer',
                               }}
                             >
-                              <b>{m.time?.split('-')[0]?.trim() || m.time}</b> · {other?.name || (currentRole === 'student' ? 'Mentor' : 'Student')}
+                              <b>{m.time?.split('-')[0]?.trim() || m.time}</b> ·{' '}
+                              {other?.name || (currentRole === 'student' ? 'Mentor' : 'Student')}
                             </button>
                           );
                         })}
@@ -716,7 +735,9 @@ export default function SessionsAndCalendar({ role, defaultTab = 'calendar' }) {
           ) : (
             /* Agenda List View */
             <section className="card" style={{ padding: 18 }}>
-              <h3 style={{ margin: '0 0 14px 0', fontSize: '1.05rem' }}>Monthly Agenda & Sessions</h3>
+              <h3 style={{ margin: '0 0 14px 0', fontSize: '1.05rem' }}>
+                Monthly Agenda & Sessions
+              </h3>
               {userMeetings.length === 0 ? (
                 <EmptyState
                   icon={CalendarDays}
@@ -733,8 +754,12 @@ export default function SessionsAndCalendar({ role, defaultTab = 'calendar' }) {
                   {userMeetings.map((m) => {
                     const other =
                       currentRole === 'student'
-                        ? typeof m.mentorId === 'object' ? m.mentorId : null
-                        : typeof m.studentId === 'object' ? m.studentId : null;
+                        ? typeof m.mentorId === 'object'
+                          ? m.mentorId
+                          : null
+                        : typeof m.studentId === 'object'
+                          ? m.studentId
+                          : null;
                     return (
                       <div
                         key={m.id || m._id}
@@ -767,7 +792,9 @@ export default function SessionsAndCalendar({ role, defaultTab = 'calendar' }) {
                           <div>
                             <b style={{ fontSize: '0.95rem' }}>{m.title || 'Mentorship Session'}</b>
                             <div style={{ fontSize: '0.82rem', color: 'var(--foreground-muted)' }}>
-                              With {other?.name || (currentRole === 'student' ? 'Mentor' : 'Student')} · {m.time} ({m.mode || 'Online'})
+                              With{' '}
+                              {other?.name || (currentRole === 'student' ? 'Mentor' : 'Student')} ·{' '}
+                              {m.time} ({m.mode || 'Online'})
                             </div>
                           </div>
                         </div>
@@ -838,12 +865,28 @@ export default function SessionsAndCalendar({ role, defaultTab = 'calendar' }) {
                       }}
                     >
                       <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 10,
+                            marginBottom: 6,
+                          }}
+                        >
                           <b style={{ fontSize: '1.1rem' }}>{m.title || 'Mentorship Session'}</b>
                           <StatusChip status={m.status} />
                         </div>
 
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', fontSize: '0.88rem', color: 'var(--foreground-muted)' }}>
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 14,
+                            flexWrap: 'wrap',
+                            fontSize: '0.88rem',
+                            color: 'var(--foreground-muted)',
+                          }}
+                        >
                           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                             <CalendarDays size={15} /> {m.date}
                           </span>
@@ -851,9 +894,13 @@ export default function SessionsAndCalendar({ role, defaultTab = 'calendar' }) {
                             <Clock size={15} /> {m.time}
                           </span>
                           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                            <User size={15} /> {other?.name || (currentRole === 'student' ? 'Mentor' : 'Student')} ({currentRole === 'student' ? other?.jobTitle || 'Mentor' : 'Student'})
+                            <User size={15} />{' '}
+                            {other?.name || (currentRole === 'student' ? 'Mentor' : 'Student')} (
+                            {currentRole === 'student' ? other?.jobTitle || 'Mentor' : 'Student'})
                           </span>
-                          <span>Mode: <b>{m.mode || 'Online'}</b></span>
+                          <span>
+                            Mode: <b>{m.mode || 'Online'}</b>
+                          </span>
                         </div>
 
                         {/* Meeting notes snippet if logged */}
@@ -874,7 +921,9 @@ export default function SessionsAndCalendar({ role, defaultTab = 'calendar' }) {
                       </div>
 
                       {/* Action buttons */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                      <div
+                        style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}
+                      >
                         {hasLink && m.status === 'scheduled' && (
                           <a
                             href={m.link}
@@ -893,7 +942,8 @@ export default function SessionsAndCalendar({ role, defaultTab = 'calendar' }) {
                           onClick={() => openLogModal(m)}
                           style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
                         >
-                          <FileText size={14} /> {m.status === 'completed' ? 'View/Edit Log' : 'Add Notes'}
+                          <FileText size={14} />{' '}
+                          {m.status === 'completed' ? 'View/Edit Log' : 'Add Notes'}
                         </button>
 
                         {m.status === 'scheduled' && (
@@ -924,7 +974,13 @@ export default function SessionsAndCalendar({ role, defaultTab = 'calendar' }) {
           {/* Capacity Settings */}
           <section className="card" style={{ marginBottom: 18, padding: 18 }}>
             <h3 style={{ margin: '0 0 12px 0', fontSize: '1.1rem' }}>Mentee Capacity & Intake</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20 }}>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                gap: 20,
+              }}
+            >
               <div>
                 <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>
                   Active Mentee Limit
@@ -934,7 +990,9 @@ export default function SessionsAndCalendar({ role, defaultTab = 'calendar' }) {
                   min="1"
                   max="25"
                   value={mentorCapacity}
-                  onChange={(e) => setMentorCapacity(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                  onChange={(e) =>
+                    setMentorCapacity(Math.max(1, parseInt(e.target.value, 10) || 1))
+                  }
                   style={{ width: '100%', maxWidth: 200 }}
                   required
                 />
@@ -951,7 +1009,9 @@ export default function SessionsAndCalendar({ role, defaultTab = 'calendar' }) {
                   style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
                 >
                   {mentorPause ? <PlayCircle size={16} /> : <PauseCircle size={16} />}
-                  {mentorPause ? 'Requests Paused (Click to Accept)' : 'Accepting Students (Click to Pause)'}
+                  {mentorPause
+                    ? 'Requests Paused (Click to Accept)'
+                    : 'Accepting Students (Click to Pause)'}
                 </button>
               </div>
             </div>
@@ -959,11 +1019,27 @@ export default function SessionsAndCalendar({ role, defaultTab = 'calendar' }) {
 
           {/* Weekly Availability Slots */}
           <section className="card" style={{ padding: 18 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: 14,
+              }}
+            >
               <div>
-                <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Weekly Recurring Availability Slots</h3>
-                <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: 'var(--foreground-muted)' }}>
-                  Select the recurring time intervals when you are available for 1:1 mentorship sessions.
+                <h3 style={{ margin: 0, fontSize: '1.1rem' }}>
+                  Weekly Recurring Availability Slots
+                </h3>
+                <p
+                  style={{
+                    margin: '4px 0 0',
+                    fontSize: '0.85rem',
+                    color: 'var(--foreground-muted)',
+                  }}
+                >
+                  Select the recurring time intervals when you are available for 1:1 mentorship
+                  sessions.
                 </p>
               </div>
               <button type="submit" className="uiverse-btn" disabled={isSavingAvailability}>
@@ -973,7 +1049,15 @@ export default function SessionsAndCalendar({ role, defaultTab = 'calendar' }) {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               {DAYS.map((day) => (
-                <div key={day} style={{ padding: 10, borderRadius: 6, background: 'var(--surface-sunken, #f8fafc)', border: '1px solid var(--border)' }}>
+                <div
+                  key={day}
+                  style={{
+                    padding: 10,
+                    borderRadius: 6,
+                    background: 'var(--surface-sunken, #f8fafc)',
+                    border: '1px solid var(--border)',
+                  }}
+                >
                   <b style={{ display: 'block', marginBottom: 6, fontSize: '0.9rem' }}>{day}</b>
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                     {TIME_SLOTS.map((slot) => {
@@ -1011,9 +1095,15 @@ export default function SessionsAndCalendar({ role, defaultTab = 'calendar' }) {
         >
           {availablePartners.length === 0 ? (
             <div style={{ padding: 10, textAlign: 'center' }}>
-              <AlertCircle size={36} color="var(--warning-text, #f59e0b)" style={{ margin: '0 auto 10px' }} />
+              <AlertCircle
+                size={36}
+                color="var(--warning-text, #f59e0b)"
+                style={{ margin: '0 auto 10px' }}
+              />
               <h4 style={{ margin: '0 0 6px 0' }}>No Active Mentorship Connection Found</h4>
-              <p style={{ fontSize: '0.88rem', color: 'var(--foreground-muted)', marginBottom: 14 }}>
+              <p
+                style={{ fontSize: '0.88rem', color: 'var(--foreground-muted)', marginBottom: 14 }}
+              >
                 {currentRole === 'student'
                   ? 'You need to connect with a mentor first before scheduling 1:1 meetings.'
                   : 'You have no accepted student mentees yet.'}
@@ -1032,15 +1122,31 @@ export default function SessionsAndCalendar({ role, defaultTab = 'calendar' }) {
               )}
             </div>
           ) : (
-            <form onSubmit={handleBookingSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <form
+              onSubmit={handleBookingSubmit}
+              style={{ display: 'flex', flexDirection: 'column', gap: 14 }}
+            >
               {/* Select Participant */}
               <label>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: 4,
+                  }}
+                >
                   <span style={{ fontWeight: 600 }}>
                     {currentRole === 'student' ? 'Select Mentor' : 'Select Mentee / Student'}
                   </span>
                   {currentRole === 'student' && isSelectedPartnerAccepted && (
-                    <span style={{ fontSize: '0.75rem', color: 'var(--success-text, #059669)', fontWeight: 600 }}>
+                    <span
+                      style={{
+                        fontSize: '0.75rem',
+                        color: 'var(--success-text, #059669)',
+                        fontWeight: 600,
+                      }}
+                    >
                       ✓ Connected Mentor
                     </span>
                   )}
@@ -1061,7 +1167,14 @@ export default function SessionsAndCalendar({ role, defaultTab = 'calendar' }) {
 
                     return (
                       <option key={pId} value={pId}>
-                        {isAccepted ? '⭐ ' : ''}{p.name} {p.jobTitle ? `(${p.jobTitle})` : currentRole === 'student' ? '(Mentor)' : '(Student)'} {isAccepted ? '— Connected' : ''}
+                        {isAccepted ? '⭐ ' : ''}
+                        {p.name}{' '}
+                        {p.jobTitle
+                          ? `(${p.jobTitle})`
+                          : currentRole === 'student'
+                            ? '(Mentor)'
+                            : '(Student)'}{' '}
+                        {isAccepted ? '— Connected' : ''}
                       </option>
                     );
                   })}
@@ -1085,7 +1198,8 @@ export default function SessionsAndCalendar({ role, defaultTab = 'calendar' }) {
                 >
                   <AlertCircle size={16} />
                   <span>
-                    You have not yet established an accepted connection with this mentor. You can send a connection request from the Find Mentor page.
+                    You have not yet established an accepted connection with this mentor. You can
+                    send a connection request from the Find Mentor page.
                   </span>
                 </div>
               )}
@@ -1122,14 +1236,20 @@ export default function SessionsAndCalendar({ role, defaultTab = 'calendar' }) {
                               setIsCustomTime(false);
                             }
                             // Extract day and calculate upcoming date
-                            const dayMatch = DAY_NAMES.find(d => s.toLowerCase().includes(d.toLowerCase()));
+                            const dayMatch = DAY_NAMES.find((d) =>
+                              s.toLowerCase().includes(d.toLowerCase())
+                            );
                             if (dayMatch) {
                               const targetDayIdx = DAY_NAMES.indexOf(dayMatch);
                               const now = new Date();
                               const currentDayIdx = now.getDay();
                               let diff = targetDayIdx - currentDayIdx;
                               if (diff <= 0) diff += 7; // Next occurrence
-                              const nextDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() + diff);
+                              const nextDate = new Date(
+                                now.getFullYear(),
+                                now.getMonth(),
+                                now.getDate() + diff
+                              );
                               const y = nextDate.getFullYear();
                               const m = String(nextDate.getMonth() + 1).padStart(2, '0');
                               const d = String(nextDate.getDate()).padStart(2, '0');
@@ -1167,7 +1287,9 @@ export default function SessionsAndCalendar({ role, defaultTab = 'calendar' }) {
                 </label>
 
                 <div>
-                  <span style={{ fontWeight: 600, display: 'block', marginBottom: 4 }}>Time Slot</span>
+                  <span style={{ fontWeight: 600, display: 'block', marginBottom: 4 }}>
+                    Time Slot
+                  </span>
                   {!isCustomTime ? (
                     <select
                       value={bookSlot}
@@ -1223,7 +1345,13 @@ export default function SessionsAndCalendar({ role, defaultTab = 'calendar' }) {
                   required
                 />
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 6 }}>
-                  {['Resume Review', 'Mock Interview', 'Career Advice', 'Code Review', 'Capstone Review'].map((tag) => (
+                  {[
+                    'Resume Review',
+                    'Mock Interview',
+                    'Career Advice',
+                    'Code Review',
+                    'Capstone Review',
+                  ].map((tag) => (
                     <button
                       key={tag}
                       type="button"
@@ -1302,7 +1430,9 @@ export default function SessionsAndCalendar({ role, defaultTab = 'calendar' }) {
 
             return (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div
+                  style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                >
                   <StatusChip status={selectedMeeting.status} />
                   <span style={{ fontSize: '0.85rem', color: 'var(--foreground-muted)' }}>
                     Mode: <b>{selectedMeeting.mode || 'Online'}</b>
@@ -1343,7 +1473,16 @@ export default function SessionsAndCalendar({ role, defaultTab = 'calendar' }) {
                   </div>
                 )}
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 10, flexWrap: 'wrap', gap: 8 }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginTop: 10,
+                    flexWrap: 'wrap',
+                    gap: 8,
+                  }}
+                >
                   <div style={{ display: 'flex', gap: 8 }}>
                     {selectedMeeting.link && selectedMeeting.status === 'scheduled' && (
                       <a
@@ -1391,7 +1530,10 @@ export default function SessionsAndCalendar({ role, defaultTab = 'calendar' }) {
           isOpen={Boolean(logModalMeeting)}
           onClose={() => setLogModalMeeting(null)}
         >
-          <form onSubmit={handleSaveLog} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <form
+            onSubmit={handleSaveLog}
+            style={{ display: 'flex', flexDirection: 'column', gap: 12 }}
+          >
             <label>
               <span style={{ fontWeight: 600, display: 'block', marginBottom: 4 }}>
                 Discussion Notes

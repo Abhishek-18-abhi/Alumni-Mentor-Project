@@ -373,7 +373,6 @@ export default function AdminAnalytics() {
           </div>
         )}
       </section>
-
     </AppShell>
   );
 }
