@@ -10,9 +10,8 @@ import {
   AlertCircle,
   Info,
 } from 'lucide-react';
-import { MIN_PASSWORD_LENGTH, DOMAINS, LANGUAGES } from '../lib/constants';
+import { MIN_PASSWORD_LENGTH, DOMAINS } from '../lib/constants';
 import Logo from '../components/Logo';
-import ChipPicker from '../components/ChipPicker';
 import { login, registerUser, logout } from '../lib/auth';
 import { getSession } from '../lib/storage';
 
@@ -34,7 +33,7 @@ export default function Auth({ register = false, adminLogin = false }) {
 
   const [mode, setMode] = useState(params.get('role') === 'mentor' ? 'mentor' : 'student');
   const [showPassword, setShowPassword] = useState(false);
-  const [selectedLanguages, setSelectedLanguages] = useState(['English']);
+  const [languagesInput, setLanguagesInput] = useState('English');
 
   const currentYear = new Date().getFullYear();
   const gradYears = Array.from({ length: 16 }, (_, i) => currentYear - i);
@@ -68,10 +67,14 @@ export default function Auth({ register = false, adminLogin = false }) {
 
     try {
       if (register) {
+        const parsedLanguages = languagesInput
+          .split(',')
+          .map((x) => x.trim())
+          .filter(Boolean);
         const payload = {
           ...form,
           role: mode,
-          languages: selectedLanguages.length > 0 ? selectedLanguages : ['English'],
+          languages: parsedLanguages.length > 0 ? parsedLanguages : ['English'],
           capacity: Number(form.capacity) || 3,
           graduationYear: mode === 'mentor' ? Number(form.graduationYear) : undefined,
           degree: mode === 'mentor' ? form.degree : undefined,
@@ -342,16 +345,15 @@ export default function Auth({ register = false, adminLogin = false }) {
                 </label>
               </div>
 
-              <div>
-                <label style={{ display: 'block', marginBottom: 6 }}>Languages Fluent In</label>
-                <ChipPicker
-                  options={LANGUAGES}
-                  selected={selectedLanguages}
-                  onChange={setSelectedLanguages}
-                  allowCustom={true}
-                  placeholder="Add another language..."
+              <label>
+                Languages Fluent In
+                <input
+                  type="text"
+                  value={languagesInput}
+                  onChange={(e) => setLanguagesInput(e.target.value)}
+                  placeholder="e.g. English, Hindi, Spanish"
                 />
-              </div>
+              </label>
 
               <div style={{ marginTop: 12 }}>
                 <label>

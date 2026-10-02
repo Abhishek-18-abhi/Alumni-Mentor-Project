@@ -1919,47 +1919,106 @@ textarea:focus {
    Onboarding, Chips & Match Engine
    ========================================================================== */
 
-.chip-picker {
+.chip-picker,
+.chip-picker-options {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin: 8px 0 16px;
+  gap: 8px 10px;
+  margin: 8px 0 14px;
 }
 
-.chip {
-  border: 1px solid var(--border);
-  background: var(--surface);
-  border-radius: var(--radius-pill);
+.chip,
+.chip-btn {
+  border: 1px solid var(--border, #cbd5e1);
+  background: var(--surface, #ffffff);
+  border-radius: var(--radius-pill, 9999px);
+  padding: 6px 14px;
+  color: var(--foreground-subtle, #334155);
+  font-size: 0.82rem;
+  font-weight: 550;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+  line-height: 1.4;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.chip:hover,
+.chip-btn:hover {
+  border-color: var(--primary-border, #93c5fd);
+  background: #f8fafc;
+  color: var(--foreground, #0f172a);
+  transform: translateY(-1px);
+}
+
+.chip.selected,
+.chip.active,
+.chip-btn.active,
+.chip-btn.selected {
+  background: #eff6ff;
+  border-color: #2563eb;
+  color: #1d4ed8;
+  font-weight: 650;
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.14);
+}
+
+.chip.selected:hover,
+.chip-btn.active:hover {
+  background: #dbeafe;
+  border-color: #1d4ed8;
+}
+
+.chip-check-icon {
+  color: #2563eb;
+  flex-shrink: 0;
+}
+
+.custom-skill,
+.chip-custom-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 320px;
+  margin-top: 6px;
+  margin-bottom: 8px;
+}
+
+.custom-skill input,
+.chip-custom-form input,
+.chip-custom-input {
+  flex: 1;
+  height: 36px;
   padding: 6px 12px;
-  color: var(--foreground);
-  font-size: 0.78rem;
+  border: 1px solid var(--border, #cbd5e1);
+  border-radius: var(--radius-md, 8px);
+  background: var(--surface, #ffffff);
+  font-size: 0.82rem;
+  color: var(--foreground, #0f172a);
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.custom-skill input:focus,
+.chip-custom-form input:focus,
+.chip-custom-input:focus {
+  border-color: var(--primary, #2563eb);
+  box-shadow: 0 0 0 3px var(--ring, rgba(37, 99, 235, 0.18));
+}
+
+.custom-skill button,
+.chip-add-btn {
+  height: 36px;
+  padding: 0 14px;
+  font-size: 0.8rem;
   font-weight: 600;
+  border-radius: var(--radius-md, 8px);
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.chip:hover {
-  border-color: var(--border-hover);
-  background: var(--background);
-}
-
-.chip.selected {
-  background: var(--primary-subtle);
-  border-color: var(--primary-border);
-  color: var(--primary);
-  font-weight: 650;
-}
-
-.custom-skill {
-  display: flex;
-  gap: 8px;
-}
-
-.custom-skill input {
-  flex: 1;
+  white-space: nowrap;
 }
 
 .selected-summary {

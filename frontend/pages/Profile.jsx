@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { AlertCircle, Check, Save } from 'lucide-react';
-import { SKILLS, DOMAINS, MENTORSHIP_GOALS, LANGUAGES } from '../lib/constants';
+import { SKILLS, DOMAINS, MENTORSHIP_GOALS } from '../lib/constants';
 import { useToast } from '../components/Toast';
 import AppShell from '../components/AppShell';
 import PageTitle from '../components/PageTitle';
 import ChipPicker from '../components/ChipPicker';
-import { getCurrentUser } from '../lib/storage';
+import { getCurrentUser, splitList } from '../lib/storage';
 import { updateUser } from '../lib/auth';
 
 export default function Profile() {
@@ -246,16 +246,14 @@ export default function Profile() {
             )}
           </div>
 
-          <div>
-            <label style={{ display: 'block', marginBottom: 6 }}>Languages Fluent In</label>
-            <ChipPicker
-              options={LANGUAGES}
-              selected={form.languages}
-              onChange={(languages) => setForm({ ...form, languages })}
-              allowCustom={true}
-              placeholder="Add language..."
+          <label>
+            Languages Fluent In
+            <input
+              value={form.languages.join(', ')}
+              placeholder="e.g. English, Hindi, Spanish"
+              onChange={(e) => setForm({ ...form, languages: splitList(e.target.value) })}
             />
-          </div>
+          </label>
 
           {u.role === 'mentor' && (
             <label>

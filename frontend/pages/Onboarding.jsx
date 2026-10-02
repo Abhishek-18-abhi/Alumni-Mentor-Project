@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { Check, ChevronRight, CalendarDays, ArrowLeft, Save, AlertCircle } from 'lucide-react';
-import { SKILLS, DOMAINS, MENTORSHIP_GOALS, DAYS, TIME_SLOTS, LANGUAGES } from '../lib/constants';
+import { SKILLS, DOMAINS, MENTORSHIP_GOALS, DAYS, TIME_SLOTS } from '../lib/constants';
 import { useToast } from '../components/Toast';
 import AppShell from '../components/AppShell';
 import PageTitle from '../components/PageTitle';
 import ChipPicker from '../components/ChipPicker';
-import { getCurrentUser } from '../lib/storage';
+import { getCurrentUser, splitList } from '../lib/storage';
 import { updateUser } from '../lib/auth';
 
 export default function Onboarding({ role = 'student' }) {
@@ -237,12 +237,10 @@ export default function Onboarding({ role = 'student' }) {
               />
 
               <label style={{ marginTop: 14 }}>Communication Languages</label>
-              <ChipPicker
-                options={LANGUAGES}
-                selected={form.languages}
-                onChange={(languages) => setForm((f) => ({ ...f, languages }))}
-                allowCustom={true}
-                placeholder="Add language..."
+              <input
+                value={form.languages.join(', ')}
+                onChange={(e) => setForm((f) => ({ ...f, languages: splitList(e.target.value) }))}
+                placeholder="e.g. English, Hindi, Spanish"
               />
 
               <label style={{ marginTop: 14 }}>

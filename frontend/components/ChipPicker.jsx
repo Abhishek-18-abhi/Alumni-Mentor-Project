@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, X } from 'lucide-react';
+import { Plus, Check } from 'lucide-react';
 
 /**
  * Reusable ChipPicker component
@@ -56,39 +56,29 @@ export default function ChipPicker({
   const allAvailable = Array.from(new Set([...options, ...selected]));
 
   return (
-    <div className={`chip-picker ${className}`.trim()}>
+    <div className={`chip-picker-wrapper ${className}`.trim()}>
       {label && <label className="chip-picker-label">{label}</label>}
 
-      <div className="chip-picker-options" role="group" aria-label={label || 'Select items'}>
+      <div className="chip-picker" role="group" aria-label={label || 'Select items'}>
         {allAvailable.map((opt) => {
           const isSelected = selected.includes(opt);
           return (
             <button
               key={opt}
               type="button"
-              className={`chip-btn ${isSelected ? 'active' : ''}`}
+              className={`chip ${isSelected ? 'selected active' : ''}`}
               aria-pressed={isSelected}
               onClick={() => toggleOption(opt)}
             >
+              {isSelected && <Check size={13} className="chip-check-icon" />}
               <span>{opt}</span>
-              {isSelected && (
-                <X
-                  size={12}
-                  className="chip-remove-icon"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    removeChip(opt);
-                  }}
-                  aria-label={`Remove ${opt}`}
-                />
-              )}
             </button>
           );
         })}
       </div>
 
       {allowCustom && (!maxItems || selected.length < maxItems) && (
-        <div className="chip-custom-form">
+        <div className="custom-skill chip-custom-form">
           <input
             type="text"
             value={customInput}
@@ -106,11 +96,11 @@ export default function ChipPicker({
           />
           <button
             type="button"
-            className="btn mini secondary chip-add-btn"
+            className="btn secondary chip-add-btn"
             disabled={!customInput.trim()}
             onClick={handleAddCustom}
           >
-            <Plus size={13} /> Add
+            <Plus size={14} /> Add
           </button>
         </div>
       )}
