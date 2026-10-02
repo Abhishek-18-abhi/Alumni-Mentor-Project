@@ -19,7 +19,8 @@ export default function MentorProfile() {
 
   const { data: allUsers = [], loading } = useUsers();
   const mentor = (allUsers || []).find((u) => u.id === id || u._id === id);
-  const student = (allUsers || []).find((u) => u.id === session?.id || u._id === session?.id) || session;
+  const student =
+    (allUsers || []).find((u) => u.id === session?.id || u._id === session?.id) || session;
 
   const match = mentor && student ? scoreMatch(student, mentor) : null;
   const [aiExplanation, setAiExplanation] = useState('');

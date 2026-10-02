@@ -454,7 +454,14 @@ export default function Landing() {
                 </div>
 
                 <div style={{ marginTop: 16 }}>
-                  <label style={{ fontSize: '0.82rem', fontWeight: 600, display: 'block', marginBottom: 6 }}>
+                  <label
+                    style={{
+                      fontSize: '0.82rem',
+                      fontWeight: 600,
+                      display: 'block',
+                      marginBottom: 6,
+                    }}
+                  >
                     Toggle Student Target Skills:
                   </label>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>

@@ -414,10 +414,12 @@ export default function AdminAnalytics() {
                 gap: 6,
               }}
             >
-              <Sparkles size={16} style={{ color: 'var(--primary)' }} /> Qualitative Feedback & AI Thematic Synthesis
+              <Sparkles size={16} style={{ color: 'var(--primary)' }} /> Qualitative Feedback & AI
+              Thematic Synthesis
             </h2>
             <p style={{ margin: 0, fontSize: '0.84rem', color: 'var(--foreground-muted)' }}>
-              Synthesizes qualitative review comments across all student evaluations without exposing student names.
+              Synthesizes qualitative review comments across all student evaluations without
+              exposing student names.
             </p>
           </div>
           <button
@@ -427,7 +429,8 @@ export default function AdminAnalytics() {
             onClick={handleSynthesizeFeedback}
             style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
           >
-            <Sparkles size={13} /> {isSummarizingFeedback ? 'Synthesizing...' : 'Synthesize Survey Themes'}
+            <Sparkles size={13} />{' '}
+            {isSummarizingFeedback ? 'Synthesizing...' : 'Synthesize Survey Themes'}
           </button>
         </div>
 
@@ -451,7 +454,8 @@ export default function AdminAnalytics() {
                 Sentiment: {feedbackSummary.overallSentiment || 'Positive'}
               </span>
               <span style={{ fontSize: '0.82rem', color: 'var(--foreground-muted)' }}>
-                Sample: {feedbackSummary.sampleSize || feedbackStats.totalReviews || 0} reviews analyzed
+                Sample: {feedbackSummary.sampleSize || feedbackStats.totalReviews || 0} reviews
+                analyzed
               </span>
             </div>
             <p style={{ margin: '0 0 12px 0', fontSize: '0.88rem', lineHeight: 1.55 }}>
@@ -488,7 +492,8 @@ export default function AdminAnalytics() {
               fontSize: '0.86rem',
             }}
           >
-            Click &quot;Synthesize Survey Themes&quot; to aggregate qualitative feedback with AI analysis.
+            Click &quot;Synthesize Survey Themes&quot; to aggregate qualitative feedback with AI
+            analysis.
           </div>
         )}
       </section>

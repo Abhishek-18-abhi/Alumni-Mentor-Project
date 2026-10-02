@@ -107,10 +107,7 @@ export default function HeroIllustration() {
           {/* Plant on Desk (Right side) */}
           <g className="hero-plant">
             {/* Pot */}
-            <path
-              d="M 370 315 L 366 340 L 394 340 L 390 315 Z"
-              fill="url(#plantPotGrad)"
-            />
+            <path d="M 370 315 L 366 340 L 394 340 L 390 315 Z" fill="url(#plantPotGrad)" />
             {/* Leaves */}
             <path
               d="M 380 315 C 375 285 365 270 355 275 C 365 295 375 305 380 315 Z"
@@ -151,18 +148,25 @@ export default function HeroIllustration() {
             />
 
             {/* Neck */}
-            <path
-              d="M 235 220 L 245 220 L 243 250 L 235 250 Z"
-              fill="#fdba74"
-            />
+            <path d="M 235 220 L 245 220 L 243 250 L 235 250 Z" fill="#fdba74" />
 
             {/* Head & Face */}
             <ellipse cx="242" cy="190" rx="22" ry="26" fill="url(#skinGrad)" />
 
             {/* Facial Features */}
             {/* Eyebrows & Eyes (Look up and smiling) */}
-            <path d="M 235 182 Q 240 179 244 182" stroke="#475569" strokeWidth="1.6" strokeLinecap="round" />
-            <path d="M 248 182 Q 253 179 257 182" stroke="#475569" strokeWidth="1.6" strokeLinecap="round" />
+            <path
+              d="M 235 182 Q 240 179 244 182"
+              stroke="#475569"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+            />
+            <path
+              d="M 248 182 Q 253 179 257 182"
+              stroke="#475569"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+            />
             <circle cx="240" cy="188" r="2.2" fill="#0f172a" />
             <circle cx="253" cy="188" r="2.2" fill="#0f172a" />
 
@@ -171,8 +175,18 @@ export default function HeroIllustration() {
             <ellipse cx="258" cy="195" rx="3.5" ry="2" fill="#fca5a5" opacity="0.6" />
 
             {/* Nose & Smile */}
-            <path d="M 245 190 Q 246 195 244 196" stroke="#ea580c" strokeWidth="1.2" strokeLinecap="round" />
-            <path d="M 241 202 Q 246 206 251 202" stroke="#b91c1c" strokeWidth="1.6" strokeLinecap="round" />
+            <path
+              d="M 245 190 Q 246 195 244 196"
+              stroke="#ea580c"
+              strokeWidth="1.2"
+              strokeLinecap="round"
+            />
+            <path
+              d="M 241 202 Q 246 206 251 202"
+              stroke="#b91c1c"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+            />
 
             {/* Hair Front / Bangs */}
             <path
@@ -201,10 +215,7 @@ export default function HeroIllustration() {
             <circle cx="316" cy="280" r="3.5" fill="#ffffff" opacity="0.9" />
 
             {/* Laptop Keyboard Base on Desk */}
-            <path
-              d="M 270 338 L 355 338 L 362 342 L 265 342 Z"
-              fill="#94a3b8"
-            />
+            <path d="M 270 338 L 355 338 L 362 342 L 265 342 Z" fill="#94a3b8" />
           </g>
         </svg>
       </div>

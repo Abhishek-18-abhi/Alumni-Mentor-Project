@@ -15,7 +15,9 @@ export default function AdminNotifications() {
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
 
-  const eligibleRecipients = (users || []).filter((u) => u.role === 'student' || u.role === 'mentor');
+  const eligibleRecipients = (users || []).filter(
+    (u) => u.role === 'student' || u.role === 'mentor'
+  );
 
   const handleSend = async (e) => {
     e.preventDefault();

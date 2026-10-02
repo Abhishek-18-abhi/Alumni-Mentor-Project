@@ -23,7 +23,8 @@ export default function Request() {
   const { data: existingRequests = [], refetch: refetchRequests } = useMentorshipRequests();
 
   const mentor = (allUsers || []).find((u) => u.id === mentorId || u._id === mentorId);
-  const student = (allUsers || []).find((u) => u.id === session?.id || u._id === session?.id) || session;
+  const student =
+    (allUsers || []).find((u) => u.id === session?.id || u._id === session?.id) || session;
 
   const handleSubmit = async (e) => {
     e.preventDefault();

@@ -90,8 +90,16 @@ export default function AdminUsers() {
 
   const tabs = [
     { id: 'all', label: 'All Accounts', count: (users || []).length },
-    { id: 'student', label: 'Students', count: (users || []).filter((u) => u.role === 'student').length },
-    { id: 'mentor', label: 'Mentors', count: (users || []).filter((u) => u.role === 'mentor').length },
+    {
+      id: 'student',
+      label: 'Students',
+      count: (users || []).filter((u) => u.role === 'student').length,
+    },
+    {
+      id: 'mentor',
+      label: 'Mentors',
+      count: (users || []).filter((u) => u.role === 'mentor').length,
+    },
     { id: 'admin', label: 'Admins', count: (users || []).filter((u) => u.role === 'admin').length },
   ];
 

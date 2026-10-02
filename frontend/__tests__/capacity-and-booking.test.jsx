@@ -68,12 +68,11 @@ describe('Capacity Checks & Enforcement', () => {
   });
 
   it('rejects mentorship request when server detects mentor is at capacity (HTTP 409)', async () => {
-    global.fetch = vi.fn().mockResolvedValue(
-      mockResponse(
-        { message: 'Mentor has reached maximum active mentee capacity (3/3).' },
-        409
-      )
-    );
+    global.fetch = vi
+      .fn()
+      .mockResolvedValue(
+        mockResponse({ message: 'Mentor has reached maximum active mentee capacity (3/3).' }, 409)
+      );
 
     let errorThrown = null;
     try {
@@ -92,12 +91,11 @@ describe('Capacity Checks & Enforcement', () => {
 
 describe('Meeting Booking Validation', () => {
   it('rejects booking when date is in the past (HTTP 400)', async () => {
-    global.fetch = vi.fn().mockResolvedValue(
-      mockResponse(
-        { message: 'Meeting cannot be scheduled in the past.' },
-        400
-      )
-    );
+    global.fetch = vi
+      .fn()
+      .mockResolvedValue(
+        mockResponse({ message: 'Meeting cannot be scheduled in the past.' }, 400)
+      );
 
     let errorThrown = null;
     try {
@@ -143,12 +141,14 @@ describe('Meeting Booking Validation', () => {
   });
 
   it('rejects booking when either party has a double-booking conflict (HTTP 409)', async () => {
-    global.fetch = vi.fn().mockResolvedValue(
-      mockResponse(
-        { message: 'The mentor already has a scheduled meeting at this date and time.' },
-        409
-      )
-    );
+    global.fetch = vi
+      .fn()
+      .mockResolvedValue(
+        mockResponse(
+          { message: 'The mentor already has a scheduled meeting at this date and time.' },
+          409
+        )
+      );
 
     let errorThrown = null;
     try {
@@ -187,12 +187,14 @@ describe('Request Withdrawal Flow', () => {
   });
 
   it('rejects withdrawal if request is already accepted (HTTP 400)', async () => {
-    global.fetch = vi.fn().mockResolvedValue(
-      mockResponse(
-        { message: 'Cannot withdraw a request that is already accepted or finalized.' },
-        400
-      )
-    );
+    global.fetch = vi
+      .fn()
+      .mockResolvedValue(
+        mockResponse(
+          { message: 'Cannot withdraw a request that is already accepted or finalized.' },
+          400
+        )
+      );
 
     let errorThrown = null;
     try {
@@ -229,7 +231,8 @@ describe('AI Explainability & Fallback', () => {
   it('gracefully provides deterministic template fallback when AI service indicates fallback was used', async () => {
     global.fetch = vi.fn().mockResolvedValue(
       mockResponse({
-        explanation: 'Matched with 85% overall alignment based on 2 shared skills and schedule overlap.',
+        explanation:
+          'Matched with 85% overall alignment based on 2 shared skills and schedule overlap.',
         fallbackUsed: true,
         latencyMs: 12,
       })
@@ -246,9 +249,9 @@ describe('AI Explainability & Fallback', () => {
   });
 
   it('propagates graceful error handling when API call fails entirely', async () => {
-    global.fetch = vi.fn().mockResolvedValue(
-      mockResponse({ message: 'AI service temporarily unavailable.' }, 503)
-    );
+    global.fetch = vi
+      .fn()
+      .mockResolvedValue(mockResponse({ message: 'AI service temporarily unavailable.' }, 503));
 
     let errorThrown = null;
     try {

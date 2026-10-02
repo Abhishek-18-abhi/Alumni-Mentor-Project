@@ -69,9 +69,7 @@ export default function Sidebar({ role = 'student', isOpen = false, onClose = ()
   });
 
   const pendingRequestsCount = (allReqs || []).filter(
-    (r) =>
-      ((r.mentorId?._id || r.mentorId) === user?.id) &&
-      r.status === 'pending'
+    (r) => (r.mentorId?._id || r.mentorId) === user?.id && r.status === 'pending'
   ).length;
 
   const userMeetingsCount = (allMeetings || []).filter((m) => {
@@ -101,11 +99,7 @@ export default function Sidebar({ role = 'student', isOpen = false, onClose = ()
         <div className="sidebar-role-badge">
           <span className="role-pulse" />
           <span>
-            {role === 'admin'
-              ? 'Administrator'
-              : role === 'mentor'
-                ? 'Alumni Mentor'
-                : 'Student'}
+            {role === 'admin' ? 'Administrator' : role === 'mentor' ? 'Alumni Mentor' : 'Student'}
           </span>
         </div>
       </div>
