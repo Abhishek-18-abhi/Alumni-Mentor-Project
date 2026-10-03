@@ -30,29 +30,42 @@ router.get('/', requireAuth, async (req, res, next) => {
 
 router.post('/', requireAuth, async (req, res, next) => {
   try {
-    const { toUserId, requestId, rating, text = '', comment = '', aspects } = req.body;
+    let { toUserId, requestId, rating, text = '', comment = '', aspects } = req.body;
     const numericRating = Number(rating);
     if (
       !toUserId ||
-      !requestId ||
       !Number.isInteger(numericRating) ||
       numericRating < 1 ||
       numericRating > 5
     ) {
       return res.status(400).json({
-        message: 'toUserId, requestId and an integer rating from 1 to 5 are required.',
+        message: 'toUserId and an integer rating from 1 to 5 are required.',
       });
     }
-    if (!mongoose.isValidObjectId(toUserId) || !mongoose.isValidObjectId(requestId)) {
-      return res.status(400).json({ message: 'Invalid recipient or request ID.' });
+    if (!mongoose.isValidObjectId(toUserId)) {
+      return res.status(400).json({ message: 'Invalid recipient ID.' });
     }
     if (String(toUserId) === String(req.user._id)) {
       return res.status(400).json({ message: 'You cannot submit feedback to yourself.' });
     }
 
-    const mentorshipRequest = await MentorshipRequest.findById(requestId);
+    let mentorshipRequest = null;
+    if (requestId && mongoose.isValidObjectId(requestId)) {
+      mentorshipRequest = await MentorshipRequest.findById(requestId);
+    }
     if (!mentorshipRequest) {
-      return res.status(404).json({ message: 'Mentorship request not found.' });
+      mentorshipRequest = await MentorshipRequest.findOne({
+        $or: [
+          { studentId: req.user._id, mentorId: toUserId, status: 'accepted' },
+          { mentorId: req.user._id, studentId: toUserId, status: 'accepted' },
+        ],
+      });
+    }
+
+    if (!mentorshipRequest) {
+      return res.status(404).json({
+        message: 'Active mentorship relationship not found for this mentor.',
+      });
     }
     if (mentorshipRequest.status !== 'accepted') {
       return res.status(400).json({

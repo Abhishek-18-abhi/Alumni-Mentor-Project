@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import AppShell from '../../components/AppShell';
 import PageTitle from '../../components/PageTitle';
 import EmptyState from '../../components/EmptyState';
@@ -10,27 +10,31 @@ import { apiPost } from '../../lib/api';
 import { useToast } from '../../components/Toast';
 import {
   Star,
-  CheckCircle2,
-  CalendarDays,
   Send,
   MessageSquare,
   Award,
-  ThumbsUp,
-  Sparkles,
+  CheckCircle2,
+  CalendarDays,
   UserCheck,
+  Briefcase,
+  ArrowRight,
 } from 'lucide-react';
 
 export default function Feedback({ role }) {
   const toast = useToast();
   const nav = useNavigate();
+  const [searchParams] = useSearchParams();
   const session = getSession();
   const currentRole = role || session?.role || 'student';
   const myId = session?.id || session?._id;
 
-  // Active tab: default to 'received' for mentors, 'micro' for students
-  const [activeTab, setActiveTab] = useState(currentRole === 'mentor' ? 'received' : 'micro');
+  // Student Tab state: 'give' or 'submitted'
+  const [studentTab, setStudentTab] = useState('give');
 
-  const [selectedMeetingId, setSelectedMeetingId] = useState('');
+  // Form state for students
+  const [selectedMentorId, setSelectedMentorId] = useState(
+    () => searchParams.get('mentor') || searchParams.get('mentorId') || ''
+  );
   const [rating, setRating] = useState(5);
   const [usefulness, setUsefulness] = useState(5);
   const [clarity, setClarity] = useState(5);
@@ -47,32 +51,68 @@ export default function Feedback({ role }) {
   const { data: allRequests = [] } = useMentorshipRequests();
   const { data: allUsers = [] } = useUsers();
 
-  const todayStr = new Date().toISOString().split('T')[0];
+  // For students: mentors the student has had accepted mentorship requests OR meetings with
+  const availableMentors = useMemo(() => {
+    if (currentRole !== 'student') return [];
+    const mentorMap = new Map();
 
-  // User's past meetings that were attended (scheduled in past or completed)
-  const attendedPastMeetings = useMemo(() => {
-    return (allMeetings || []).filter((m) => {
-      const sId = m.studentId?._id || m.studentId?.id || m.studentId;
-      const mId = m.mentorId?._id || m.mentorId?.id || m.mentorId;
-      const isParticipant = String(sId) === String(myId) || String(mId) === String(myId);
-      const isPastOrDone =
-        m.status === 'completed' || (m.status === 'scheduled' && m.date <= todayStr);
-      return isParticipant && isPastOrDone && m.status !== 'cancelled';
+    // 1. From accepted mentorship requests
+    (allRequests || []).forEach((r) => {
+      const sId = String(r.studentId?._id || r.studentId?.id || r.studentId || '');
+      if (sId === String(myId) && r.status === 'accepted') {
+        const mObj =
+          typeof r.mentorId === 'object'
+            ? r.mentorId
+            : (allUsers || []).find((u) => String(u._id || u.id) === String(r.mentorId));
+        if (mObj) {
+          const mId = String(mObj._id || mObj.id);
+          mentorMap.set(mId, {
+            id: mId,
+            name: mObj.name || 'Mentor',
+            company: mObj.company || '',
+            domain: mObj.domain || '',
+            jobTitle: mObj.jobTitle || '',
+            requestId: r._id || r.id,
+          });
+        }
+      }
     });
-  }, [allMeetings, myId, todayStr]);
 
-  // Active accepted pairings
-  const acceptedPairs = useMemo(() => {
-    return (allRequests || []).filter((r) => {
-      const sId = r.studentId?._id || r.studentId?.id || r.studentId;
-      const mId = r.mentorId?._id || r.mentorId?.id || r.mentorId;
-      const matchesMe =
-        currentRole === 'student' ? String(sId) === String(myId) : String(mId) === String(myId);
-      return matchesMe && r.status === 'accepted';
+    // 2. From meetings
+    (allMeetings || []).forEach((m) => {
+      const sId = String(m.studentId?._id || m.studentId?.id || m.studentId || '');
+      if (sId === String(myId) && m.status !== 'cancelled') {
+        const mObj =
+          typeof m.mentorId === 'object'
+            ? m.mentorId
+            : (allUsers || []).find((u) => String(u._id || u.id) === String(m.mentorId));
+        if (mObj) {
+          const mId = String(mObj._id || mObj.id);
+          if (!mentorMap.has(mId)) {
+            mentorMap.set(mId, {
+              id: mId,
+              name: mObj.name || 'Mentor',
+              company: mObj.company || '',
+              domain: mObj.domain || '',
+              jobTitle: mObj.jobTitle || '',
+              requestId: '',
+            });
+          }
+        }
+      }
     });
-  }, [allRequests, currentRole, myId]);
 
-  // Feedback received by current user (for mentors, this is reviews from students)
+    return Array.from(mentorMap.values());
+  }, [currentRole, allRequests, allMeetings, allUsers, myId]);
+
+  // Set default selected mentor if only 1 exists and none selected
+  useEffect(() => {
+    if (currentRole === 'student' && !selectedMentorId && availableMentors.length > 0) {
+      setSelectedMentorId(availableMentors[0].id);
+    }
+  }, [currentRole, selectedMentorId, availableMentors]);
+
+  // Feedback received by this mentor (reviews from students)
   const receivedFeedback = useMemo(() => {
     return (allFeedback || []).filter((f) => {
       const toId = f.toUserId?._id || f.toUserId?.id || f.toUserId;
@@ -80,15 +120,15 @@ export default function Feedback({ role }) {
     });
   }, [allFeedback, myId]);
 
-  // Feedback submitted by current user
-  const mySubmittedFeedback = useMemo(() => {
+  // Feedback submitted by this student
+  const studentSubmittedFeedback = useMemo(() => {
     return (allFeedback || []).filter((f) => {
-      const fFromId = f.fromUserId?._id || f.fromUserId?.id || f.fromUserId;
-      return String(fFromId) === String(myId);
+      const fromId = f.fromUserId?._id || f.fromUserId?.id || f.fromUserId;
+      return String(fromId) === String(myId);
     });
   }, [allFeedback, myId]);
 
-  // Statistics for received feedback
+  // Overall rating statistics for mentor
   const ratingStats = useMemo(() => {
     if (!receivedFeedback.length) {
       return { avg: null, count: 0, usefulness: 5, clarity: 5, comfort: 5 };
@@ -108,55 +148,22 @@ export default function Feedback({ role }) {
     };
   }, [receivedFeedback]);
 
-  const handleSubmit = async (e) => {
+  const handleStudentSubmit = async (e) => {
     e.preventDefault();
+    if (!selectedMentorId) {
+      return toast.error('Please select a mentor to review.');
+    }
     if (!comment.trim() || submitting) return;
 
-    let targetToUserId = '';
-    let targetRequestId = '';
-
-    if (activeTab === 'micro') {
-      if (!selectedMeetingId) {
-        return toast.error('Please select an attended past meeting to evaluate.');
-      }
-      const meeting = attendedPastMeetings.find((m) => (m.id || m._id) === selectedMeetingId);
-      if (!meeting) return toast.error('Invalid meeting selection.');
-
-      const partnerId =
-        currentRole === 'student'
-          ? meeting.mentorId?._id || meeting.mentorId?.id || meeting.mentorId
-          : meeting.studentId?._id || meeting.studentId?.id || meeting.studentId;
-
-      targetToUserId = partnerId;
-
-      const req = acceptedPairs.find((r) => {
-        const rMId = r.mentorId?._id || r.mentorId?.id || r.mentorId;
-        const rSId = r.studentId?._id || r.studentId?.id || r.studentId;
-        return currentRole === 'student'
-          ? String(rMId) === String(partnerId)
-          : String(rSId) === String(partnerId);
-      });
-      targetRequestId = req?.id || req?._id || '';
-    } else {
-      if (acceptedPairs.length === 0) {
-        return toast.error('You need an active mentorship pairing to submit programme feedback.');
-      }
-      const pair = acceptedPairs[0];
-      targetRequestId = pair.id || pair._id;
-      targetToUserId =
-        currentRole === 'student'
-          ? pair.mentorId?._id || pair.mentorId?.id || pair.mentorId
-          : pair.studentId?._id || pair.studentId?.id || pair.studentId;
-    }
+    const chosenMentor = availableMentors.find((m) => m.id === selectedMentorId);
 
     setSubmitting(true);
     try {
       await apiPost('/feedback', {
-        toUserId: targetToUserId,
-        requestId: targetRequestId,
-        meetingId: activeTab === 'micro' ? selectedMeetingId : undefined,
+        toUserId: selectedMentorId,
+        requestId: chosenMentor?.requestId || undefined,
         rating: Number(rating),
-        text: `[${activeTab === 'micro' ? 'Post-Meeting Micro-Survey' : 'End-of-Programme Satisfaction'}] ${comment.trim()}`,
+        text: comment.trim(),
         comment: comment.trim(),
         aspects: {
           usefulness: Number(usefulness),
@@ -165,15 +172,10 @@ export default function Feedback({ role }) {
         },
       });
 
-      toast.success(
-        activeTab === 'micro'
-          ? 'Post-meeting evaluation submitted successfully!'
-          : 'End-of-programme satisfaction survey submitted!'
-      );
+      toast.success(`Your review has been submitted for ${chosenMentor?.name || 'your mentor'}!`);
       setComment('');
-      setSelectedMeetingId('');
       await refetchFeedback();
-      setActiveTab('submitted');
+      setStudentTab('submitted');
     } catch (err) {
       toast.error(err?.message || 'Failed to submit feedback.');
     } finally {
@@ -181,42 +183,18 @@ export default function Feedback({ role }) {
     }
   };
 
-  const tabs =
-    currentRole === 'mentor'
-      ? [
-          { id: 'received', label: `Reviews from Students (${receivedFeedback.length})` },
-          { id: 'micro', label: 'Evaluate a Mentee' },
-          { id: 'submitted', label: `Reviews You Submitted (${mySubmittedFeedback.length})` },
-        ]
-      : [
-          { id: 'micro', label: 'Post-Meeting Micro-Survey' },
-          { id: 'programme', label: 'End-of-Programme Satisfaction' },
-          { id: 'received', label: `Feedback from Mentors (${receivedFeedback.length})` },
-          { id: 'submitted', label: `Your Submitted Reviews (${mySubmittedFeedback.length})` },
-        ];
+  // ---------------------------------------------------------------------------
+  // MENTOR VIEW: Clean dashboard showing ONLY reviews received from students
+  // ---------------------------------------------------------------------------
+  if (currentRole === 'mentor') {
+    return (
+      <AppShell role="mentor">
+        <PageTitle
+          eyebrow="Student Evaluations"
+          title="Student Reviews & Feedback"
+          text="Reviews, ratings, and testimonials given to you by students with whom you've conducted mentorship meetings."
+        />
 
-  return (
-    <AppShell role={currentRole}>
-      <PageTitle
-        eyebrow="Feedback & Quality Assurance"
-        title={
-          currentRole === 'mentor'
-            ? 'Mentorship Feedback & Student Reviews'
-            : 'Mentorship Feedback & Surveys'
-        }
-        text={
-          currentRole === 'mentor'
-            ? 'View student reviews and ratings for your mentorship sessions, and submit evaluations for mentees.'
-            : 'Provide honest evaluations on meeting clarity, usefulness, and overall mentorship experience.'
-        }
-      />
-
-      <div style={{ marginBottom: 18 }}>
-        <TabBar tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
-      </div>
-
-      {/* TAB 1: REVIEWS RECEIVED FROM STUDENTS / PARTNERS */}
-      {activeTab === 'received' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           {/* Summary Banner */}
           <section className="card" style={{ padding: '24px' }}>
@@ -271,15 +249,13 @@ export default function Feedback({ role }) {
                       fontWeight: 600,
                     }}
                   >
-                    Average Score
+                    Average Rating
                   </span>
                 </div>
 
                 <div>
                   <h2 style={{ fontSize: '1.25rem', margin: '0 0 6px 0' }}>
-                    {currentRole === 'mentor'
-                      ? 'Student Feedback & Performance'
-                      : 'Received Mentorship Reviews'}
+                    Student Feedback & Satisfaction
                   </h2>
                   <p
                     style={{
@@ -289,19 +265,14 @@ export default function Feedback({ role }) {
                       lineHeight: 1.5,
                     }}
                   >
-                    Based on <b>{ratingStats.count}</b> verified session evaluations from students.
+                    Based on <b>{ratingStats.count}</b> verified student review
+                    {ratingStats.count === 1 ? '' : 's'}.
                   </p>
                 </div>
               </div>
 
               {/* 3 Metric Pills */}
-              <div
-                style={{
-                  display: 'flex',
-                  gap: 12,
-                  flexWrap: 'wrap',
-                }}
-              >
+              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                 <div
                   style={{
                     background: 'var(--surface-sunken, #f8fafc)',
@@ -391,12 +362,12 @@ export default function Feedback({ role }) {
               <EmptyState
                 icon={Star}
                 title="No student evaluations yet"
-                text="When your mentees complete mentorship sessions and submit their evaluations, their reviews, star ratings, and feedback will be displayed here."
+                text="When students complete mentorship meetings with you and leave their feedback, their reviews, star ratings, and comments will appear here."
               />
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 {receivedFeedback.map((f) => {
-                  const studentName = f.fromUserId?.name || 'Student';
+                  const studentName = f.fromUserId?.name || 'Student Mentee';
                   return (
                     <div
                       key={f.id || f._id}
@@ -528,7 +499,7 @@ export default function Feedback({ role }) {
                           borderLeft: '3px solid var(--primary)',
                         }}
                       >
-                        "{f.comment || f.text || 'Excellent mentorship session.'}"
+                        "{f.comment || f.text || 'Great mentorship guidance.'}"
                       </p>
                     </div>
                   );
@@ -537,115 +508,191 @@ export default function Feedback({ role }) {
             )}
           </section>
         </div>
-      )}
+      </AppShell>
+    );
+  }
 
-      {/* TAB 2 & 3: EVALUATION SUBMISSION FORM */}
-      {(activeTab === 'micro' || activeTab === 'programme') && (
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-            gap: 20,
-          }}
-        >
-          {/* Survey Submission Form */}
+  // ---------------------------------------------------------------------------
+  // STUDENT VIEW: Choose mentor, rate and submit review + view past submissions
+  // ---------------------------------------------------------------------------
+  const studentTabs = [
+    { id: 'give', label: 'Submit Mentor Feedback' },
+    { id: 'submitted', label: `Your Submitted Reviews (${studentSubmittedFeedback.length})` },
+  ];
+
+  return (
+    <AppShell role="student">
+      <PageTitle
+        eyebrow="Student Feedback"
+        title="Mentor Feedback & Reviews"
+        text="Choose a mentor you have connected with, rate your mentorship session experience, and submit your review."
+      />
+
+      <div style={{ marginBottom: 18 }}>
+        <TabBar tabs={studentTabs} activeTab={studentTab} onChange={setStudentTab} />
+      </div>
+
+      {studentTab === 'give' && (
+        <div style={{ maxWidth: 760 }}>
           <section className="card form-card">
-            <h2 style={{ fontSize: '1.15rem', margin: '0 0 14px 0' }}>
-              {activeTab === 'micro'
-                ? currentRole === 'mentor'
-                  ? 'Evaluate Mentee Post-Session'
-                  : 'Post-Meeting Micro-Evaluation'
-                : 'End-of-Programme Satisfaction Review'}
+            <h2
+              style={{
+                fontSize: '1.2rem',
+                margin: '0 0 4px 0',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+              }}
+            >
+              <Star size={20} style={{ color: '#f59e0b' }} /> Rate Your Mentor
             </h2>
+            <p
+              style={{
+                margin: '0 0 18px 0',
+                fontSize: '0.88rem',
+                color: 'var(--foreground-muted)',
+              }}
+            >
+              Select a mentor and share your honest feedback to help recognize excellence and
+              support mentor growth.
+            </p>
 
-            {activeTab === 'micro' && attendedPastMeetings.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '24px 0' }}>
+            {availableMentors.length === 0 ? (
+              <div
+                style={{
+                  padding: '32px 20px',
+                  textAlign: 'center',
+                  background: 'var(--surface-sunken, #f8fafc)',
+                  borderRadius: 10,
+                }}
+              >
+                <MessageSquare
+                  size={32}
+                  style={{ color: 'var(--foreground-muted)', margin: '0 auto 10px auto' }}
+                />
+                <h3 style={{ margin: '0 0 6px 0', fontSize: '1.05rem' }}>
+                  No Connected Mentors Yet
+                </h3>
                 <p
                   style={{
                     color: 'var(--foreground-muted)',
-                    fontSize: '0.9rem',
-                    marginBottom: 14,
+                    fontSize: '0.88rem',
+                    margin: '0 auto 16px auto',
+                    maxWidth: 440,
                     lineHeight: 1.5,
                   }}
                 >
-                  Post-meeting evaluations are only enabled after you have attended a scheduled
-                  session.
+                  Feedback can be submitted after you connect with a mentor or complete a mentorship
+                  meeting.
                 </p>
-                <button
-                  type="button"
-                  className="btn secondary"
-                  onClick={() => nav(currentRole === 'mentor' ? '/mentor/calendar' : '/calendar')}
+                <Link
+                  to="/mentors"
+                  className="btn primary"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
                 >
-                  View Calendar & Meetings
-                </button>
+                  Find a Mentor <ArrowRight size={14} />
+                </Link>
               </div>
             ) : (
               <form
-                onSubmit={handleSubmit}
-                style={{ display: 'flex', flexDirection: 'column', gap: 14 }}
+                onSubmit={handleStudentSubmit}
+                style={{ display: 'flex', flexDirection: 'column', gap: 18 }}
               >
-                {activeTab === 'micro' && (
-                  <label>
-                    <span style={{ fontWeight: 600, display: 'block', marginBottom: 4 }}>
-                      Select Attended Meeting
-                    </span>
-                    <select
-                      value={selectedMeetingId}
-                      onChange={(e) => setSelectedMeetingId(e.target.value)}
-                      required
-                    >
-                      <option value="">Choose a past meeting...</option>
-                      {attendedPastMeetings.map((m) => {
-                        const other =
-                          currentRole === 'student'
-                            ? typeof m.mentorId === 'object'
-                              ? m.mentorId?.name
-                              : allUsers.find((u) => (u.id || u._id) === m.mentorId)?.name
-                            : typeof m.studentId === 'object'
-                              ? m.studentId?.name
-                              : allUsers.find((u) => (u.id || u._id) === m.studentId)?.name;
-
-                        return (
-                          <option key={m.id || m._id} value={m.id || m._id}>
-                            {m.date} ({m.time}) · With {other || 'Partner'}
-                          </option>
-                        );
-                      })}
-                    </select>
-                  </label>
-                )}
-
-                {/* 1-5 Star Overall Rating */}
-                <div>
-                  <span style={{ fontWeight: 600, display: 'block', marginBottom: 6 }}>
-                    Overall Rating ({rating} of 5 stars)
+                {/* 1. Choose Mentor Dropdown */}
+                <label>
+                  <span
+                    style={{
+                      fontWeight: 600,
+                      display: 'block',
+                      marginBottom: 6,
+                      fontSize: '0.92rem',
+                    }}
+                  >
+                    Choose Mentor <span style={{ color: 'var(--danger, #ef4444)' }}>*</span>
                   </span>
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <button
-                        key={star}
-                        type="button"
-                        onClick={() => setRating(star)}
-                        className="icon-btn"
-                        style={{
-                          color: star <= rating ? '#f59e0b' : 'var(--border)',
-                          background: 'transparent',
-                          padding: 4,
-                        }}
-                        aria-label={`${star} star`}
-                      >
-                        <Star size={24} fill={star <= rating ? '#f59e0b' : 'none'} />
-                      </button>
+                  <select
+                    value={selectedMentorId}
+                    onChange={(e) => setSelectedMentorId(e.target.value)}
+                    required
+                    style={{ padding: '10px 12px', fontSize: '0.92rem' }}
+                  >
+                    <option value="">-- Select a mentor you connected with --</option>
+                    {availableMentors.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.name} {m.company ? `(${m.company})` : m.domain ? `(${m.domain})` : ''}
+                      </option>
                     ))}
+                  </select>
+                </label>
+
+                {/* 2. Overall Star Rating */}
+                <div>
+                  <span
+                    style={{
+                      fontWeight: 600,
+                      display: 'block',
+                      marginBottom: 6,
+                      fontSize: '0.92rem',
+                    }}
+                  >
+                    Overall Rating ({rating} of 5 stars){' '}
+                    <span style={{ color: 'var(--danger, #ef4444)' }}>*</span>
+                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ display: 'flex', gap: 4 }}>
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          type="button"
+                          onClick={() => setRating(star)}
+                          className="icon-btn"
+                          style={{
+                            color: star <= rating ? '#f59e0b' : 'var(--border)',
+                            background: 'transparent',
+                            padding: 4,
+                            cursor: 'pointer',
+                          }}
+                          aria-label={`${star} star`}
+                        >
+                          <Star
+                            size={28}
+                            fill={star <= rating ? '#f59e0b' : 'none'}
+                            stroke={star <= rating ? '#f59e0b' : '#d1d5db'}
+                          />
+                        </button>
+                      ))}
+                    </div>
+                    <span
+                      style={{
+                        fontWeight: 600,
+                        fontSize: '0.92rem',
+                        color: '#b45309',
+                        marginLeft: 6,
+                      }}
+                    >
+                      {rating === 5
+                        ? 'Exceptional (5/5)'
+                        : rating === 4
+                          ? 'Very Good (4/5)'
+                          : rating === 3
+                            ? 'Good (3/5)'
+                            : rating === 2
+                              ? 'Fair (2/5)'
+                              : 'Needs Improvement (1/5)'}
+                    </span>
                   </div>
                 </div>
 
-                {/* 1-5 Micro Scales */}
+                {/* 3. Aspect Rating Scales */}
                 <div
                   style={{
                     display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
                     gap: 12,
+                    background: 'var(--surface-sunken, #f8fafc)',
+                    padding: 14,
+                    borderRadius: 8,
+                    border: '1px solid var(--border-subtle)',
                   }}
                 >
                   <label>
@@ -657,15 +704,24 @@ export default function Feedback({ role }) {
                         marginBottom: 4,
                       }}
                     >
-                      Usefulness (1-5)
+                      Usefulness of Advice (1-5)
                     </span>
                     <select
                       value={usefulness}
                       onChange={(e) => setUsefulness(Number(e.target.value))}
                     >
-                      {[1, 2, 3, 4, 5].map((v) => (
+                      {[5, 4, 3, 2, 1].map((v) => (
                         <option key={v} value={v}>
-                          {v} - {v === 5 ? 'High' : v === 1 ? 'Low' : 'Moderate'}
+                          {v} -{' '}
+                          {v === 5
+                            ? 'Extremely Useful'
+                            : v === 4
+                              ? 'Very Helpful'
+                              : v === 3
+                                ? 'Helpful'
+                                : v === 2
+                                  ? 'Somewhat Useful'
+                                  : 'Not Useful'}
                         </option>
                       ))}
                     </select>
@@ -680,12 +736,21 @@ export default function Feedback({ role }) {
                         marginBottom: 4,
                       }}
                     >
-                      Clarity (1-5)
+                      Clarity of Guidance (1-5)
                     </span>
                     <select value={clarity} onChange={(e) => setClarity(Number(e.target.value))}>
-                      {[1, 2, 3, 4, 5].map((v) => (
+                      {[5, 4, 3, 2, 1].map((v) => (
                         <option key={v} value={v}>
-                          {v} - {v === 5 ? 'Clear' : v === 1 ? 'Confusing' : 'Fair'}
+                          {v} -{' '}
+                          {v === 5
+                            ? 'Crystal Clear'
+                            : v === 4
+                              ? 'Clear'
+                              : v === 3
+                                ? 'Moderate'
+                                : v === 2
+                                  ? 'A bit unclear'
+                                  : 'Confusing'}
                         </option>
                       ))}
                     </select>
@@ -700,66 +765,88 @@ export default function Feedback({ role }) {
                         marginBottom: 4,
                       }}
                     >
-                      Comfort (1-5)
+                      Communication & Comfort (1-5)
                     </span>
                     <select value={comfort} onChange={(e) => setComfort(Number(e.target.value))}>
-                      {[1, 2, 3, 4, 5].map((v) => (
+                      {[5, 4, 3, 2, 1].map((v) => (
                         <option key={v} value={v}>
-                          {v} - {v === 5 ? 'Great' : v === 1 ? 'Uneasy' : 'Good'}
+                          {v} -{' '}
+                          {v === 5
+                            ? 'Very Welcoming'
+                            : v === 4
+                              ? 'Comfortable'
+                              : v === 3
+                                ? 'Good'
+                                : v === 2
+                                  ? 'Neutral'
+                                  : 'Uncomfortable'}
                         </option>
                       ))}
                     </select>
                   </label>
                 </div>
 
+                {/* 4. Comments & Review Text */}
                 <label>
-                  <span style={{ fontWeight: 600, display: 'block', marginBottom: 4 }}>
-                    Detailed Comments & Takeaways
+                  <span
+                    style={{
+                      fontWeight: 600,
+                      display: 'block',
+                      marginBottom: 6,
+                      fontSize: '0.92rem',
+                    }}
+                  >
+                    Your Review & Feedback{' '}
+                    <span style={{ color: 'var(--danger, #ef4444)' }}>*</span>
                   </span>
                   <textarea
                     rows={4}
                     value={comment}
                     onChange={(e) => setComment(e.target.value)}
-                    placeholder={
-                      currentRole === 'mentor'
-                        ? 'Share feedback on student engagement, preparation, and follow-up recommendations...'
-                        : 'Share constructive feedback regarding actionable advice, technical explanations, or guidance...'
-                    }
+                    placeholder="Describe how this mentor helped you, highlights from your discussions, actionable insights received, or general appreciation..."
                     required
                   />
                 </label>
 
-                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 6 }}>
+                {/* 5. Submit Button */}
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 4 }}>
                   <button
                     type="submit"
                     className="uiverse-btn"
-                    disabled={submitting || !comment.trim()}
+                    disabled={submitting || !comment.trim() || !selectedMentorId}
                     style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
                   >
-                    <Send size={15} /> {submitting ? 'Submitting...' : 'Submit Evaluation'}
+                    <Send size={15} />{' '}
+                    {submitting ? 'Submitting Review...' : 'Submit Feedback to Mentor'}
                   </button>
                 </div>
               </form>
             )}
           </section>
+        </div>
+      )}
 
-          {/* Quick preview of submissions */}
-          <section className="card">
-            <h2 style={{ fontSize: '1.15rem', margin: '0 0 14px 0' }}>Your Submitted Reviews</h2>
-            {mySubmittedFeedback.length === 0 ? (
-              <EmptyState
-                icon={Star}
-                title="No evaluations submitted"
-                text="Your submitted meeting evaluations and satisfaction surveys will appear here."
-              />
-            ) : (
-              <div className="table-list">
-                {mySubmittedFeedback.slice(0, 5).map((f) => (
+      {studentTab === 'submitted' && (
+        <section className="card" style={{ maxWidth: 840 }}>
+          <h2 style={{ fontSize: '1.15rem', margin: '0 0 16px 0' }}>Your Submitted Reviews</h2>
+          {studentSubmittedFeedback.length === 0 ? (
+            <EmptyState
+              icon={MessageSquare}
+              title="No reviews submitted yet"
+              text="You haven't submitted any mentor feedback yet. Choose a mentor above to submit your first review!"
+            />
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              {studentSubmittedFeedback.map((f) => {
+                const mentorName = f.toUserId?.name || 'Mentor';
+                return (
                   <div
                     key={f.id || f._id}
                     style={{
-                      padding: '12px 0',
-                      borderBottom: '1px solid var(--border)',
+                      padding: 16,
+                      background: 'var(--surface-sunken, #f8fafc)',
+                      border: '1px solid var(--border-subtle)',
+                      borderRadius: 10,
                     }}
                   >
                     <div
@@ -767,90 +854,114 @@ export default function Feedback({ role }) {
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center',
-                        marginBottom: 6,
+                        flexWrap: 'wrap',
+                        gap: 10,
+                        marginBottom: 10,
                       }}
                     >
-                      <div style={{ display: 'flex', gap: 2 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <div
+                          className="mentor-avatar"
+                          style={{
+                            width: 36,
+                            height: 36,
+                            fontSize: '0.95rem',
+                            background: 'var(--primary-subtle, #e0e7ff)',
+                            color: 'var(--primary)',
+                          }}
+                        >
+                          {mentorName[0] || 'M'}
+                        </div>
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <b style={{ fontSize: '0.96rem' }}>{mentorName}</b>
+                            <span
+                              className="status-chip blue"
+                              style={{ fontSize: '0.72rem', padding: '1px 7px' }}
+                            >
+                              Alumni Mentor
+                            </span>
+                          </div>
+                          <small style={{ color: 'var(--foreground-muted)', fontSize: '0.78rem' }}>
+                            {f.createdAt
+                              ? new Date(f.createdAt).toLocaleDateString(undefined, {
+                                  year: 'numeric',
+                                  month: 'short',
+                                  day: 'numeric',
+                                })
+                              : 'Submitted review'}
+                          </small>
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                         {[1, 2, 3, 4, 5].map((s) => (
                           <Star
                             key={s}
-                            size={14}
+                            size={16}
                             color={s <= f.rating ? '#f59e0b' : 'var(--border)'}
                             fill={s <= f.rating ? '#f59e0b' : 'none'}
                           />
                         ))}
+                        <b style={{ color: '#f59e0b', fontSize: '0.95rem', marginLeft: 4 }}>
+                          {f.rating}.0
+                        </b>
                       </div>
-                      <small style={{ color: 'var(--foreground-muted)' }}>
-                        {f.createdAt ? new Date(f.createdAt).toLocaleDateString() : 'Recorded'}
-                      </small>
                     </div>
-                    <p style={{ margin: 0, fontSize: '0.86rem', lineHeight: 1.5 }}>
-                      {f.text || f.comment}
+
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
+                      <span
+                        style={{
+                          fontSize: '0.75rem',
+                          padding: '2px 8px',
+                          borderRadius: 6,
+                          background: 'var(--surface)',
+                          border: '1px solid var(--border)',
+                        }}
+                      >
+                        Usefulness: <b>{f.aspects?.usefulness ?? 5}/5</b>
+                      </span>
+                      <span
+                        style={{
+                          fontSize: '0.75rem',
+                          padding: '2px 8px',
+                          borderRadius: 6,
+                          background: 'var(--surface)',
+                          border: '1px solid var(--border)',
+                        }}
+                      >
+                        Clarity: <b>{f.aspects?.clarity ?? 5}/5</b>
+                      </span>
+                      <span
+                        style={{
+                          fontSize: '0.75rem',
+                          padding: '2px 8px',
+                          borderRadius: 6,
+                          background: 'var(--surface)',
+                          border: '1px solid var(--border)',
+                        }}
+                      >
+                        Comfort: <b>{f.aspects?.comfort ?? 5}/5</b>
+                      </span>
+                    </div>
+
+                    <p
+                      style={{
+                        margin: 0,
+                        fontSize: '0.9rem',
+                        lineHeight: 1.6,
+                        color: 'var(--foreground)',
+                        padding: '10px 14px',
+                        background: 'var(--surface)',
+                        borderRadius: 8,
+                        borderLeft: '3px solid var(--primary)',
+                      }}
+                    >
+                      "{f.comment || f.text || 'Great session.'}"
                     </p>
                   </div>
-                ))}
-              </div>
-            )}
-          </section>
-        </div>
-      )}
-
-      {/* TAB 4: REVIEWS YOU SUBMITTED */}
-      {activeTab === 'submitted' && (
-        <section className="card">
-          <h2 style={{ fontSize: '1.15rem', margin: '0 0 14px 0' }}>
-            All Reviews You Have Submitted
-          </h2>
-          {mySubmittedFeedback.length === 0 ? (
-            <EmptyState
-              icon={Star}
-              title="No evaluations submitted yet"
-              text="Evaluations and reviews you have written will appear here."
-            />
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {mySubmittedFeedback.map((f) => (
-                <div
-                  key={f.id || f._id}
-                  style={{
-                    padding: '14px',
-                    borderRadius: 8,
-                    background: 'var(--surface-sunken, #f8fafc)',
-                    border: '1px solid var(--border-subtle)',
-                  }}
-                >
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      marginBottom: 6,
-                      flexWrap: 'wrap',
-                      gap: 8,
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <div style={{ display: 'flex', gap: 2 }}>
-                        {[1, 2, 3, 4, 5].map((s) => (
-                          <Star
-                            key={s}
-                            size={15}
-                            color={s <= f.rating ? '#f59e0b' : 'var(--border)'}
-                            fill={s <= f.rating ? '#f59e0b' : 'none'}
-                          />
-                        ))}
-                      </div>
-                      <b style={{ color: '#f59e0b', fontSize: '0.9rem' }}>{f.rating}.0</b>
-                    </div>
-                    <small style={{ color: 'var(--foreground-muted)' }}>
-                      {f.createdAt ? new Date(f.createdAt).toLocaleDateString() : 'Recorded'}
-                    </small>
-                  </div>
-                  <p style={{ margin: 0, fontSize: '0.88rem', lineHeight: 1.5 }}>
-                    {f.text || f.comment}
-                  </p>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </section>

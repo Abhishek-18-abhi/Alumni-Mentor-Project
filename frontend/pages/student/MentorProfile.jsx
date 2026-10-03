@@ -369,33 +369,43 @@ export default function MentorProfile() {
                   Authentic evaluations submitted by students who completed mentorship sessions.
                 </p>
               </div>
-              {reviewsCount > 0 && (
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    background: 'rgba(245, 158, 11, 0.1)',
-                    padding: '6px 14px',
-                    borderRadius: 999,
-                  }}
-                >
-                  <div style={{ display: 'flex', gap: 2 }}>
-                    {[1, 2, 3, 4, 5].map((s) => (
-                      <Star
-                        key={s}
-                        size={15}
-                        fill={s <= Math.round(Number(avgRating)) ? '#f59e0b' : 'none'}
-                        stroke={s <= Math.round(Number(avgRating)) ? '#f59e0b' : '#d1d5db'}
-                      />
-                    ))}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                {reviewsCount > 0 && (
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      background: 'rgba(245, 158, 11, 0.1)',
+                      padding: '6px 14px',
+                      borderRadius: 999,
+                    }}
+                  >
+                    <div style={{ display: 'flex', gap: 2 }}>
+                      {[1, 2, 3, 4, 5].map((s) => (
+                        <Star
+                          key={s}
+                          size={15}
+                          fill={s <= Math.round(Number(avgRating)) ? '#f59e0b' : 'none'}
+                          stroke={s <= Math.round(Number(avgRating)) ? '#f59e0b' : '#d1d5db'}
+                        />
+                      ))}
+                    </div>
+                    <b style={{ color: '#b45309', fontSize: '1rem' }}>{avgRating}</b>
+                    <span style={{ color: 'var(--foreground-muted)', fontSize: '0.84rem' }}>
+                      ({reviewsCount} {reviewsCount === 1 ? 'review' : 'reviews'})
+                    </span>
                   </div>
-                  <b style={{ color: '#b45309', fontSize: '1rem' }}>{avgRating}</b>
-                  <span style={{ color: 'var(--foreground-muted)', fontSize: '0.84rem' }}>
-                    ({reviewsCount} {reviewsCount === 1 ? 'review' : 'reviews'})
-                  </span>
-                </div>
-              )}
+                )}
+                <button
+                  type="button"
+                  className="btn mini secondary"
+                  onClick={() => nav(`/feedback?mentor=${mentor.id || mentor._id}`)}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                >
+                  <Star size={13} fill="#f59e0b" stroke="#f59e0b" /> Leave Feedback
+                </button>
+              </div>
             </div>
 
             {reviewsCount === 0 ? (
