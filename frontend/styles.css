@@ -683,6 +683,51 @@ textarea:focus {
   box-shadow: 0 0 0 3px var(--ring);
 }
 
+.password-input-wrap {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.password-input-wrap input {
+  width: 100%;
+  box-sizing: border-box;
+  padding-right: 42px !important;
+}
+
+.password-input-wrap .password-toggle-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  padding: 6px;
+  margin: 0;
+  cursor: pointer;
+  color: var(--foreground-muted);
+  border-radius: var(--radius-sm, 6px);
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease;
+  line-height: 1;
+  z-index: 2;
+}
+
+.password-input-wrap .password-toggle-btn:hover {
+  color: var(--foreground);
+  background: var(--secondary, #f1f5f9);
+}
+
+.password-input-wrap .password-toggle-btn:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
+
 .role-cards {
   display: grid;
   grid-template-columns: 1fr 1fr;

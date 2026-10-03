@@ -212,7 +212,7 @@ export default function Auth({ register = false, adminLogin = false }) {
 
           <label>
             Password
-            <div style={{ position: 'relative' }}>
+            <div className="password-input-wrap" style={{ position: 'relative', width: '100%' }}>
               <input
                 name="password"
                 type={showPassword ? 'text' : 'password'}
@@ -224,26 +224,15 @@ export default function Auth({ register = false, adminLogin = false }) {
                 placeholder={
                   register ? `At least ${MIN_PASSWORD_LENGTH} characters` : 'Enter password'
                 }
-                style={{ paddingRight: 40 }}
+                style={{ width: '100%', boxSizing: 'border-box', paddingRight: 42 }}
               />
               <button
                 type="button"
+                className="password-toggle-btn"
                 onClick={() => setShowPassword(!showPassword)}
-                style={{
-                  position: 'absolute',
-                  right: 10,
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  color: 'var(--foreground-muted)',
-                  display: 'flex',
-                  alignItems: 'center',
-                }}
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
-                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
           </label>

@@ -153,7 +153,7 @@ export default function InitialAdminSetup() {
 
           <label>
             Master Password
-            <div style={{ position: 'relative' }}>
+            <div className="password-input-wrap" style={{ position: 'relative', width: '100%' }}>
               <input
                 required
                 type={showPassword ? 'text' : 'password'}
@@ -162,41 +162,41 @@ export default function InitialAdminSetup() {
                 placeholder={`At least ${MIN_PASSWORD_LENGTH} characters`}
                 value={f.password}
                 onChange={(e) => setF({ ...f, password: e.target.value })}
-                style={{ paddingRight: 40 }}
+                style={{ width: '100%', boxSizing: 'border-box', paddingRight: 42 }}
               />
               <button
                 type="button"
+                className="password-toggle-btn"
                 onClick={() => setShowPassword(!showPassword)}
-                style={{
-                  position: 'absolute',
-                  right: 10,
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  color: 'var(--foreground-muted)',
-                  display: 'flex',
-                  alignItems: 'center',
-                }}
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
-                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
           </label>
 
           <label>
             Confirm Password
-            <input
-              required
-              type={showPassword ? 'text' : 'password'}
-              autoComplete="new-password"
-              minLength={MIN_PASSWORD_LENGTH}
-              placeholder="Re-enter password"
-              value={f.confirmPassword}
-              onChange={(e) => setF({ ...f, confirmPassword: e.target.value })}
-            />
+            <div className="password-input-wrap" style={{ position: 'relative', width: '100%' }}>
+              <input
+                required
+                type={showPassword ? 'text' : 'password'}
+                autoComplete="new-password"
+                minLength={MIN_PASSWORD_LENGTH}
+                placeholder="Re-enter password"
+                value={f.confirmPassword}
+                onChange={(e) => setF({ ...f, confirmPassword: e.target.value })}
+                style={{ width: '100%', boxSizing: 'border-box', paddingRight: 42 }}
+              />
+              <button
+                type="button"
+                className="password-toggle-btn"
+                onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
           </label>
 
           {error && (
