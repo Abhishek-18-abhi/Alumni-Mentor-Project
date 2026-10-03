@@ -3410,7 +3410,15 @@ textarea:focus {
 .setting-toggle span {
   display: flex;
   flex-direction: column;
+  align-items: flex-start !important;
+  text-align: left !important;
   gap: 2px;
+}
+
+.setting-toggle b,
+.setting-toggle small {
+  text-align: left !important;
+  align-self: flex-start !important;
 }
 
 .setting-toggle small {
