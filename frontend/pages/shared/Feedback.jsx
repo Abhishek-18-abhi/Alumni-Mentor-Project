@@ -687,28 +687,32 @@ export default function Feedback({ role }) {
                 <div
                   style={{
                     display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
                     gap: 12,
+                    alignItems: 'stretch',
                     background: 'var(--surface-sunken, #f8fafc)',
                     padding: 14,
                     borderRadius: 8,
                     border: '1px solid var(--border-subtle)',
                   }}
                 >
-                  <label>
+                  <label style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
                     <span
                       style={{
                         fontSize: '0.84rem',
                         fontWeight: 600,
                         display: 'block',
+                        minHeight: 38,
                         marginBottom: 4,
+                        lineHeight: 1.35,
                       }}
                     >
-                      Usefulness of Advice (1-5)
+                      Usefulness of Advice <span style={{ whiteSpace: 'nowrap' }}>(1–5)</span>
                     </span>
                     <select
                       value={usefulness}
                       onChange={(e) => setUsefulness(Number(e.target.value))}
+                      style={{ marginTop: 'auto', width: '100%' }}
                     >
                       {[5, 4, 3, 2, 1].map((v) => (
                         <option key={v} value={v}>
@@ -727,18 +731,24 @@ export default function Feedback({ role }) {
                     </select>
                   </label>
 
-                  <label>
+                  <label style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
                     <span
                       style={{
                         fontSize: '0.84rem',
                         fontWeight: 600,
                         display: 'block',
+                        minHeight: 38,
                         marginBottom: 4,
+                        lineHeight: 1.35,
                       }}
                     >
-                      Clarity of Guidance (1-5)
+                      Clarity of Guidance <span style={{ whiteSpace: 'nowrap' }}>(1–5)</span>
                     </span>
-                    <select value={clarity} onChange={(e) => setClarity(Number(e.target.value))}>
+                    <select
+                      value={clarity}
+                      onChange={(e) => setClarity(Number(e.target.value))}
+                      style={{ marginTop: 'auto', width: '100%' }}
+                    >
                       {[5, 4, 3, 2, 1].map((v) => (
                         <option key={v} value={v}>
                           {v} -{' '}
@@ -756,18 +766,24 @@ export default function Feedback({ role }) {
                     </select>
                   </label>
 
-                  <label>
+                  <label style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
                     <span
                       style={{
                         fontSize: '0.84rem',
                         fontWeight: 600,
                         display: 'block',
+                        minHeight: 38,
                         marginBottom: 4,
+                        lineHeight: 1.35,
                       }}
                     >
-                      Communication & Comfort (1-5)
+                      Communication & Comfort <span style={{ whiteSpace: 'nowrap' }}>(1–5)</span>
                     </span>
-                    <select value={comfort} onChange={(e) => setComfort(Number(e.target.value))}>
+                    <select
+                      value={comfort}
+                      onChange={(e) => setComfort(Number(e.target.value))}
+                      style={{ marginTop: 'auto', width: '100%' }}
+                    >
                       {[5, 4, 3, 2, 1].map((v) => (
                         <option key={v} value={v}>
                           {v} -{' '}
