@@ -3403,6 +3403,8 @@ textarea:focus {
   gap: 20px;
   padding: 12px 0;
   border-bottom: 1px solid var(--border-subtle);
+  cursor: pointer;
+  user-select: none;
 }
 
 .setting-toggle span {
@@ -3418,10 +3420,14 @@ textarea:focus {
   font-size: 0.76rem;
 }
 
-.setting-toggle input {
-  width: 40px;
+.setting-toggle input,
+.setting-toggle input[type='checkbox'],
+.form-stack input[type='checkbox'] {
+  width: 20px;
   height: 20px;
+  padding: 0 !important;
   accent-color: var(--primary);
+  cursor: pointer;
 }
 
 .muted-text {

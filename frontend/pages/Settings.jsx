@@ -10,6 +10,8 @@ import {
   AlertTriangle,
   Sliders,
   Save,
+  PlayCircle,
+  PauseCircle,
 } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import PageTitle from '../components/PageTitle';
@@ -68,7 +70,11 @@ export default function Settings() {
       apiGet('/auth/me')
         .then((res) => {
           if (mounted && res?.user) {
-            setUser((prev) => ({ ...prev, ...res.user }));
+            const u = res.user;
+            setUser((prev) => ({ ...prev, ...u }));
+            if (u.capacity !== undefined) setCapacity(Math.max(1, Number(u.capacity) || 1));
+            if (u.pauseRequests !== undefined) setPauseRequests(Boolean(u.pauseRequests));
+            if (u.settings) setPrefs(getPrefs(u));
           }
         })
         .catch(() => {});
@@ -159,8 +165,66 @@ export default function Settings() {
 
   const pwdStrength = calculatePasswordStrength(passwords.next);
 
+  const [savingPause, setSavingPause] = useState(false);
+
+  const handleTogglePause = async () => {
+    const targetUserId = user?.id || user?._id || session?.id;
+    if (!targetUserId || savingPause) return;
+    setSavingPause(true);
+    try {
+      const nextVal = !pauseRequests;
+      const result = await updateUser(targetUserId, {
+        pauseRequests: nextVal,
+      });
+      if (result.ok) {
+        setPauseRequests(nextVal);
+        setUser((prev) => ({ ...prev, ...result.user, pauseRequests: nextVal }));
+        toast.success(nextVal ? 'Mentorship requests paused.' : 'Mentorship intake resumed.');
+      } else {
+        toast.error(result.error || 'Could not update intake status.');
+      }
+    } catch (err) {
+      toast.error(err?.message || 'Failed to update intake status.');
+    } finally {
+      setSavingPause(false);
+    }
+  };
+
+  const handleSaveCapacity = async (e) => {
+    if (e?.preventDefault) e.preventDefault();
+    const targetUserId = user?.id || user?._id || session?.id;
+    if (!targetUserId || saving) return;
+    if (capacity < 1) return toast.error('Capacity must be at least 1 mentee.');
+
+    setSaving(true);
+    try {
+      const capNum = Math.max(1, Number(capacity) || 1);
+      const pauseBool = Boolean(pauseRequests);
+      const result = await updateUser(targetUserId, {
+        capacity: capNum,
+        pauseRequests: pauseBool,
+      });
+      if (result.ok) {
+        setUser((prev) => ({
+          ...prev,
+          ...result.user,
+          capacity: capNum,
+          pauseRequests: pauseBool,
+        }));
+        toast.success(`Capacity (${capNum}) and intake status saved successfully.`);
+      } else {
+        toast.error(result.error || 'Could not save capacity settings.');
+      }
+    } catch (err) {
+      toast.error(err?.message || 'Failed to save capacity settings.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const savePreferences = async () => {
-    if (!user || saving) return;
+    const targetUserId = user?.id || user?._id || session?.id;
+    if (!targetUserId || saving) return;
     setSaving(true);
     try {
       const payload = { settings: prefs };
@@ -168,9 +232,15 @@ export default function Settings() {
         payload.capacity = Math.max(1, Number(capacity) || 1);
         payload.pauseRequests = Boolean(pauseRequests);
       }
-      const result = await updateUser(user.id, payload);
-      if (result.ok) toast.success('Settings saved successfully.');
-      else toast.error(result.error || 'Could not save settings.');
+      const result = await updateUser(targetUserId, payload);
+      if (result.ok) {
+        setUser((prev) => ({ ...prev, ...result.user }));
+        toast.success('Settings saved successfully.');
+      } else {
+        toast.error(result.error || 'Could not save settings.');
+      }
+    } catch (err) {
+      toast.error(err?.message || 'Could not save settings.');
     } finally {
       setSaving(false);
     }
@@ -200,9 +270,12 @@ export default function Settings() {
     if (passwords.next !== passwords.confirm) return toast.error('New passwords do not match.');
     if (passwords.next.length < 8) return toast.error('Password must be at least 8 characters.');
 
+    const targetUserId = user?.id || user?._id || session?.id;
+    if (!targetUserId) return toast.error('User session not found.');
+
     setSavingPassword(true);
     try {
-      const result = await changePassword(user?.id, passwords.current, passwords.next);
+      const result = await changePassword(targetUserId, passwords.current, passwords.next);
       if (!result.ok) return toast.error(result.error);
       setPasswords({ current: '', next: '', confirm: '' });
       toast.success('Password changed successfully.');
@@ -258,10 +331,11 @@ export default function Settings() {
   };
 
   const handleDeleteAccount = async () => {
-    if (isDeleting || !user) return;
+    const targetUserId = user?.id || user?._id || session?.id;
+    if (isDeleting || !targetUserId) return;
     setIsDeleting(true);
     try {
-      await apiDelete(`/users/${user.id}`);
+      await apiDelete(`/users/${targetUserId}`);
       toast.success('Account deactivated and deleted successfully.');
       logout();
       window.location.href = '/';
@@ -451,27 +525,74 @@ export default function Settings() {
                 <input
                   type="number"
                   min="1"
-                  max="10"
+                  max="20"
                   value={capacity}
                   onChange={(e) => setCapacity(Math.max(1, Number(e.target.value) || 1))}
                 />
               </label>
-              <div className="settings-options">
-                <label className="setting-toggle">
-                  <span>
-                    <b>Pause New Requests</b>
-                    <small>
-                      Temporarily hide request button on your profile while keeping existing mentees
-                    </small>
-                  </span>
-                  <input
-                    type="checkbox"
-                    checked={pauseRequests}
-                    onChange={(e) => setPauseRequests(e.target.checked)}
-                  />
-                </label>
+
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 16,
+                  padding: '14px 0',
+                  borderTop: '1px solid var(--border-subtle)',
+                  borderBottom: '1px solid var(--border-subtle)',
+                  flexWrap: 'wrap',
+                }}
+              >
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                    <b style={{ fontSize: '0.92rem' }}>Pause New Requests</b>
+                    <span
+                      className={`status-chip ${pauseRequests ? 'orange' : 'green'}`}
+                      style={{ fontSize: '0.74rem', padding: '2px 8px' }}
+                    >
+                      {pauseRequests ? 'Intake Paused' : 'Accepting Requests'}
+                    </span>
+                  </div>
+                  <small
+                    style={{
+                      color: 'var(--foreground-muted)',
+                      display: 'block',
+                      fontSize: '0.78rem',
+                      lineHeight: 1.4,
+                      maxWidth: 420,
+                    }}
+                  >
+                    {pauseRequests
+                      ? 'Mentorship inquiries are currently paused. Students cannot send you new requests.'
+                      : 'Temporarily hide request button on your profile while keeping existing mentees.'}
+                  </small>
+                </div>
+
+                <button
+                  type="button"
+                  className={`btn ${pauseRequests ? 'primary' : 'secondary'}`}
+                  onClick={handleTogglePause}
+                  disabled={savingPause}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    fontWeight: 600,
+                  }}
+                >
+                  {pauseRequests ? <PlayCircle size={16} /> : <PauseCircle size={16} />}
+                  {savingPause ? 'Updating...' : pauseRequests ? 'Resume Intake' : 'Pause Requests'}
+                </button>
               </div>
-              <button className="uiverse-btn" onClick={savePreferences} disabled={saving}>
+
+              <button
+                type="button"
+                className="uiverse-btn"
+                onClick={handleSaveCapacity}
+                disabled={saving}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}
+              >
+                <Save size={15} />
                 {saving ? 'Saving...' : 'Save Capacity Settings'}
               </button>
             </div>
