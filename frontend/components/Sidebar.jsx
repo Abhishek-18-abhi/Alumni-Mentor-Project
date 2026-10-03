@@ -4,7 +4,6 @@ import {
   LayoutDashboard,
   Users,
   CalendarDays,
-  MessageSquare,
   Target,
   Star,
   Sparkles,
@@ -24,7 +23,6 @@ const navMaps = {
     ['Find Mentor', '/mentors', Users],
     ['My Matches', '/matches', Sparkles],
     ['Calendar', '/calendar', CalendarDays],
-    ['Meetings', '/meetings', MessageSquare],
     ['Goals', '/goals', Target],
     ['Feedback', '/feedback', Star],
     ['Notifications', '/notifications', Bell],
@@ -34,7 +32,6 @@ const navMaps = {
     ['Requests', '/mentor/requests', ClipboardList],
     ['My Mentees', '/mentor/mentees', Users],
     ['Calendar', '/mentor/calendar', CalendarDays],
-    ['Meetings', '/mentor/meetings', MessageSquare],
     ['Goals', '/mentor/goals', Target],
     ['Feedback', '/mentor/feedback', Star],
     ['Notifications', '/notifications', Bell],
@@ -78,7 +75,13 @@ export default function Sidebar({ role = 'student', isOpen = false, onClose = ()
 
   const getNavBadge = (to) => {
     if (to === '/mentor/requests' && pendingRequestsCount > 0) return String(pendingRequestsCount);
-    if ((to === '/meetings' || to === '/mentor/meetings') && userMeetingsCount > 0)
+    if (
+      (to === '/calendar' ||
+        to === '/mentor/calendar' ||
+        to === '/meetings' ||
+        to === '/mentor/meetings') &&
+      userMeetingsCount > 0
+    )
       return String(userMeetingsCount);
     return null;
   };
