@@ -137,7 +137,7 @@ export default function Goals({ role }) {
       </div>
 
       {/* Goal Creation Form */}
-      <section className="card form-card" style={{ marginBottom: 20 }}>
+      <section className="card" style={{ marginBottom: 20, width: '100%' }}>
         <h3 style={{ margin: '0 0 14px 0', fontSize: '1.05rem', fontWeight: 700 }}>
           Add New Milestone Goal
         </h3>
