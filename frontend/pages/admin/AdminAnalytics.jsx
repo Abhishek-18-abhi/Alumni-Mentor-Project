@@ -503,7 +503,6 @@ export default function AdminAnalytics() {
                   <th>Domain & Company</th>
                   <th>Total Reviews</th>
                   <th>Average Rating</th>
-                  <th>Aspect Breakdown</th>
                   <th>Performance Tier</th>
                   <th>Action</th>
                 </tr>
@@ -512,7 +511,7 @@ export default function AdminAnalytics() {
                 {filteredMentors.length === 0 ? (
                   <tr>
                     <td
-                      colSpan="7"
+                      colSpan="6"
                       style={{
                         textAlign: 'center',
                         padding: 24,
@@ -578,34 +577,6 @@ export default function AdminAnalytics() {
                         ) : (
                           <span style={{ color: 'var(--foreground-muted)', fontSize: '0.82rem' }}>
                             Unrated
-                          </span>
-                        )}
-                      </td>
-                      <td>
-                        {m.totalReviews > 0 ? (
-                          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                            <span
-                              className="category-pill-tech"
-                              style={{ fontSize: '0.7rem', padding: '2px 6px' }}
-                            >
-                              Use: {m.avgUsefulness}
-                            </span>
-                            <span
-                              className="category-pill-tech"
-                              style={{ fontSize: '0.7rem', padding: '2px 6px' }}
-                            >
-                              Clar: {m.avgClarity}
-                            </span>
-                            <span
-                              className="category-pill-tech"
-                              style={{ fontSize: '0.7rem', padding: '2px 6px' }}
-                            >
-                              Comf: {m.avgComfort}
-                            </span>
-                          </div>
-                        ) : (
-                          <span style={{ color: 'var(--foreground-muted)', fontSize: '0.82rem' }}>
-                            —
                           </span>
                         )}
                       </td>
