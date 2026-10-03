@@ -4,22 +4,12 @@ import PageTitle from '../../components/PageTitle';
 import EmptyState from '../../components/EmptyState';
 import StatusChip from '../../components/StatusChip';
 import TabBar from '../../components/TabBar';
-import ModalShell from '../../components/ModalShell';
 import ProgressModal from '../../components/ProgressModal';
-import { useGoals, useMeetings, useUsers, useMentorshipRequests } from '../../hooks/useApi';
+import { useGoals, useUsers, useMentorshipRequests } from '../../hooks/useApi';
 import { getSession } from '../../lib/storage';
-import { apiPost, apiPatch, suggestGoalsWithAi } from '../../lib/api';
+import { apiPost, apiPatch } from '../../lib/api';
 import { useToast } from '../../components/Toast';
-import {
-  Target,
-  Sparkles,
-  CalendarDays,
-  Plus,
-  CheckCircle,
-  Clock,
-  Edit2,
-  Trash2,
-} from 'lucide-react';
+import { Target, CalendarDays, Plus, CheckCircle, Clock, Edit2, Trash2 } from 'lucide-react';
 
 export default function Goals({ role }) {
   const toast = useToast();
@@ -36,15 +26,8 @@ export default function Goals({ role }) {
   const [newTitle, setNewTitle] = useState('');
   const [newTarget, setNewTarget] = useState('');
   const [newTargetDate, setNewTargetDate] = useState('');
-  const [newMeetingId, setNewMeetingId] = useState('');
-
-  // AI suggestions state
-  const [isAiLoading, setIsAiLoading] = useState(false);
-  const [aiModalOpen, setAiModalOpen] = useState(false);
-  const [suggestedSmartGoals, setSuggestedSmartGoals] = useState([]);
 
   const { data: allGoals = [], loading: loadingGoals, refetch: refetchGoals } = useGoals();
-  const { data: allMeetings = [] } = useMeetings();
   const { data: allUsers = [] } = useUsers();
   const { data: allRequests = [] } = useMentorshipRequests();
 
@@ -82,48 +65,6 @@ export default function Goals({ role }) {
     });
   }, [studentGoals, tab]);
 
-  // Relevant meetings for this student
-  const relevantMeetings = useMemo(() => {
-    return (allMeetings || []).filter((m) => {
-      const sId = m.studentId?._id || m.studentId?.id || m.studentId;
-      return String(sId) === String(activeTargetStudentId);
-    });
-  }, [allMeetings, activeTargetStudentId]);
-
-  // AI SMART Goal Suggestions
-  const handleGenerateAiGoals = async () => {
-    if (isAiLoading) return;
-    setIsAiLoading(true);
-
-    try {
-      const studentUser =
-        allUsers.find((u) => (u.id || u._id) === activeTargetStudentId) || session;
-      const res = await suggestGoalsWithAi({
-        studentSkills: studentUser?.skills || [],
-        studentInterests: studentUser?.interests || [],
-        studentGoals: studentUser?.goals || [],
-      });
-
-      if (res?.goals && res.goals.length > 0) {
-        // Editable SMART goals before saving
-        setSuggestedSmartGoals(
-          res.goals.map((g) => ({
-            title: g.title || '',
-            target: g.target || g.description || '',
-            targetDate: g.targetDate || '',
-          }))
-        );
-        setAiModalOpen(true);
-      } else {
-        toast.error('Could not generate SMART goals suggestions.');
-      }
-    } catch {
-      toast.error('AI goal suggestions service temporarily unavailable.');
-    } finally {
-      setIsAiLoading(false);
-    }
-  };
-
   // Add a goal
   const handleAddGoal = async (e) => {
     e.preventDefault();
@@ -137,7 +78,6 @@ export default function Goals({ role }) {
         title: newTitle.trim(),
         target: newTarget.trim(),
         targetDate: newTargetDate || undefined,
-        meetingId: newMeetingId || undefined,
         progress: 0,
       });
 
@@ -145,31 +85,11 @@ export default function Goals({ role }) {
       setNewTitle('');
       setNewTarget('');
       setNewTargetDate('');
-      setNewMeetingId('');
       await refetchGoals();
     } catch (err) {
       toast.error(err?.message || 'Failed to create goal.');
     } finally {
       setIsAdding(false);
-    }
-  };
-
-  // Adopt SMART Goal from AI Modal
-  const handleAdoptSmartGoal = async (smartGoal, index) => {
-    try {
-      await apiPost('/goals', {
-        studentId: activeTargetStudentId,
-        title: smartGoal.title,
-        target: smartGoal.target || smartGoal.description || '',
-        targetDate: smartGoal.targetDate || undefined,
-        progress: 0,
-      });
-
-      toast.success(`Adopted goal: "${smartGoal.title}"`);
-      setSuggestedSmartGoals((prev) => prev.filter((_, i) => i !== index));
-      await refetchGoals();
-    } catch (err) {
-      toast.error(err?.message || 'Failed to adopt SMART goal.');
     }
   };
 
@@ -208,32 +128,12 @@ export default function Goals({ role }) {
 
   return (
     <AppShell role={currentRole}>
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'flex-start',
-          flexWrap: 'wrap',
-          gap: 12,
-        }}
-      >
+      <div style={{ marginBottom: 16 }}>
         <PageTitle
           eyebrow="Milestones & Accountability"
           title={currentRole === 'student' ? 'My Goals & Milestones' : 'Mentee Milestone Goals'}
-          text="Track tangible career and technical competencies linked to your mentorship meetings."
+          text="Track tangible career and technical competencies to achieve your professional milestones."
         />
-
-        <div style={{ display: 'inline-flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-          <button
-            type="button"
-            className="uiverse-btn"
-            disabled={isAiLoading}
-            onClick={handleGenerateAiGoals}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
-          >
-            <Sparkles size={15} /> {isAiLoading ? 'Synthesizing...' : 'AI SMART Goal Suggestions'}
-          </button>
-        </div>
       </div>
 
       {currentRole === 'mentor' && myMentees.length > 0 && (
@@ -295,13 +195,7 @@ export default function Goals({ role }) {
             </label>
           </div>
 
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-              gap: 12,
-            }}
-          >
+          <div style={{ maxWidth: 320 }}>
             <label>
               <span style={{ fontWeight: 600, display: 'block', marginBottom: 4 }}>
                 Target Completion Date
@@ -311,20 +205,6 @@ export default function Goals({ role }) {
                 value={newTargetDate}
                 onChange={(e) => setNewTargetDate(e.target.value)}
               />
-            </label>
-
-            <label>
-              <span style={{ fontWeight: 600, display: 'block', marginBottom: 4 }}>
-                Link to Scheduled Meeting (Optional)
-              </span>
-              <select value={newMeetingId} onChange={(e) => setNewMeetingId(e.target.value)}>
-                <option value="">No linked meeting</option>
-                {relevantMeetings.map((m) => (
-                  <option key={m.id || m._id} value={m.id || m._id}>
-                    {m.date} ({m.time}) · {m.status}
-                  </option>
-                ))}
-              </select>
             </label>
           </div>
 
@@ -356,7 +236,7 @@ export default function Goals({ role }) {
         <EmptyState
           icon={Target}
           title={`No ${tab} goals`}
-          text="Track goals by creating a new milestone or using the AI SMART Goal Advisor above."
+          text="Track goals by creating a new milestone goal above."
         />
       ) : (
         <div className="goal-grid">
@@ -449,112 +329,6 @@ export default function Goals({ role }) {
           onSave={handleSaveProgress}
           onCancel={() => setProgressGoal(null)}
         />
-      )}
-
-      {/* AI SMART Goals Suggestions Modal */}
-      {aiModalOpen && (
-        <ModalShell
-          title="Recommended SMART Goals"
-          isOpen={aiModalOpen}
-          onClose={() => setAiModalOpen(false)}
-        >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <p style={{ margin: 0, fontSize: '0.88rem', color: 'var(--foreground-muted)' }}>
-              Synthesized by AI from your technical competencies and profile trajectory. Review,
-              edit target dates, and adopt into your milestone roadmap.
-            </p>
-
-            {suggestedSmartGoals.length === 0 ? (
-              <p
-                style={{ textAlign: 'center', color: 'var(--foreground-muted)', padding: '20px 0' }}
-              >
-                All generated goals have been adopted!
-              </p>
-            ) : (
-              suggestedSmartGoals.map((sg, idx) => (
-                <div
-                  key={idx}
-                  style={{
-                    padding: 14,
-                    borderRadius: 8,
-                    border: '1px solid var(--border)',
-                    background: 'var(--surface-sunken, #f8fafc)',
-                  }}
-                >
-                  <label style={{ display: 'block', marginBottom: 6 }}>
-                    <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>Title:</span>
-                    <input
-                      type="text"
-                      value={sg.title}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        setSuggestedSmartGoals((prev) =>
-                          prev.map((g, i) => (i === idx ? { ...g, title: val } : g))
-                        );
-                      }}
-                      style={{ width: '100%', marginTop: 4 }}
-                    />
-                  </label>
-
-                  <label style={{ display: 'block', marginBottom: 6 }}>
-                    <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>Success Criteria:</span>
-                    <input
-                      type="text"
-                      value={sg.target}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        setSuggestedSmartGoals((prev) =>
-                          prev.map((g, i) => (i === idx ? { ...g, target: val } : g))
-                        );
-                      }}
-                      style={{ width: '100%', marginTop: 4 }}
-                    />
-                  </label>
-
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      marginTop: 10,
-                    }}
-                  >
-                    <label
-                      style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.85rem' }}
-                    >
-                      <span>Target:</span>
-                      <input
-                        type="date"
-                        value={sg.targetDate}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setSuggestedSmartGoals((prev) =>
-                            prev.map((g, i) => (i === idx ? { ...g, targetDate: val } : g))
-                          );
-                        }}
-                      />
-                    </label>
-
-                    <button
-                      type="button"
-                      className="uiverse-btn"
-                      onClick={() => handleAdoptSmartGoal(sg, idx)}
-                      style={{ fontSize: '0.8rem', padding: '6px 14px' }}
-                    >
-                      Adopt Goal
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
-
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 10 }}>
-              <button type="button" className="btn secondary" onClick={() => setAiModalOpen(false)}>
-                Done
-              </button>
-            </div>
-          </div>
-        </ModalShell>
       )}
     </AppShell>
   );
