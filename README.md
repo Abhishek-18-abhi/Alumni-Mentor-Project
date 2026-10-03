@@ -1,50 +1,70 @@
 # BCA-05: Explainable Alumni-Mentor Matching Marketplace with Capacity-Aware Recommendations
 
-> **Capstone Project BCA-05**  
-> **Tech Stack:** React 19 + Vite, Node.js 22 + Express 5, MongoDB Atlas + Mongoose, JWT Auth, Docker, OpenAPI 3 / Swagger.
+> **BCA Capstone Project — Final Year**  
+> **Tech Stack:** React 19 + Vite, Node.js + Express 5, MongoDB Atlas + Mongoose, JWT Authentication, Swagger UI / OpenAPI 3.
 
 ---
 
 ## 1. Project Overview
 
-**MentorConnect (BCA-05)** is a full-stack, enterprise-grade alumni-student mentorship marketplace engineered to solve critical bottlenecks in higher-education mentorship programmes:
+**MentorConnect (BCA-05)** is a full-stack alumni-student mentorship marketplace engineered to solve key challenges in higher-education mentorship programs:
 
-1. **Explainable Matchmaking Engine:** Eliminates "black-box" recommendations with a **100% transparent and explainable match scoring algorithm** with audited factor breakdowns (Skills 45%, Interests 20%, Goals 15%, Languages 10%, Availability 5%, Capacity 5%).
-2. **Mentor Burnout & Capacity Guardrails:** Mentors define explicit concurrent mentee limits. The backend enforces **atomic concurrency guards** (`findOneAndUpdate` with `$expr`), mathematically preventing concurrent acceptances from exceeding capacity.
-3. **Double-Booking & Availability Safeguards:** Server-side bidirectional scheduling ensures mentorship sessions fall strictly within published availability slots, blocking past bookings and overlapping slots for both participants.
-4. **Milestone Goals & Accountability:** Comprehensive student and mentor goal-tracking system supporting milestone creation, progress updates (0–100%), full editing, and deletion.
-5. **Two-Way Feedback & Continuous Quality:** Students select connected mentors to submit star ratings, written reviews, and detailed aspect evaluations (Usefulness of Advice, Clarity of Guidance, Communication & Comfort). Mentors and administrators receive real-time performance insights.
-6. **Cryptographic Audit Ledger:** An immutable SHA-256 hash-chained event ledger guarantees data provenance for mentor approvals, account status shifts, and role changes.
-
----
-
-## 2. Key Features by Role
-
-### 🎓 Student Workspace
-- **Smart Discovery & Search:** Filter verified mentors by company, technical domain, skills, and languages.
-- **Explainable Match Score:** View itemized alignment percentages for every factor before requesting mentorship.
-- **Mentorship Requests:** Submit customized mentorship inquiries with goals and statements of purpose.
-- **Interactive Calendar & Booking:** Browse published mentor availability slots and schedule meetings.
-- **Milestone Goals Tracking:** Define targets, track percentage completion, edit milestones, and delete completed/outdated items.
-- **Mentor Reviews & Ratings:** Rate mentorship session quality with 1–5 stars, aspect evaluations, and constructive feedback.
-
-### 💼 Alumni Mentor Workspace
-- **Capacity Management:** Configure concurrent mentee limits (1–6 concurrent students) protected by atomic race-condition locks.
-- **Inquiry Management:** Accept or decline student mentorship requests with automated notification dispatch.
-- **Session & Calendar Hub:** Publish recurring availability slots, host meeting sessions, and manage calendar events.
-- **Mentee Goal Management:** Track and assign milestone targets for active mentees with full edit, progress adjustment, and delete controls.
-- **Feedback & Reputation Hub:** Review student ratings, overall satisfaction averages, and aspect breakdowns.
-
-### 🛡️ Administrator Workspace
-- **Institutional Governance Dashboard:** High-level platform KPIs, active pairs, and session completion metrics.
-- **Mentor Verification Queue:** Inspect mentor academic credentials, graduation year, job title, and employer before granting platform matching eligibility.
-- **User Lifecycle Controls:** Search, filter, inspect profiles, and manage activation/deactivation of student and mentor accounts.
-- **Institutional Analytics & Funnel:** Detailed Request-to-Acceptance funnel metrics (Total Inquiries, Accepted, Pending, Declined, Withdrawn), domain popularity, and average mentor ratings.
-- **Tamper-Evident Audit Ledger:** Cryptographically linked SHA-256 log chain recording institutional state transitions.
+1. **Explainable Matchmaking Engine:** Eliminates "black-box" recommendations with a **100% transparent, deterministic match scoring algorithm** with clear factor breakdowns (Skills 45%, Interests 20%, Goals 15%, Languages 10%, Availability 5%, Capacity 5%).
+2. **Mentor Capacity & Burnout Prevention:** Mentors set concurrent mentee limits (1–6 students). The backend enforces **atomic concurrency guards** in MongoDB (`findOneAndUpdate` with `$expr`), preventing race conditions and over-allocation.
+3. **Session Scheduling & Availability Management:** Mentors publish recurring availability slots. Students select from available slots, with server-side validation preventing double bookings, overlapping sessions, and past bookings.
+4. **Milestone Goals & Progress Tracking:** Comprehensive goal-tracking system allowing students and mentors to create milestone targets, monitor progress percentage (0–100%), edit details, and delete goals.
+5. **Multi-Aspect Feedback & Reviews:** Students submit 1–5 star ratings, detailed comments, and aspect-specific evaluations (Usefulness of Advice, Clarity of Guidance, Communication & Comfort). Mentors and administrators receive aggregated performance and satisfaction metrics.
+6. **In-App Notification Center:** Automated in-app notifications keep students and mentors updated on mentorship request status, new meeting sessions, and milestone progress.
+7. **Tamper-Evident Audit Ledger:** Cryptographic SHA-256 chained event log recording critical institutional actions (mentor verification, account status changes, and administrative actions).
 
 ---
 
-## 3. Explainable Matching Algorithm
+## 2. Tech Stack & Tools Used
+
+### Frontend
+- **Framework & Build Tool:** React 19 Single Page Application built with Vite
+- **Routing:** React Router v6 with role-based route protection (`/student`, `/mentor`, `/admin`)
+- **Icons & UI:** Lucide React icons with a custom, responsive CSS design system
+- **Testing:** Vitest & React Testing Library (82 unit and integration tests across 15 test suites)
+
+### Backend
+- **Runtime & Framework:** Node.js & Express 5 REST API
+- **Database & ODM:** MongoDB Atlas with Mongoose 8
+- **Authentication & Security:** JWT (JSON Web Tokens), bcryptjs password hashing, Helmet security headers, CORS, and Express Rate Limit
+- **API Documentation:** Swagger UI (`swagger-ui-express`) with OpenAPI 3 specification at `/api/docs`
+- **Testing:** Node Test Runner (`node:test`) & Supertest
+
+---
+
+## 3. Features by User Role
+
+### 🎓 Student Features
+- **Mentor Discovery & Search:** Browse and filter verified mentors by domain, technical skills, company, and languages.
+- **Explainable Match Scores:** View itemized alignment percentages across all criteria before sending a request.
+- **Mentorship Requests:** Submit customized mentorship inquiries with goals and statement of purpose.
+- **Session Scheduling:** View mentor availability calendar and book non-conflicting 1-on-1 mentorship sessions.
+- **Milestone Goals Tracking:** Add milestones, track completion percentage, edit targets, and delete completed/outdated goals.
+- **Review & Feedback Submission:** Rate mentors (1–5 stars) with comments and 3 aspect ratings (Advice Usefulness, Clarity of Guidance, Communication Comfort).
+- **Notification Hub:** View in-app notifications for request status and meeting updates.
+
+### 💼 Alumni Mentor Features
+- **Capacity Controls:** Define maximum concurrent mentees (1–6 students) enforced with atomic database guards.
+- **Request Management:** Review incoming student mentorship requests and accept or decline with notes.
+- **Availability & Session Hub:** Configure weekly availability slots, accept meetings, and manage schedule.
+- **Mentee Milestone Management:** Track active mentees, set milestone goals, update progress, edit, and delete targets.
+- **Feedback & Reviews Hub:** View student ratings, average satisfaction scores, and aspect breakdowns.
+- **Notification Hub:** Receive alerts when new inquiries, bookings, or reviews are submitted.
+
+### 🛡️ Administrator Features
+- **Governance Dashboard:** Platform-wide metrics, active mentorship pairs, and total completed sessions.
+- **Mentor Verification Queue:** Inspect mentor credentials, graduation year, job title, and employer before approving.
+- **User Management:** Search, view, and activate/deactivate student and mentor accounts.
+- **Funnel Analytics:** Track inquiry pipeline (Total Inquiries, Accepted, Pending, Declined, Withdrawn) and domain trends.
+- **Cryptographic Audit Ledger:** View immutable SHA-256 chained activity logs with verification hashes.
+
+---
+
+## 4. Explainable Matching Algorithm
 
 The matching engine computes a deterministic, normalized affinity score $S \in [0, 100]$:
 
@@ -52,127 +72,119 @@ $$\text{Score} = \sum_{i} w_i \cdot \text{RawScore}_i$$
 
 | Factor | Weight ($w_i$) | Evaluation Method |
 |---|---|---|
-| **Skills Overlap** | 45% (0.45) | Jaccard-style normalized overlap of technical skills |
-| **Interests** | 20% (0.20) | Intersection of student career domains & mentor domains |
-| **Goals** | 15% (0.15) | Alignment between student growth targets & mentor offerings |
+| **Skills Overlap** | 45% (0.45) | Normalized overlap of student skills and mentor skills |
+| **Interests / Domain** | 20% (0.20) | Intersection of student target domain & mentor domain |
+| **Goals Alignment** | 15% (0.15) | Alignment between student growth targets & mentor offerings |
 | **Languages** | 10% (0.10) | Common spoken communication languages |
 | **Availability** | 5% (0.05) | Overlapping day/time availability slots |
 | **Capacity** | 5% (0.05) | Full credit if $\text{currentMentees} < \text{capacity}$; 0% if at capacity |
 
-Every match produces an immutable `matchSnapshot` stored with the mentorship request, providing students and administrators with clear natural-language rationale for every recommendation.
+Every match generates an immutable `matchSnapshot` saved with the mentorship request, providing transparent natural-language rationale for every recommendation.
 
 ---
 
-## 4. System Architecture
+## 5. System Architecture
 
 ```mermaid
 flowchart TD
-    Client["React 19 + Vite SPA (Port 5173 / 3000)"]
+    Client["React 19 + Vite SPA (Port 5173)"]
     API["Express 5 REST API (Port 5000)"]
-    DB[(MongoDB Atlas / Local MongoDB)]
-    Docs["Swagger OpenAPI 3 UI (/api/docs)"]
+    DB[(MongoDB Atlas / Mongoose ODM)]
+    Docs["Swagger OpenAPI 3 Docs (/api/docs)"]
 
-    Client -->|JWT Bearer Requests| API
-    API -->|Mongoose ODM| DB
-    API -->|Interactive API Explorer| Docs
-    API -->|SHA-256 Chained Hash Ledger| DB
+    Client -->|JWT Bearer HTTP Requests| API
+    API -->|Mongoose Queries & Updates| DB
+    API -->|Interactive API Documentation| Docs
+    API -->|SHA-256 Chained Hash Log| DB
 ```
-
-### Backend Architecture
-- **Runtime:** Node.js (v20+ / v22+) & Express 5
-- **Database & ODM:** MongoDB Atlas / Local MongoDB with Mongoose 8
-- **Security:** Helmet headers, CORS policy, bcrypt password hashing, express-rate-limit, and JWT Bearer token authentication.
-- **Interactive Documentation:** Live Swagger OpenAPI 3 UI available at `/api/docs`.
-
-### Frontend Architecture
-- **Framework:** React 19 Single Page Application built with Vite 6.
-- **Routing:** React Router v6 with strict role-based access control (Student, Mentor, Admin route guards).
-- **Design System:** Custom CSS design system inspired by modern UI palettes with complete dark/light contrast compliance and responsive layouts.
-- **Icons & Assets:** Lucide React icons.
 
 ---
 
-## 5. Getting Started
+## 6. Getting Started & Running Locally
 
 ### Prerequisites
-- Node.js 20+ or 22+ (LTS recommended)
-- MongoDB instance (MongoDB Atlas connection string or local MongoDB on `mongodb://localhost:27017`)
-- Git
+- **Node.js:** v20+ or v22+ (LTS recommended)
+- **MongoDB:** MongoDB Atlas connection string (or local MongoDB on `mongodb://localhost:27017`)
+- **Git**
 
-### Environment Configuration
+### Step 1: Clone the Repository
+```bash
+git clone https://github.com/Abhishek-18-abhi/Alumni-Mentor-Project.git
+cd Alumni-Mentor-Project
+```
 
-1. **Frontend Environment:**
-   ```bash
-   cp .env.example .env
-   ```
-   *Example `.env`:*
+### Step 2: Install Dependencies
+```bash
+# Install frontend dependencies
+npm install
+
+# Install backend dependencies
+cd backend
+npm install
+cd ..
+```
+
+### Step 3: Configure Environment Variables
+
+1. **Frontend `.env` (in root directory):**
    ```env
    VITE_API_URL=http://localhost:5000/api
    ```
 
-2. **Backend Environment:**
-   ```bash
-   cp backend/.env.example backend/.env
-   ```
-   *Example `backend/.env`:*
+2. **Backend `.env` (in `backend/` directory):**
    ```env
    PORT=5000
    MONGODB_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/alumni-mentor?retryWrites=true&w=majority
-   JWT_SECRET=super_secret_jwt_key_at_least_32_characters_long
-   CLIENT_URL=http://localhost:5173,http://localhost:3000
+   JWT_SECRET=your_jwt_secret_key_at_least_32_characters_long
+   CLIENT_URL=http://localhost:5173
    ```
 
-### Running Locally
+### Step 4: Start the Application
 
-```bash
-# 1. Install frontend & root dependencies
-npm install
+1. **Start the Backend API (Port 5000):**
+   ```bash
+   cd backend
+   npm run dev
+   ```
 
-# 2. Install backend dependencies
-cd backend && npm install && cd ..
+2. **Start the Frontend (Port 5173):**
+   Open a separate terminal in the root directory:
+   ```bash
+   npm run dev
+   ```
 
-# 3. Start the Backend API (Port 5000)
-cd backend
-npm run dev
-
-# 4. In a separate terminal, start the Frontend (Port 5173)
-npm run dev
-```
-
-### Running with Docker Compose
-
-```bash
-docker-compose up --build
-```
-- **Frontend SPA:** `http://localhost:3000` (or `http://localhost:5173` locally)
-- **Backend API:** `http://localhost:5000/api`
-- **Healthcheck:** `http://localhost:5000/api/health`
-- **Swagger Documentation:** `http://localhost:5000/api/docs`
+3. **Access the Application:**
+   - **Frontend App:** `http://localhost:5173`
+   - **Backend API:** `http://localhost:5000/api`
+   - **Healthcheck:** `http://localhost:5000/api/health`
+   - **Swagger API Docs:** `http://localhost:5000/api/docs`
 
 ---
 
-## 6. Verification & Automated Testing
+## 7. Testing & Verification
 
-The project maintains comprehensive end-to-end and unit test suites:
+The project includes unit, component, and integration tests:
 
 ```bash
 # Run Frontend Vitest Suite (82 tests across 15 test suites)
 npm test
 
-# Run Backend Suite (Integration & Node Test Runner)
+# Run Backend Tests (Node Test Runner + Supertest)
 cd backend && npm test
 ```
 
-### Test Coverage Highlights
-- **Role-Based Routing:** Verified redirections and unauthorized access prevention for `/admin`, `/mentor`, and `/student`.
+### Verified Test Suites
+- **Route Authorization:** Verifies role-based route protection for Student, Mentor, and Admin workspaces.
 - **Capacity & Booking Validation:** Automated race-condition tests, double-booking rejection, and past-date rejection.
-- **Explainable Matching Engine:** Extended factor verification and Jaccard boundary checks.
-- **Feedback & Reviews:** Role-specific review submission and mentor visibility isolation tests.
-- **Component Integrity:** ChipPicker, TabBar, ScoreBreakdown, StatusChip, and ErrorBoundary unit tests.
+- **Explainable Matching Engine:** Factor calculation, weights summing to 1.0, and boundary tests.
+- **Goals & Milestone Management:** Milestone creation, progress updates, edit, and deletion logic.
+- **Feedback & Review System:** Multi-aspect review submission and role-based feedback isolation.
+- **UI Components:** Unit tests for ChipPicker, TabBar, ScoreBreakdown, StatusChip, and ErrorBoundary.
 
 ---
 
-## 7. Academic Integrity & Security Standard
-- **No Hardcoded Credentials:** All secrets, database URIs, and JWT signing keys are loaded strictly through environment variables.
-- **Strict Role-Based Authorization:** Every mutating endpoint verifies caller identity and role (`student`, `mentor`, `admin`).
-- **Atomic Operations:** Capacity updates leverage atomic database operations to maintain data integrity under concurrent loads.
+## 8. Security & Academic Integrity
+- **Environment-Driven Secrets:** All database URIs, ports, and JWT signing keys are managed securely via `.env` files.
+- **Role-Based Access Control (RBAC):** Every mutating API endpoint validates the user's JWT token and role (`student`, `mentor`, `admin`).
+- **Data Protection:** Passwords securely hashed with `bcryptjs` (salt factor 10); private emails stripped from public mentor/student listings.
+- **Atomic Concurrency Protection:** Mentor capacity limits enforced with atomic database operations to prevent race conditions.
