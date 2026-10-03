@@ -4,10 +4,12 @@ import PageTitle from '../../components/PageTitle';
 import EmptyState from '../../components/EmptyState';
 import StatusChip from '../../components/StatusChip';
 import TabBar from '../../components/TabBar';
+import ModalShell from '../../components/ModalShell';
+import ConfirmModal from '../../components/ConfirmModal';
 import ProgressModal from '../../components/ProgressModal';
 import { useGoals, useUsers, useMentorshipRequests } from '../../hooks/useApi';
 import { getSession } from '../../lib/storage';
-import { apiPost, apiPatch } from '../../lib/api';
+import { apiPost, apiPatch, apiDelete } from '../../lib/api';
 import { useToast } from '../../components/Toast';
 import { Target, CalendarDays, Plus, CheckCircle, Clock, Edit2, Trash2 } from 'lucide-react';
 
@@ -21,6 +23,12 @@ export default function Goals({ role }) {
   const [selectedStudentId, setSelectedStudentId] = useState('');
   const [isAdding, setIsAdding] = useState(false);
   const [progressGoal, setProgressGoal] = useState(null);
+
+  // Edit and Delete states
+  const [editingGoal, setEditingGoal] = useState(null);
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const [deletingGoal, setDeletingGoal] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // New goal form
   const [newTitle, setNewTitle] = useState('');
@@ -109,6 +117,62 @@ export default function Goals({ role }) {
       await refetchGoals();
     } catch (err) {
       toast.error(err?.message || 'Failed to update progress.');
+    }
+  };
+
+  // Start editing a goal
+  const handleStartEdit = (g) => {
+    setEditingGoal({
+      id: g.id || g._id,
+      title: g.title || '',
+      target: g.target || '',
+      targetDate: g.targetDate || '',
+      progress: g.progress || 0,
+    });
+  };
+
+  // Save edited goal
+  const handleSaveEdit = async (e) => {
+    e.preventDefault();
+    if (!editingGoal || isSavingEdit) return;
+    if (!editingGoal.title?.trim()) {
+      return toast.error('Goal title is required.');
+    }
+
+    setIsSavingEdit(true);
+    try {
+      await apiPatch(`/goals/${editingGoal.id}`, {
+        title: editingGoal.title.trim(),
+        target: editingGoal.target.trim(),
+        targetDate: editingGoal.targetDate || undefined,
+        progress: Number(editingGoal.progress) || 0,
+      });
+
+      toast.success('Goal updated successfully.');
+      setEditingGoal(null);
+      await refetchGoals();
+    } catch (err) {
+      toast.error(err?.message || 'Failed to update goal.');
+    } finally {
+      setIsSavingEdit(false);
+    }
+  };
+
+  // Delete goal
+  const handleConfirmDelete = async () => {
+    if (!deletingGoal || isDeleting) return;
+    const gId = deletingGoal.id || deletingGoal._id;
+
+    setIsDeleting(true);
+    try {
+      await apiDelete(`/goals/${gId}`);
+      toast.success('Goal deleted successfully.');
+      setDeletingGoal(null);
+      await refetchGoals();
+    } catch (err) {
+      toast.error(err?.message || 'Failed to delete goal.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -315,18 +379,46 @@ export default function Goals({ role }) {
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
+                    flexWrap: 'wrap',
+                    gap: 8,
                     marginTop: 'auto',
                   }}
                 >
                   <span style={{ fontWeight: 600, fontSize: '0.82rem' }}>{progress}% Complete</span>
-                  <button
-                    type="button"
-                    className="btn mini secondary"
-                    onClick={() => setProgressGoal(g)}
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
-                  >
-                    <Edit2 size={12} /> Update Progress
-                  </button>
+                  <div style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}>
+                    <button
+                      type="button"
+                      className="btn mini secondary"
+                      onClick={() => handleStartEdit(g)}
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                      title="Edit milestone goal"
+                    >
+                      <Edit2 size={12} /> Edit
+                    </button>
+                    <button
+                      type="button"
+                      className="btn mini secondary"
+                      onClick={() => setProgressGoal(g)}
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                      title="Update percentage completion"
+                    >
+                      <Clock size={12} /> Progress
+                    </button>
+                    <button
+                      type="button"
+                      className="btn mini danger"
+                      onClick={() => setDeletingGoal(g)}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 4,
+                        padding: '4px 8px',
+                      }}
+                      title="Delete milestone goal"
+                    >
+                      <Trash2 size={12} /> Delete
+                    </button>
+                  </div>
                 </div>
               </article>
             );
@@ -341,6 +433,92 @@ export default function Goals({ role }) {
           initial={progressGoal.progress || 0}
           onSave={handleSaveProgress}
           onCancel={() => setProgressGoal(null)}
+        />
+      )}
+
+      {/* Edit Milestone Goal Modal */}
+      {editingGoal && (
+        <ModalShell
+          eyebrow="Milestone Goal"
+          title="Edit Milestone Goal"
+          onClose={() => setEditingGoal(null)}
+        >
+          <form onSubmit={handleSaveEdit} className="form-stack">
+            <label>
+              Goal Title
+              <input
+                type="text"
+                required
+                value={editingGoal.title}
+                onChange={(e) => setEditingGoal({ ...editingGoal, title: e.target.value })}
+                placeholder="e.g. Master System Design & Microservices"
+              />
+            </label>
+
+            <label>
+              Success Criteria / Deliverable
+              <input
+                type="text"
+                value={editingGoal.target}
+                onChange={(e) => setEditingGoal({ ...editingGoal, target: e.target.value })}
+                placeholder="e.g. Implement rate limiter and deploy to AWS"
+              />
+            </label>
+
+            <div className="two-col">
+              <label>
+                Target Completion Date
+                <input
+                  type="date"
+                  value={editingGoal.targetDate}
+                  onChange={(e) => setEditingGoal({ ...editingGoal, targetDate: e.target.value })}
+                />
+              </label>
+
+              <label>
+                Progress ({editingGoal.progress}%)
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={editingGoal.progress}
+                  onChange={(e) =>
+                    setEditingGoal({ ...editingGoal, progress: Number(e.target.value) })
+                  }
+                  style={{ marginTop: 8 }}
+                />
+              </label>
+            </div>
+
+            <div className="form-actions" style={{ marginTop: 14 }}>
+              <button
+                type="button"
+                className="btn secondary"
+                onClick={() => setEditingGoal(null)}
+                disabled={isSavingEdit}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="uiverse-btn"
+                disabled={isSavingEdit || !editingGoal.title?.trim()}
+              >
+                {isSavingEdit ? 'Saving changes...' : 'Save Changes'}
+              </button>
+            </div>
+          </form>
+        </ModalShell>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deletingGoal && (
+        <ConfirmModal
+          title="Delete Milestone Goal?"
+          message={`Are you sure you want to delete the goal "${deletingGoal.title}"? This action cannot be undone.`}
+          confirmLabel={isDeleting ? 'Deleting...' : 'Delete Goal'}
+          onConfirm={handleConfirmDelete}
+          onCancel={() => setDeletingGoal(null)}
         />
       )}
     </AppShell>
