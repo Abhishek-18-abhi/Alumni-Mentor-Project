@@ -135,13 +135,18 @@ export function useGoals(options = {}) {
   );
 }
 
-export function useFeedback(options = {}) {
+export function useFeedback(arg1 = {}, arg2 = {}) {
+  const isParams = Boolean(arg1 && typeof arg1 === 'object' && 'mentorId' in arg1);
+  const params = isParams ? arg1 : {};
+  const options = isParams ? arg2 : arg1;
+  const queryStr = params.mentorId ? `?mentorId=${encodeURIComponent(params.mentorId)}` : '';
+
   return useApiQuery(
     async () => {
-      const res = await apiGet('/feedback');
+      const res = await apiGet(`/feedback${queryStr}`);
       return res?.feedback || [];
     },
-    [],
+    [params.mentorId],
     { initialData: [], ...options }
   );
 }

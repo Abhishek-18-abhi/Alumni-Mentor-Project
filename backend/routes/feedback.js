@@ -10,10 +10,15 @@ const router = Router();
 
 router.get('/', requireAuth, async (req, res, next) => {
   try {
-    const filter =
-      req.user.role === 'admin'
-        ? {}
-        : { $or: [{ fromUserId: req.user._id }, { toUserId: req.user._id }] };
+    const { mentorId } = req.query;
+    let filter;
+    if (mentorId && mongoose.isValidObjectId(mentorId)) {
+      filter = { toUserId: mentorId };
+    } else if (req.user.role === 'admin') {
+      filter = {};
+    } else {
+      filter = { $or: [{ fromUserId: req.user._id }, { toUserId: req.user._id }] };
+    }
     const feedback = await Feedback.find(filter)
       .populate('fromUserId toUserId', 'name email role')
       .sort({ createdAt: -1 });

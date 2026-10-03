@@ -59,7 +59,7 @@ router.get('/analytics', requireAuth, requireRole('admin'), async (req, res, nex
       Mentor.find().populate('userId', 'name email isActive').lean(),
       MentorshipRequest.find().lean(),
       Meeting.find().lean(),
-      Feedback.find().lean(),
+      Feedback.find().populate('fromUserId toUserId', 'name email role').sort({ createdAt: -1 }).lean(),
     ]);
 
     // Request Funnel metrics
@@ -123,6 +123,55 @@ router.get('/analytics', requireAuth, requireRole('admin'), async (req, res, nex
       status: 'Failed',
     });
 
+    // Individual Mentor Performance Aggregation
+    const mentorPerformance = allMentorProfiles.map((m) => {
+      const mUserId = String(m.userId?._id || m.userId || '');
+      const mFeedback = feedbackList.filter((f) => {
+        const toId = String(f.toUserId?._id || f.toUserId || '');
+        return toId === mUserId;
+      });
+
+      const mRatings = mFeedback.map((f) => Number(f.rating) || 5);
+      const mAvgRating =
+        mRatings.length > 0
+          ? Math.round((mRatings.reduce((a, b) => a + b, 0) / mRatings.length) * 10) / 10
+          : null;
+
+      const avgUsefulness =
+        mFeedback.length > 0
+          ? Math.round((mFeedback.reduce((a, b) => a + (b.aspects?.usefulness || 5), 0) / mFeedback.length) * 10) / 10
+          : 5.0;
+      const avgClarity =
+        mFeedback.length > 0
+          ? Math.round((mFeedback.reduce((a, b) => a + (b.aspects?.clarity || 5), 0) / mFeedback.length) * 10) / 10
+          : 5.0;
+      const avgComfort =
+        mFeedback.length > 0
+          ? Math.round((mFeedback.reduce((a, b) => a + (b.aspects?.comfort || 5), 0) / mFeedback.length) * 10) / 10
+          : 5.0;
+
+      return {
+        mentorId: mUserId,
+        name: m.userId?.name || 'Mentor',
+        email: m.userId?.email || '',
+        company: m.company || 'Alumni Cell',
+        domain: m.domain || 'Software Engineering',
+        totalReviews: mFeedback.length,
+        avgRating: mAvgRating,
+        avgUsefulness,
+        avgClarity,
+        avgComfort,
+        recentReviews: mFeedback.slice(0, 5).map((rf) => ({
+          id: rf._id,
+          studentName: rf.fromUserId?.name || 'Student',
+          rating: rf.rating,
+          comment: rf.comment || rf.text || '',
+          aspects: rf.aspects,
+          createdAt: rf.createdAt,
+        })),
+      };
+    }).sort((a, b) => (b.avgRating || 0) - (a.avgRating || 0) || b.totalReviews - a.totalReviews);
+
     res.json({
       overview: {
         totalUsers,
@@ -166,6 +215,19 @@ router.get('/analytics', requireAuth, requireRole('admin'), async (req, res, nex
         averageRating: avgRating,
         totalSurveys: feedbackList.length,
       },
+      mentorPerformance,
+      allFeedback: feedbackList.map((f) => ({
+        id: f._id,
+        rating: f.rating,
+        text: f.text || f.comment,
+        aspects: f.aspects,
+        studentName: f.fromUserId?.name || 'Student',
+        studentEmail: f.fromUserId?.email || '',
+        mentorName: f.toUserId?.name || 'Mentor',
+        mentorEmail: f.toUserId?.email || '',
+        mentorId: f.toUserId?._id || f.toUserId,
+        createdAt: f.createdAt,
+      })),
     });
   } catch (err) {
     next(err);
