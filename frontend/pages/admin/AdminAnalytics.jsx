@@ -254,6 +254,42 @@ export default function AdminAnalytics() {
                 />
               </div>
             </div>
+
+            <div>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  fontSize: '0.85rem',
+                  marginBottom: 4,
+                }}
+              >
+                <span>5. Withdrawn by Student</span>
+                <b>{funnel.withdrawn || 0}</b>
+              </div>
+              <div className="sim-bar" style={{ width: '100%', height: 8 }}>
+                <div
+                  className="sim-bar-fill"
+                  style={{
+                    width: `${funnel.totalRequests ? Math.round(((funnel.withdrawn || 0) / funnel.totalRequests) * 100) : 0}%`,
+                    background: 'var(--foreground-muted, #94a3b8)',
+                  }}
+                />
+              </div>
+            </div>
+
+            <p
+              style={{
+                margin: '8px 0 0 0',
+                fontSize: '0.78rem',
+                color: 'var(--foreground-muted)',
+                lineHeight: 1.4,
+              }}
+            >
+              * Total {funnel.totalRequests || 0} inquiries = {funnel.accepted || 0} accepted +{' '}
+              {funnel.pending || 0} pending + {funnel.rejected || 0} declined +{' '}
+              {funnel.withdrawn || 0} withdrawn.
+            </p>
           </div>
         </section>
 

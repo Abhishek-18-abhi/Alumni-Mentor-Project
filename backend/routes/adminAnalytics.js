@@ -67,6 +67,9 @@ router.get('/analytics', requireAuth, requireRole('admin'), async (req, res, nex
     const pendingRequests = requests.filter((r) => r.status === 'pending').length;
     const acceptedRequests = requests.filter((r) => r.status === 'accepted').length;
     const rejectedRequests = requests.filter((r) => r.status === 'rejected').length;
+    const withdrawnRequests = requests.filter(
+      (r) => r.status === 'withdrawn' || r.status === 'cancelled'
+    ).length;
     const completedDecisions = acceptedRequests + rejectedRequests;
     const acceptRate = completedDecisions > 0 ? Math.round((acceptedRequests / completedDecisions) * 100) : 0;
 
@@ -188,6 +191,7 @@ router.get('/analytics', requireAuth, requireRole('admin'), async (req, res, nex
         pending: pendingRequests,
         accepted: acceptedRequests,
         rejected: rejectedRequests,
+        withdrawn: withdrawnRequests,
         acceptRatePercent: acceptRate,
       },
       matching: {
