@@ -136,25 +136,6 @@ export default function Goals({ role }) {
         />
       </div>
 
-      {currentRole === 'mentor' && myMentees.length > 0 && (
-        <section className="card" style={{ marginBottom: 16 }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <span style={{ fontWeight: 600 }}>Select Mentee:</span>
-            <select
-              value={activeTargetStudentId}
-              onChange={(e) => setSelectedStudentId(e.target.value)}
-              style={{ maxWidth: 300 }}
-            >
-              {myMentees.map((m) => (
-                <option key={m.id || m._id} value={m.id || m._id}>
-                  {m.name} ({m.course || 'BCA'})
-                </option>
-              ))}
-            </select>
-          </label>
-        </section>
-      )}
-
       {/* Goal Creation Form */}
       <section className="card form-card" style={{ marginBottom: 20 }}>
         <h3 style={{ margin: '0 0 14px 0', fontSize: '1.05rem', fontWeight: 700 }}>
@@ -195,7 +176,16 @@ export default function Goals({ role }) {
             </label>
           </div>
 
-          <div style={{ maxWidth: 320 }}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns:
+                currentRole === 'mentor'
+                  ? 'repeat(auto-fit, minmax(260px, 1fr))'
+                  : 'minmax(260px, 320px)',
+              gap: 12,
+            }}
+          >
             <label>
               <span style={{ fontWeight: 600, display: 'block', marginBottom: 4 }}>
                 Target Completion Date
@@ -206,6 +196,29 @@ export default function Goals({ role }) {
                 onChange={(e) => setNewTargetDate(e.target.value)}
               />
             </label>
+
+            {currentRole === 'mentor' && (
+              <label>
+                <span style={{ fontWeight: 600, display: 'block', marginBottom: 4 }}>
+                  Select Mentee
+                </span>
+                <select
+                  value={activeTargetStudentId}
+                  onChange={(e) => setSelectedStudentId(e.target.value)}
+                  disabled={myMentees.length === 0}
+                >
+                  {myMentees.length === 0 ? (
+                    <option value="">No active mentees paired</option>
+                  ) : (
+                    myMentees.map((m) => (
+                      <option key={m.id || m._id} value={m.id || m._id}>
+                        {m.name} ({m.course || 'BCA'})
+                      </option>
+                    ))
+                  )}
+                </select>
+              </label>
+            )}
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 4 }}>
