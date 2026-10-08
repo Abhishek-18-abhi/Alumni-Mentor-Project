@@ -17,7 +17,7 @@ const DEMO_PASSWORD = 'Password@123';
 const mentorsData = [
   {
     name: 'Priya Sharma',
-    email: 'priya.sharma@alumni.edu',
+    email: 'priya1234@gmail.com',
     role: 'mentor',
     jobTitle: 'Senior Software Engineer',
     company: 'Google',
@@ -36,7 +36,7 @@ const mentorsData = [
   },
   {
     name: 'Rahul Verma',
-    email: 'rahul.verma@alumni.edu',
+    email: 'rahul1234@gmail.com',
     role: 'mentor',
     jobTitle: 'Lead Data Scientist',
     company: 'Microsoft',
@@ -55,7 +55,7 @@ const mentorsData = [
   },
   {
     name: 'Ananya Patel',
-    email: 'ananya.patel@alumni.edu',
+    email: 'ananyapatel1234@gmail.com',
     role: 'mentor',
     jobTitle: 'Product Manager & UX Lead',
     company: 'Amazon',
@@ -74,7 +74,7 @@ const mentorsData = [
   },
   {
     name: 'Vikramaditya Rao',
-    email: 'vikram.rao@alumni.edu',
+    email: 'vikram1234@gmail.com',
     role: 'mentor',
     jobTitle: 'Senior Cybersecurity Analyst',
     company: 'Cisco Systems',
@@ -93,7 +93,7 @@ const mentorsData = [
   },
   {
     name: 'Sneha Kulkarni',
-    email: 'sneha.kulkarni@alumni.edu',
+    email: 'snehakulkarni1234@gmail.com',
     role: 'mentor',
     jobTitle: 'Senior Mobile Engineer',
     company: 'Zomato',
@@ -112,7 +112,7 @@ const mentorsData = [
   },
   {
     name: 'Aditya Joshi',
-    email: 'aditya.joshi@alumni.edu',
+    email: 'aditya1234@gmail.com',
     role: 'mentor',
     jobTitle: 'Staff Backend Architect',
     company: 'Swiggy',
@@ -131,7 +131,7 @@ const mentorsData = [
   },
   {
     name: 'Neha Sundaram',
-    email: 'neha.sundaram@alumni.edu',
+    email: 'neha1234@gmail.com',
     role: 'mentor',
     jobTitle: 'Senior BI Consultant',
     company: 'Deloitte',
@@ -150,7 +150,7 @@ const mentorsData = [
   },
   {
     name: 'Rohan Deshmukh',
-    email: 'rohan.deshmukh@alumni.edu',
+    email: 'rohan1234@gmail.com',
     role: 'mentor',
     jobTitle: 'Lead Frontend Engineer',
     company: 'Adobe',
@@ -169,7 +169,7 @@ const mentorsData = [
   },
   {
     name: 'Pooja Nambiar',
-    email: 'pooja.nambiar@alumni.edu',
+    email: 'poojanambiar1234@gmail.com',
     role: 'mentor',
     jobTitle: 'Senior Database Architect',
     company: 'Oracle',
@@ -188,7 +188,7 @@ const mentorsData = [
   },
   {
     name: 'Karan Kapoor',
-    email: 'karan.kapoor@alumni.edu',
+    email: 'karan1234@gmail.com',
     role: 'mentor',
     jobTitle: 'Lead DevOps & SRE',
     company: 'Flipkart',
@@ -207,7 +207,7 @@ const mentorsData = [
   },
   {
     name: 'Divya Nair',
-    email: 'divya.nair@alumni.edu',
+    email: 'divya1234@gmail.com',
     role: 'mentor',
     jobTitle: 'AI Solutions Specialist',
     company: 'TCS Digital',
@@ -226,7 +226,7 @@ const mentorsData = [
   },
   {
     name: 'Manish Tiwari',
-    email: 'manish.tiwari@alumni.edu',
+    email: 'manishtiwari1234@gmail.com',
     role: 'mentor',
     jobTitle: 'Engineering Manager',
     company: 'Paytm',
@@ -245,7 +245,7 @@ const mentorsData = [
   },
   {
     name: 'Tanvi Sengupta',
-    email: 'tanvi.sengupta@alumni.edu',
+    email: 'tanvi1234@gmail.com',
     role: 'mentor',
     jobTitle: 'Full Stack Python Developer',
     company: 'Infosys',
@@ -267,7 +267,7 @@ const mentorsData = [
 const studentsData = [
   {
     name: 'Arjun Mehta',
-    email: 'arjun.mehta@student.edu',
+    email: 'arjun1234@gmail.com',
     role: 'student',
     college: 'Vivekanand College of BCA',
     course: 'BCA',
@@ -281,7 +281,7 @@ const studentsData = [
   },
   {
     name: 'Riya Sen',
-    email: 'riya.sen@student.edu',
+    email: 'riya1234@gmail.com',
     role: 'student',
     college: 'Vivekanand College of BCA',
     course: 'BCA',
@@ -295,7 +295,7 @@ const studentsData = [
   },
   {
     name: 'Varun Chawla',
-    email: 'varun.chawla@student.edu',
+    email: 'varun1234@gmail.com',
     role: 'student',
     college: 'Vivekanand College of BCA',
     course: 'BCA',
@@ -309,7 +309,7 @@ const studentsData = [
   },
   {
     name: 'Sneha Iyer',
-    email: 'sneha.iyer@student.edu',
+    email: 'snehaiyer1234@gmail.com',
     role: 'student',
     college: 'Vivekanand College of BCA',
     course: 'BCA',
@@ -323,7 +323,7 @@ const studentsData = [
   },
   {
     name: 'Kunal Verma',
-    email: 'kunal.verma@student.edu',
+    email: 'kunal1234@gmail.com',
     role: 'student',
     college: 'Vivekanand College of BCA',
     course: 'BCA',
@@ -337,7 +337,7 @@ const studentsData = [
   },
   {
     name: 'Ananya Ghosh',
-    email: 'ananya.ghosh@student.edu',
+    email: 'ananyaghosh1234@gmail.com',
     role: 'student',
     college: 'Vivekanand College of BCA',
     course: 'BCA',
@@ -351,7 +351,7 @@ const studentsData = [
   },
   {
     name: 'Harshvardhan Patil',
-    email: 'harsh.patil@student.edu',
+    email: 'harsh1234@gmail.com',
     role: 'student',
     college: 'Vivekanand College of BCA',
     course: 'BCA',
@@ -365,7 +365,7 @@ const studentsData = [
   },
   {
     name: 'Pooja Hegde',
-    email: 'pooja.hegde@student.edu',
+    email: 'poojahegde1234@gmail.com',
     role: 'student',
     college: 'Vivekanand College of BCA',
     course: 'BCA',
@@ -379,7 +379,7 @@ const studentsData = [
   },
   {
     name: 'Devendra Singh',
-    email: 'devendra.singh@student.edu',
+    email: 'devendra1234@gmail.com',
     role: 'student',
     college: 'Vivekanand College of BCA',
     course: 'BCA',
@@ -393,7 +393,7 @@ const studentsData = [
   },
   {
     name: 'Meera Krishnan',
-    email: 'meera.krishnan@student.edu',
+    email: 'meera1234@gmail.com',
     role: 'student',
     college: 'Vivekanand College of BCA',
     course: 'BCA',
@@ -407,7 +407,7 @@ const studentsData = [
   },
   {
     name: 'Abhishek Nair',
-    email: 'abhishek.nair@student.edu',
+    email: 'abhishek1234@gmail.com',
     role: 'student',
     college: 'Vivekanand College of BCA',
     course: 'BCA',
@@ -421,7 +421,7 @@ const studentsData = [
   },
   {
     name: 'Simran Kaur',
-    email: 'simran.kaur@student.edu',
+    email: 'simran1234@gmail.com',
     role: 'student',
     college: 'Vivekanand College of BCA',
     course: 'BCA',
@@ -435,7 +435,7 @@ const studentsData = [
   },
   {
     name: 'Yash Trivedi',
-    email: 'yash.trivedi@student.edu',
+    email: 'yash1234@gmail.com',
     role: 'student',
     college: 'Vivekanand College of BCA',
     course: 'BCA',
@@ -571,20 +571,20 @@ async function seed() {
 
     // 4. Seed realistic mentorship interactions (requests, meetings, goals, feedback)
     console.log('\n--- Seeding Mentorship Activity ---');
-    const arjun = studentUserMap.get('arjun.mehta@student.edu');
-    const priya = mentorUserMap.get('priya.sharma@alumni.edu');
+    const arjun = studentUserMap.get('arjun1234@gmail.com');
+    const priya = mentorUserMap.get('priya1234@gmail.com');
 
-    const riya = studentUserMap.get('riya.sen@student.edu');
-    const rahul = mentorUserMap.get('rahul.verma@alumni.edu');
+    const riya = studentUserMap.get('riya1234@gmail.com');
+    const rahul = mentorUserMap.get('rahul1234@gmail.com');
 
-    const varun = studentUserMap.get('varun.chawla@student.edu');
-    const karan = mentorUserMap.get('karan.kapoor@alumni.edu');
+    const varun = studentUserMap.get('varun1234@gmail.com');
+    const karan = mentorUserMap.get('karan1234@gmail.com');
 
-    const snehaI = studentUserMap.get('sneha.iyer@student.edu');
-    const ananyaP = mentorUserMap.get('ananya.patel@alumni.edu');
+    const snehaI = studentUserMap.get('snehaiyer1234@gmail.com');
+    const ananyaP = mentorUserMap.get('ananyapatel1234@gmail.com');
 
-    const kunal = studentUserMap.get('kunal.verma@student.edu');
-    const vikram = mentorUserMap.get('vikram.rao@alumni.edu');
+    const kunal = studentUserMap.get('kunal1234@gmail.com');
+    const vikram = mentorUserMap.get('vikram1234@gmail.com');
 
     // Mentorship Requests
     const pairConfigs = [
